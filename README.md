@@ -13,11 +13,13 @@ Compiling instructions.
 Additional externals not hosted on github.
 
 Giflib (version was 5.0.4 as of this writing)
-5. download from http://sourceforge.net/projects/giflib/files/latest/download
-6. extract to a temporary folder
-7. cp giflib-5.0.4/lib/*.[ch] externals/giflib-ios/giflib-ios/giflib-ios/
+
+1. download from http://sourceforge.net/projects/giflib/files/latest/download
+2. extract to a temporary folder
+3. cp giflib-5.0.4/lib/*.[ch] externals/giflib-ios/giflib-ios/giflib-ios/
 
 PNGNQ (vwersion 1.1 as of this writing)
-8. download from http://sourceforge.net/projects/pngnq/files/latest/download
-9. extract to a temporary folder
-10. cp pngnq-1.1/src/neuquant32.[ch] externals/giflib-ios/giflib-ios/giflib-ios/
+
+1. download from http://sourceforge.net/projects/pngnq/files/latest/download
+2. extract to a temporary folder
+3. cp pngnq-1.1/src/neuquant32.[ch] externals/giflib-ios/giflib-ios/giflib-ios/
