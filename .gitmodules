@@ -1,0 +1,12 @@
+[submodule "externals/SVProgressHUD"]
+	path = externals/SVProgressHUD
+	url = https://github.com/samvermette/SVProgressHUD.git
+[submodule "externals/NSDate-TimeAgo"]
+	path = externals/NSDate-TimeAgo
+	url = https://github.com/kevinlawler/NSDate-TimeAgo.git
+[submodule "externals/AFNetworking"]
+	path = externals/AFNetworking
+	url = https://github.com/AFNetworking/AFNetworking.git
+[submodule "externals/giflib-ios"]
+	path = externals/giflib-ios
+	url = https://github.com/soleilpqd/giflib-ios.git
