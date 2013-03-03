@@ -3,6 +3,8 @@ Creeper
 
 Creeper is an iPhone app to create animated gifs from video capture device. Imgur is used as the storage solution.
 
+Imgur api requires a API client id. You can obtain one at http://api.imgur.com and copy the id string provided into the ImgurAPICredentials.h located in the Imgur group in the project.
+
 Compiling instructions.
 
 1. git clone git@github.com:dpedley/creeper.git
