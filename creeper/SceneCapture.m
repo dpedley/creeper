@@ -13,6 +13,10 @@
 #import <giflib/giflib_ios.h>
 #import "ImageInfo.h"
 
+static int SceneCapture_ClearAlert = 404;
+static int SceneCapture_ResolutionChangeAlert = 204;
+static int SceneCapture_RotationAlert = 104;
+
 static int maxFrameCount_Small = 50;
 static int maxFrameCount_Large = 16;
 
@@ -187,7 +191,24 @@ static int maxFrameCount_Large = 16;
 		if (conn.isVideoMaxFrameDurationSupported)
 			conn.videoMaxFrameDuration = CMTimeMake(1, 12);
 		
-		conn.videoOrientation = AVCaptureVideoOrientationPortrait;
+		switch (self.interfaceOrientation)
+		{
+			case UIDeviceOrientationPortrait:
+				conn.videoOrientation = AVCaptureVideoOrientationPortrait;
+				break;
+				
+			case UIDeviceOrientationLandscapeRight:
+				conn.videoOrientation = AVCaptureVideoOrientationLandscapeLeft;
+				break;
+				
+			case UIDeviceOrientationLandscapeLeft:
+				conn.videoOrientation = AVCaptureVideoOrientationLandscapeRight;
+				break;
+				
+			default:
+				conn.videoOrientation = AVCaptureVideoOrientationPortrait;
+				break;
+		}
 		
 		// Start the session running to start the flow of data
 		[self.session startRunning];
@@ -197,7 +218,14 @@ static int maxFrameCount_Large = 16;
 		self.screenShotView.frame = frm;
 		NSLog(@"frm: %f %f %f %f", frm.origin.x, frm.origin.y, frm.size.width, frm.size.height);
 		self.previewLayer = [AVCaptureVideoPreviewLayer layerWithSession:self.session];
+		[self.previewLayer setVideoGravity:AVLayerVideoGravityResizeAspectFill];
 		self.previewLayer.frame = CGRectMake(0, 0, frm.size.width, frm.size.height);
+		
+		AVCaptureConnection *previewLayerConnection=self.previewLayer.connection;
+		if ([previewLayerConnection isVideoOrientationSupported])
+		{
+			[previewLayerConnection setVideoOrientation:conn.videoOrientation];
+		}
 		[self.screenShotView.layer addSublayer:self.previewLayer];
 	}
 	[SVProgressHUD dismiss];
@@ -228,7 +256,7 @@ static int maxFrameCount_Large = 16;
 
 - (void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex
 {
-	if (alertView.tag==404)
+	if (alertView.tag==SceneCapture_ClearAlert)
 	{
 		if (buttonIndex==1)
 		{
@@ -240,10 +268,10 @@ static int maxFrameCount_Large = 16;
 		}
 		else
 		{
-			
+			// Cancelled
 		}
 	}
-	else if (alertView.tag==204)
+	else if (alertView.tag==SceneCapture_ResolutionChangeAlert)
 	{
 		if (buttonIndex==1)
 		{
@@ -256,7 +284,24 @@ static int maxFrameCount_Large = 16;
 		}
 		else
 		{
-			
+			// Cancelled
+			[self.resolutionSelect setSelectedSegmentIndex:(self.resolutionSelect==0)?1:0];
+		}
+	}
+	else if (alertView.tag==SceneCapture_RotationAlert)
+	{
+		if (buttonIndex==1)
+		{
+			self.encoder = nil;
+			[self.animationFrames removeAllObjects];
+			[self.animationProgress setProgress:0.0 animated:YES];
+			self.frameCount = 0;
+			[SVProgressHUD showWithStatus:@"Rotating video" maskType:SVProgressHUDMaskTypeGradient];
+			[self performSelectorInBackground:@selector(setupCaptureSession) withObject:nil];
+		}
+		else
+		{
+			// Cancelled
 		}
 	}
 	[alertView dismissWithClickedButtonIndex:buttonIndex animated:YES];
@@ -267,7 +312,7 @@ static int maxFrameCount_Large = 16;
 	if (self.frameCount>0)
 	{
 		UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Are you sure" message:@"Do you want to clear your recording?" delegate:self cancelButtonTitle:@"No" otherButtonTitles:@"Yes", nil];
-		alert.tag = 404;
+		alert.tag = SceneCapture_ClearAlert;
 		[alert show];
 	}
 }
@@ -277,7 +322,7 @@ static int maxFrameCount_Large = 16;
 	if (self.encoder || self.frameCount>0)
 	{
 		UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Change resolution" message:@"To change resolution will clear your current recording?" delegate:self cancelButtonTitle:@"No" otherButtonTitles:@"Yes", nil];
-		alert.tag = 204;
+		alert.tag = SceneCapture_ResolutionChangeAlert;
 		[alert show];
 	}
 	else
@@ -289,6 +334,21 @@ static int maxFrameCount_Large = 16;
 
 
 #pragma mark - Object lifecycle
+
+-(void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation
+{
+	if (self.encoder || self.frameCount>0)
+	{
+		UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Camera Rotated" message:@"Do you want to clear your current recording and start with new orientation?" delegate:self cancelButtonTitle:@"No" otherButtonTitles:@"Yes", nil];
+		alert.tag = SceneCapture_RotationAlert;
+		[alert show];
+	}
+	else
+	{
+		[SVProgressHUD showWithStatus:@"Rotating video" maskType:SVProgressHUDMaskTypeGradient];
+		[self performSelectorInBackground:@selector(setupCaptureSession) withObject:nil];
+	}
+}
 
 - (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
 {
