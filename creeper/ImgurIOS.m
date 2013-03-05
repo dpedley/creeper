@@ -150,7 +150,7 @@
 		
 		if (imageGone)
 		{
-			NSLog(@"Imgur Delete Response: %@", JSON);
+			CLog(@"Imgur Delete Response: %@", JSON);
 			
 			ImgurEntry *newEntry = [ImgurEntry withAttributeNamed:@"deletehash" matchingValue:hashToken];
 			[newEntry removeFromCache:newEntry.deletehash];
@@ -162,7 +162,7 @@
 		}
 		
 	} failure:^(NSURLRequest *request, NSHTTPURLResponse *response, NSError *error, id JSON) {
-		NSLog(@"er res: %@", JSON);
+		CLog(@"er res: %@", JSON);
 		
 		NSNumber *status = [JSON objectForKey:@"status"];
 		NSNumber *success = [JSON objectForKey:@"success"];
@@ -185,7 +185,7 @@
 		
 		if (imageGone)
 		{
-			NSLog(@"Imgur Delete Response: %@", JSON);
+			CLog(@"Imgur Delete Response: %@", JSON);
 			
 			ImgurEntry *newEntry = [ImgurEntry withAttributeNamed:@"deletehash" matchingValue:hashToken];
 			[newEntry removeFromCache:newEntry.deletehash];
@@ -237,7 +237,7 @@
 //						   img
 //						   ];
 	NSString *base64EncodedImage = [data base64EncodingWithLineLength:0];
-//	NSLog(@"base64:\n\n%@\n\n", [self postValueEncoding:base64EncodedImage]);
+//	CLog(@"base64:\n\n%@\n\n", [self postValueEncoding:base64EncodedImage]);
 	NSString* post_data = [NSString stringWithFormat:@"%@type=base64&image=%@",
 						   optionalParams,
 						   [self postValueEncoding:base64EncodedImage]
@@ -270,7 +270,7 @@
 			
 			// Cache the image data for later
 			[newEntry saveImageData:data toCache:newEntry.deletehash];
-			NSLog(@"Saved: %@", JSON);
+			CLog(@"Saved: %@", JSON);
 			completion(YES);
 		}
 		else
@@ -280,7 +280,7 @@
 		
 	} failure:^(NSURLRequest *request, NSHTTPURLResponse *response, NSError *error, id JSON) {
 		completion(NO);
-		NSLog(@"er res: %@", JSON);
+		CLog(@"er res: %@", JSON);
 	}];
 	
 	[operation start];

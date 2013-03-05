@@ -192,13 +192,13 @@ static int maxFrameCount_Large = 16;
 		}
 		else
 		{
-			NSLog(@"Couldn't add input");
+			CLog(@"Couldn't add input");
 			[SVProgressHUD dismiss];
 			return;
 		}
 		
 		// Add Audio Input
-//		NSLog(@"Adding audio input");
+//		CLog(@"Adding audio input");
 //		AVCaptureDevice *audioCaptureDevice = [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeAudio];
 //		NSError *error = nil;
 //		AVCaptureDeviceInput *audioInput = [AVCaptureDeviceInput deviceInputWithDevice:audioCaptureDevice error:&error];
@@ -253,7 +253,6 @@ static int maxFrameCount_Large = 16;
 		// create a preview layer to show the output from the camera
 		CGRect frm = self.screenShotView.bounds;
 		self.screenShotView.frame = frm;
-		NSLog(@"frm: %f %f %f %f", frm.origin.x, frm.origin.y, frm.size.width, frm.size.height);
 		self.previewLayer = [AVCaptureVideoPreviewLayer layerWithSession:self.session];
 		[self.previewLayer setVideoGravity:AVLayerVideoGravityResizeAspect];
 		self.previewLayer.frame = CGRectMake(0, 0, frm.size.width, frm.size.height);
@@ -324,7 +323,7 @@ static int maxFrameCount_Large = 16;
 	{
 		UIImage *img = [self.animationFrames objectAtIndex:0];
 		[self.animationFrames removeObjectAtIndex:0];
-		NSLog( @"Encode frame... %d", [self.animationFrames count]);
+		CLog( @"Encode frame... %d", [self.animationFrames count]);
 		
 		if (!self.encoder)
 		{
@@ -355,7 +354,7 @@ static int maxFrameCount_Large = 16;
 	}
 	
 	self.encoderActive = NO;
-	NSLog(@"Ok now try to upload");
+	CLog(@"Encoder not active.");
 }
 
 #pragma mark - Actions
@@ -533,7 +532,7 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
 		{
 			self.frameCount++;
 			[self updateFrameDisplay];
-			NSLog(@"Capturing image [%d] [%d]: %@", self.longPress.state, self.frameCount, [NSDate date]);
+			CLog(@"Capturing image [%d] [%d]: %@", self.longPress.state, self.frameCount, [NSDate date]);
 			// Create a UIImage from the sample buffer data
 			UIImage *image = [self imageFromSampleBuffer:sampleBuffer];
 			

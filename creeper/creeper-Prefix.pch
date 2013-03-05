@@ -12,6 +12,14 @@
 	#import <UIKit/UIKit.h>
 	#import <Foundation/Foundation.h>
 	#import <CoreData/CoreData.h>
+	#import <SystemConfiguration/SystemConfiguration.h>
+	#import <MobileCoreServices/MobileCoreServices.h>
     #import "Mochi.h"
 	#import "SVProgressHUD.h"
+#endif
+
+#ifdef DEBUG
+#define CLog NSLog
+#else
+#define CLog //
 #endif

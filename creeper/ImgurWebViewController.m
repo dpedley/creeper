@@ -76,9 +76,9 @@ static int ImgurWebView_ShareAlert = 100;
 
 - (void)webViewDidFinishLoad:(UIWebView *)webView
 {
-	NSString *html = [webView stringByEvaluatingJavaScriptFromString:
-					  @"document.body.innerHTML"];
-	NSLog(@"Mobile imgur:\n\n%@\n\n", html);
+//	NSString *html = [webView stringByEvaluatingJavaScriptFromString:
+//					  @"document.body.innerHTML"];
+//	CLog(@"Mobile imgur:\n\n%@\n\n", html);
 	[SVProgressHUD dismiss];
 }
 
@@ -133,7 +133,7 @@ static int ImgurWebView_ShareAlert = 100;
 		}
 		else
 		{
-			NSLog(@"Done parsing");
+			CLog(@"Done parsing");
 			parsing = NO;
 		}
 	}
@@ -152,13 +152,14 @@ static int ImgurWebView_ShareAlert = 100;
 
 		if (!htmlTemplate)
 		{
-			NSLog(@"No template");
+			CLog(@"No template");
+			[self.webView loadData:self.imgur.imageData MIMEType:@"image/gif" textEncodingName:@"utf-8" baseURL:[NSURL URLWithString:@"http://i.imgur.com"]];
 			return;
 		}
 		
 		NSString *pageParsed = [self template:htmlTemplate parseWithImgurEntry:self.imgur];
 		
-		NSLog(@"Opening Data: %@", pageParsed);
+		CLog(@"Opening Data: %@", pageParsed);
 		NSData *pageData = [pageParsed dataUsingEncoding:NSUTF8StringEncoding];
 		
 		[self.webView loadData:pageData MIMEType:@"text/html" textEncodingName:@"utf-8" baseURL:[NSURL URLWithString:@"http://i.imgur.com"]];
