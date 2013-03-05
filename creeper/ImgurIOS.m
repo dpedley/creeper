@@ -29,14 +29,24 @@
 	}
 }
 
--(UIImage *)loadFromCache:(NSString *)cacheName
+-(NSData *)loadDataFromCache:(NSString *)cacheName
 {
 	NSString *fileLocation = [NSHomeDirectory() stringByAppendingFormat:@"/Documents/%@", cacheName];
 	
 	NSFileManager *mgr = [NSFileManager defaultManager];
 	if ([mgr fileExistsAtPath:fileLocation])
 	{
-		NSData *imgData = [NSData dataWithContentsOfFile:fileLocation];
+		return [NSData dataWithContentsOfFile:fileLocation];
+	}
+	return nil;
+}
+
+-(UIImage *)loadFromCache:(NSString *)cacheName
+{
+	NSData *imgData = [self loadDataFromCache:cacheName];
+	
+	if (imgData)
+	{
 		return [UIImage imageWithData:imgData];
 	}
 	return nil;
@@ -59,17 +69,29 @@
 	UIImage *cachedImage = [self loadFromCache:self.deletehash];
 	if (!cachedImage)
 	{
-		NSURL * imageURL = [NSURL URLWithString:self.link];
-		NSData * imageData = [NSData dataWithContentsOfURL:imageURL];
+		return [UIImage imageWithData:self.imageData];
+	}
+	
+	return cachedImage;
+}
+
+@dynamic imageData;
+-(NSData *)imageData
+{
+	NSData *imageData = [self loadDataFromCache:self.deletehash];
+	
+	if (!imageData)
+	{
+		NSURL *imageURL = [NSURL URLWithString:self.link];
+		imageData = [NSData dataWithContentsOfURL:imageURL];
 		
 		if (imageData)
 		{
 			[self saveImageData:imageData toCache:self.deletehash];
-			return [UIImage imageWithData:imageData];
 		}
 	}
 	
-	return cachedImage;
+	return imageData;
 }
 
 @end

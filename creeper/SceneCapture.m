@@ -13,6 +13,7 @@
 #import <giflib/giflib_ios.h>
 #import "ImageInfo.h"
 
+#define RGB(r,g,b) [UIColor colorWithRed: ((double)r / 255.0) green: ((double)g / 255.0) blue: ((double)b / 255.0) alpha:1.0]
 static int SceneCapture_ClearAlert = 404;
 static int SceneCapture_ResolutionChangeAlert = 204;
 static int SceneCapture_RotationAlert = 104;
@@ -34,10 +35,13 @@ static int maxFrameCount_Large = 16;
 @property (nonatomic, strong) GifEncode *encoder;
 @property (nonatomic, assign) BOOL encoderActive;
 @property (nonatomic, readonly) int maxFrameCount;
+@property (nonatomic, strong) UIColor *goColor;
+@property (nonatomic, strong) UIColor *stopColor;
 
 -(IBAction)recordActionStateChange:(id)sender;
 -(IBAction)clearRecordingAction:(id)sender;
 -(IBAction)changeResolution:(id)sender;
+-(IBAction)frameAdvanceAction:(id)sender;
 
 @property (nonatomic, strong) AVCaptureSession *session;
 @property (nonatomic, strong) AVCaptureVideoPreviewLayer *previewLayer;
@@ -101,7 +105,22 @@ static int maxFrameCount_Large = 16;
 
 -(void)updateFrameDisplay
 {
-	[self.frameDisplay performSelectorOnMainThread:@selector(setTitle:) withObject:[NSString stringWithFormat:@"%d/%d", self.frameCount, self.maxFrameCount] waitUntilDone:NO];
+	[self.frameDisplay performSelectorOnMainThread:@selector(setTitle:) withObject:[NSString stringWithFormat:@"%@%d/%d", (self.frameCount<10)?@" ":@"", self.frameCount, self.maxFrameCount] waitUntilDone:NO];
+	if (self.frameCount < self.maxFrameCount)
+	{
+		[self.frameDisplay setEnabled:YES];
+		[self.frameDisplay setTintColor:self.goColor];
+	}
+	else
+	{
+		[self.frameDisplay setEnabled:NO];
+		[self.frameDisplay setTintColor:self.stopColor];
+	}
+}
+
+-(void)updateProgress
+{
+	[self.animationProgress setProgress: ( (double)self.frameCount / (double)self.maxFrameCount ) animated:NO];
 }
 
 - (void)setupCaptureSession
@@ -218,7 +237,7 @@ static int maxFrameCount_Large = 16;
 		self.screenShotView.frame = frm;
 		NSLog(@"frm: %f %f %f %f", frm.origin.x, frm.origin.y, frm.size.width, frm.size.height);
 		self.previewLayer = [AVCaptureVideoPreviewLayer layerWithSession:self.session];
-		[self.previewLayer setVideoGravity:AVLayerVideoGravityResizeAspectFill];
+		[self.previewLayer setVideoGravity:AVLayerVideoGravityResizeAspect];
 		self.previewLayer.frame = CGRectMake(0, 0, frm.size.width, frm.size.height);
 		
 		AVCaptureConnection *previewLayerConnection=self.previewLayer.connection;
@@ -229,6 +248,96 @@ static int maxFrameCount_Large = 16;
 		[self.screenShotView.layer addSublayer:self.previewLayer];
 	}
 	[SVProgressHUD dismiss];
+}
+
+// Create a UIImage from sample buffer data
+- (UIImage *) imageFromSampleBuffer:(CMSampleBufferRef) sampleBuffer
+{
+    // Get a CMSampleBuffer's Core Video image buffer for the media data
+    CVImageBufferRef imageBuffer = CMSampleBufferGetImageBuffer(sampleBuffer);
+    // Lock the base address of the pixel buffer
+    CVPixelBufferLockBaseAddress(imageBuffer, 0);
+	
+    // Get the number of bytes per row for the pixel buffer
+    void *baseAddress = CVPixelBufferGetBaseAddress(imageBuffer);
+	
+    // Get the number of bytes per row for the pixel buffer
+    size_t bytesPerRow = CVPixelBufferGetBytesPerRow(imageBuffer);
+    // Get the pixel buffer width and height
+    size_t width = CVPixelBufferGetWidth(imageBuffer);
+    size_t height = CVPixelBufferGetHeight(imageBuffer);
+	
+    // Create a device-dependent RGB color space
+    CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
+	
+    // Create a bitmap graphics context with the sample buffer data
+    CGContextRef context = CGBitmapContextCreate(baseAddress, width, height, 8,
+												 bytesPerRow, colorSpace, kCGBitmapByteOrder32Little | kCGImageAlphaPremultipliedFirst);
+    // Create a Quartz image from the pixel data in the bitmap graphics context
+    CGImageRef quartzImage = CGBitmapContextCreateImage(context);
+    // Unlock the pixel buffer
+    CVPixelBufferUnlockBaseAddress(imageBuffer,0);
+	
+    // Free up the context and color space
+    CGContextRelease(context);
+    CGColorSpaceRelease(colorSpace);
+	
+    // Create an image object from the Quartz image
+    UIImage *image = [UIImage imageWithCGImage:quartzImage];
+	
+    // Release the Quartz image
+    CGImageRelease(quartzImage);
+	
+    return (image);
+}
+
+-(void)createAnimatedGifFromFrames
+{
+	if ( (self.encoderActive) || ([self.animationFrames count]==0) )
+	{
+		return;
+	}
+	self.encoderActive = YES;
+	
+	NSTimeInterval frmDelay = 0.333;
+	CGRect imgBounds;
+	
+	while ( [self.animationFrames count] > 0 )
+	{
+		UIImage *img = [self.animationFrames objectAtIndex:0];
+		[self.animationFrames removeObjectAtIndex:0];
+		NSLog( @"Encode frame... %d", [self.animationFrames count]);
+		
+		if (!self.encoder)
+		{
+			self.encoder = [[GifEncode alloc] initWithFile:[self temporaryFileLocation]
+												targetSize:img.size
+												 loopCount:0
+												  optimize:YES ];
+			if (self.encoder.error != 0)
+			{
+				NSLog(@"Encoder init error: %d", self.encoder.error);
+				return;
+			}
+			
+		}
+		imgBounds = CGRectMake(0, 0, img.size.width, img.size.height);
+		
+		[self.encoder putImageAsFrame:img
+						  frameBounds:imgBounds
+							delayTime:frmDelay
+						 disposalMode:DISPOSE_DO_NOT
+					   alphaThreshold:0.5];
+		
+		if (self.encoder.error != 0)
+		{
+			NSLog(@"Encoder put image error: %d", self.encoder.error);
+			return;
+		}
+	}
+	
+	self.encoderActive = NO;
+	NSLog(@"Ok now try to upload");
 }
 
 #pragma mark - Actions
@@ -332,6 +441,10 @@ static int maxFrameCount_Large = 16;
 	}
 }
 
+-(IBAction)frameAdvanceAction:(id)sender
+{
+	self.animationActive = YES;
+}
 
 #pragma mark - Object lifecycle
 
@@ -366,6 +479,9 @@ static int maxFrameCount_Large = 16;
 	[self.animationProgress setProgress:0.0];
 	self.animationActive = NO;
 	self.animationFrames = [NSMutableArray array];
+	self.goColor = RGB(27,188,43);
+	self.stopColor = RGB(210,48,15);
+	[self updateFrameDisplay];
 }
 
 -(void)viewDidAppear:(BOOL)animated
@@ -385,103 +501,6 @@ static int maxFrameCount_Large = 16;
     // Dispose of any resources that can be recreated.
 }
 
-#pragma mark - Utilities
-
-// Create a UIImage from sample buffer data
-- (UIImage *) imageFromSampleBuffer:(CMSampleBufferRef) sampleBuffer
-{
-    // Get a CMSampleBuffer's Core Video image buffer for the media data
-    CVImageBufferRef imageBuffer = CMSampleBufferGetImageBuffer(sampleBuffer);
-    // Lock the base address of the pixel buffer
-    CVPixelBufferLockBaseAddress(imageBuffer, 0);
-	
-    // Get the number of bytes per row for the pixel buffer
-    void *baseAddress = CVPixelBufferGetBaseAddress(imageBuffer);
-	
-    // Get the number of bytes per row for the pixel buffer
-    size_t bytesPerRow = CVPixelBufferGetBytesPerRow(imageBuffer);
-    // Get the pixel buffer width and height
-    size_t width = CVPixelBufferGetWidth(imageBuffer);
-    size_t height = CVPixelBufferGetHeight(imageBuffer);
-	
-    // Create a device-dependent RGB color space
-    CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
-	
-    // Create a bitmap graphics context with the sample buffer data
-    CGContextRef context = CGBitmapContextCreate(baseAddress, width, height, 8,
-												 bytesPerRow, colorSpace, kCGBitmapByteOrder32Little | kCGImageAlphaPremultipliedFirst);
-    // Create a Quartz image from the pixel data in the bitmap graphics context
-    CGImageRef quartzImage = CGBitmapContextCreateImage(context);
-    // Unlock the pixel buffer
-    CVPixelBufferUnlockBaseAddress(imageBuffer,0);
-	
-    // Free up the context and color space
-    CGContextRelease(context);
-    CGColorSpaceRelease(colorSpace);
-	
-    // Create an image object from the Quartz image
-    UIImage *image = [UIImage imageWithCGImage:quartzImage];
-	
-    // Release the Quartz image
-    CGImageRelease(quartzImage);
-	
-    return (image);
-}
-
--(void)createAnimatedGifFromFrames
-{
-	if ( (self.encoderActive) || ([self.animationFrames count]==0) )
-	{
-		return;
-	}
-	self.encoderActive = YES;
-	
-	NSTimeInterval frmDelay = 0.333;
-	CGRect imgBounds;
-	
-	while ( [self.animationFrames count] > 0 )
-	{
-		UIImage *img = [self.animationFrames objectAtIndex:0];
-		[self.animationFrames removeObjectAtIndex:0];
-		NSLog( @"Encode frame... %d", [self.animationFrames count]);
-		
-		if (!self.encoder)
-		{
-			self.encoder = [[GifEncode alloc] initWithFile:[self temporaryFileLocation]
-										   targetSize:img.size
-											loopCount:0
-											 optimize:YES ];
-			if (self.encoder.error != 0)
-			{
-				NSLog(@"Encoder init error: %d", self.encoder.error);
-				return;
-			}
-			
-		}
-		imgBounds = CGRectMake(0, 0, img.size.width, img.size.height);
-		
-		[self.encoder putImageAsFrame:img
-					 frameBounds:imgBounds
-					   delayTime:frmDelay
-					disposalMode:DISPOSE_DO_NOT
-				  alphaThreshold:0.5];
-		
-		if (self.encoder.error != 0)
-		{
-			NSLog(@"Encoder put image error: %d", self.encoder.error);
-			return;
-		}
-	}
-		
-	self.encoderActive = NO;
-	NSLog(@"Ok now try to upload");
-}
-
--(void)updateProgress
-{
-	[self.animationProgress setProgress: ( (double)self.frameCount / (double)self.maxFrameCount ) animated:NO];
-}
-
 #pragma mark - The delegate
 
 // Delegate routine that is called when a sample buffer was written
@@ -496,13 +515,17 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
 		{
 			self.frameCount++;
 			[self updateFrameDisplay];
-			NSLog(@"Capturing image [%d]: %@", self.frameCount, [NSDate date]);
+			NSLog(@"Capturing image [%d] [%d]: %@", self.longPress.state, self.frameCount, [NSDate date]);
 			// Create a UIImage from the sample buffer data
 			UIImage *image = [self imageFromSampleBuffer:sampleBuffer];
 			
 			[self.animationFrames addObject:image];
 			[self performSelectorOnMainThread:@selector(updateProgress) withObject:nil waitUntilDone:NO];
 			[self performSelectorInBackground:@selector(createAnimatedGifFromFrames) withObject:nil];
+			if (self.longPress.state!=UIGestureRecognizerStateBegan)
+			{
+				self.animationActive = NO;
+			}
 		}
 	}
 

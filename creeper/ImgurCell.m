@@ -35,7 +35,7 @@
 
 -(void)configureWithEntry:(ImgurEntry *)entry
 {
-	[self.imageView setImage:entry.image];
+	[self.preview setImage:entry.image];
 	// Set the Info
 	NSString *theInfo = @"";
 	

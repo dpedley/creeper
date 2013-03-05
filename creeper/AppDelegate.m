@@ -9,6 +9,9 @@
 #import "AppDelegate.h"
 #import "AnimationListController.h"
 #import "ImgurEntry.h"
+#import "CreeperSHKConfigurator.h"
+#import "SHK.h"
+#import "SHKConfiguration.h"
 
 @implementation AppDelegate
 
@@ -21,6 +24,9 @@
 	// Init mochi
 	[Mochi settingsFromDictionary:@{ @"database" : @"creeper", @"model" : @"creeper" }];
 	controller.managedObjectContext = [[Mochi mochiForClass:[ImgurEntry class]] managedObjectContext];
+	
+	CreeperSHKConfigurator *configurator = [[CreeperSHKConfigurator alloc] init];
+	[SHKConfiguration sharedInstanceWithConfigurator:configurator];
 	
     return YES;
 }

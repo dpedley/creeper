@@ -150,7 +150,12 @@
                             </imageView>
                             <toolbar opaque="NO" clearsContextBeforeDrawing="NO" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="w8s-Jh-hCD">
                                 <items>
-                                    <barButtonItem title="0/50" style="plain" id="aU1-WF-75T"/>
+                                    <barButtonItem title="0/50" style="done" id="aU1-WF-75T">
+                                        <color key="tintColor" red="0.3803921938" green="0.74901962280000001" blue="0.1960784495" alpha="1" colorSpace="deviceRGB"/>
+                                        <connections>
+                                            <action selector="frameAdvanceAction:" destination="Ndd-YN-YRf" id="zbg-OO-1d8"/>
+                                        </connections>
+                                    </barButtonItem>
                                     <barButtonItem style="plain" systemItem="flexibleSpace" id="3Cs-eH-1zd"/>
                                     <barButtonItem systemItem="trash" id="8Hp-l6-V4i">
                                         <connections>
@@ -337,12 +342,21 @@
                             <constraint firstItem="Wrj-6H-NMB" firstAttribute="top" secondItem="22" secondAttribute="top" type="default" id="kSv-oC-i40"/>
                         </constraints>
                     </view>
-                    <navigationItem key="navigationItem" title="Imgur Link" id="26"/>
+                    <navigationItem key="navigationItem" title="Imgur Link" id="26">
+                        <connections>
+                            <outlet property="rightBarButtonItem" destination="gQR-GL-Qi7" id="jnS-Mq-8LW"/>
+                        </connections>
+                    </navigationItem>
                     <connections>
                         <outlet property="webView" destination="Wrj-6H-NMB" id="Jax-Wa-ShF"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="23" sceneMemberID="firstResponder"/>
+                <barButtonItem systemItem="action" id="gQR-GL-Qi7">
+                    <connections>
+                        <action selector="shareAction:" destination="21" id="vIC-Yx-f2o"/>
+                    </connections>
+                </barButtonItem>
             </objects>
             <point key="canvasLocation" x="881" y="-18"/>
         </scene>
@@ -378,6 +392,7 @@
         <class className="ImgurWebViewController" superclassName="UIViewController">
             <source key="sourceIdentifier" type="project" relativePath="./Classes/ImgurWebViewController.h"/>
             <relationships>
+                <relationship kind="action" name="shareAction:"/>
                 <relationship kind="outlet" name="webView" candidateClass="UIWebView"/>
             </relationships>
         </class>
@@ -389,6 +404,7 @@
             <relationships>
                 <relationship kind="action" name="changeResolution:"/>
                 <relationship kind="action" name="clearRecordingAction:"/>
+                <relationship kind="action" name="frameAdvanceAction:"/>
                 <relationship kind="action" name="recordActionStateChange:"/>
                 <relationship kind="outlet" name="animationProgress" candidateClass="UIProgressView"/>
                 <relationship kind="outlet" name="doneButton" candidateClass="UIBarButtonItem"/>

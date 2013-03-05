@@ -10,3 +10,6 @@
 [submodule "externals/giflib-ios"]
 	path = externals/giflib-ios
 	url = https://github.com/soleilpqd/giflib-ios.git
+[submodule "externals/ShareKit"]
+	path = externals/ShareKit
+	url = https://github.com/ShareKit/ShareKit.git

@@ -12,6 +12,7 @@
 @interface ImgurEntry (LocalImageCacheAdditions)
 
 @property (nonatomic, readonly) UIImage *image;
+@property (nonatomic, readonly) NSData *imageData;
 
 @end
 
