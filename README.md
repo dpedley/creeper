@@ -3,9 +3,6 @@ Creeper
 
 Creeper is an iPhone app to create animated gifs from video capture device. Imgur is used as the storage solution.
 
-Imgur api requires a API client id. You can obtain one at http://api.imgur.com and copy the id string provided into 
-the ImgurAPICredentials.h located in the Imgur group in the project.
-
 Compiling
 =========
 
@@ -44,11 +41,17 @@ information to github.
 1. ImgurAPICredentials.h - You application ID registered with https://api.imgur.com/
 2. CreeperSHKConfigurator.m - ShareKit integration keys instructions at: http://getsharekit.com/install/ 
 
-!!! Notes on ShareKit integration !!!
+
+
+Notes on ShareKit integration
+
+If you want to explore the app the ImgurID is mandatory. The ShareKit credentials, however, you can leave as the defaults. 
+This will simple limit the app from "share image" and "share link".
 
 (as of March 5th 2013)
-Creeper is pre-configured. You only need to do step 3 in the instructions.
+Creeper is pre-configured for ShareKit. You only need to do step 3 in the install instructions.
 In step 3, the instructions call for info in SHKConfig.h this has been duplicated in CreeperSHKConfigurator.m. 
+Reading this will give you enough information to get the basics configured.
 
 Imagery
 =======
