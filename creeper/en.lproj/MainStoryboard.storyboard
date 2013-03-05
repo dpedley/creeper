@@ -109,22 +109,63 @@
                             <outlet property="delegate" destination="12" id="15"/>
                         </connections>
                     </tableView>
-                    <navigationItem key="navigationItem" title="Creeper" id="36">
+                    <navigationItem key="navigationItem" id="36">
+                        <nil key="title"/>
                         <barButtonItem key="backBarButtonItem" title="Back" id="mxE-Au-Rvr"/>
                         <connections>
                             <outlet property="rightBarButtonItem" destination="iXR-Ck-RtE" id="4l2-3K-qbY"/>
+                            <outlet property="titleView" destination="yIa-D0-umU" id="VOP-W4-PHn"/>
                         </connections>
                     </navigationItem>
                     <connections>
+                        <outlet property="cameraButton" destination="iXR-Ck-RtE" id="08g-C7-c8f"/>
                         <outlet property="helpView" destination="Icq-dr-H9d" id="MzP-aM-1SR"/>
+                        <outlet property="informationButton" destination="i3F-7M-ahf" id="x53-fw-o5o"/>
+                        <outlet property="wikiInfoView" destination="ekv-Rb-sDI" id="oJ5-30-9vK"/>
                     </connections>
                 </tableViewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="17" sceneMemberID="firstResponder"/>
+                <view opaque="NO" contentMode="scaleToFill" id="yIa-D0-umU" userLabel="Navigation Title View">
+                    <rect key="frame" x="0.0" y="0.0" width="160" height="44"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                    <subviews>
+                        <label opaque="NO" clipsSubviews="YES" userInteractionEnabled="NO" contentMode="left" text="Creeper" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="PSW-vU-B06" userLabel="Creeper">
+                            <constraints>
+                                <constraint firstAttribute="width" constant="97" id="E7K-dr-YHf"/>
+                                <constraint firstAttribute="height" constant="36" id="Sa9-Yv-1LF"/>
+                            </constraints>
+                            <fontDescription key="fontDescription" type="boldSystem" pointSize="22"/>
+                            <color key="textColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
+                            <nil key="highlightedColor"/>
+                            <color key="shadowColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
+                            <size key="shadowOffset" width="1" height="1"/>
+                        </label>
+                        <button opaque="NO" userInteractionEnabled="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="infoLight" showsTouchWhenHighlighted="YES" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="i3F-7M-ahf" userLabel="Info">
+                            <fontDescription key="fontDescription" type="boldSystem" pointSize="20"/>
+                            <size key="titleShadowOffset" width="2" height="2"/>
+                            <state key="normal">
+                                <color key="titleColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
+                            </state>
+                            <state key="highlighted">
+                                <color key="titleColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                            </state>
+                        </button>
+                    </subviews>
+                    <constraints>
+                        <constraint firstItem="PSW-vU-B06" firstAttribute="top" secondItem="yIa-D0-umU" secondAttribute="top" constant="2" id="5Xf-Mx-nIw"/>
+                        <constraint firstAttribute="trailing" secondItem="i3F-7M-ahf" secondAttribute="trailing" constant="13" id="Ebo-lO-gja"/>
+                        <constraint firstItem="PSW-vU-B06" firstAttribute="leading" secondItem="yIa-D0-umU" secondAttribute="leading" constant="30" id="Mlj-8E-A27"/>
+                        <constraint firstItem="i3F-7M-ahf" firstAttribute="centerY" secondItem="yIa-D0-umU" secondAttribute="centerY" type="default" id="j2t-zo-J5X"/>
+                    </constraints>
+                    <connections>
+                        <outletCollection property="gestureRecognizers" destination="RGo-S1-Q8g" appends="YES" id="ldm-rq-kdL"/>
+                    </connections>
+                </view>
                 <label opaque="NO" clipsSubviews="YES" userInteractionEnabled="NO" contentMode="left" usesAttributedText="YES" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" preferredMaxLayoutWidth="320" id="Icq-dr-H9d" userLabel="Help Label">
                     <rect key="frame" x="0.0" y="0.0" width="320" height="109"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                     <attributedString key="attributedText">
-                        <fragment content="Help To capture an animation, just click the camera icon in the upper right.">
+                        <fragment content="No animations">
                             <attributes>
                                 <color key="NSColor" cocoaTouchSystemColor="darkTextColor"/>
                                 <font key="NSFont" size="17" name="EurostileRegular"/>
@@ -135,6 +176,16 @@
                     </attributedString>
                     <color key="highlightedColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                 </label>
+                <webView contentMode="scaleToFill" id="ekv-Rb-sDI" userLabel="Wiki Info View">
+                    <rect key="frame" x="0.0" y="0.0" width="240" height="128"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                    <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="calibratedRGB"/>
+                </webView>
+                <tapGestureRecognizer id="RGo-S1-Q8g">
+                    <connections>
+                        <action selector="informationAction:" destination="12" id="ul9-3K-vP0"/>
+                    </connections>
+                </tapGestureRecognizer>
                 <barButtonItem systemItem="camera" id="iXR-Ck-RtE">
                     <connections>
                         <segue destination="Ndd-YN-YRf" kind="push" identifier="CamSegue" id="VGD-Tm-o4j"/>
@@ -386,8 +437,11 @@
         <class className="AnimationListController" superclassName="UITableViewController">
             <source key="sourceIdentifier" type="project" relativePath="./Classes/AnimationListController.h"/>
             <relationships>
+                <relationship kind="action" name="informationAction:"/>
                 <relationship kind="outlet" name="cameraButton" candidateClass="UIBarButtonItem"/>
                 <relationship kind="outlet" name="helpView" candidateClass="UIView"/>
+                <relationship kind="outlet" name="informationButton" candidateClass="UIButton"/>
+                <relationship kind="outlet" name="wikiInfoView" candidateClass="UIWebView"/>
             </relationships>
         </class>
         <class className="ImageInfo" superclassName="UIViewController">

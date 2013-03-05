@@ -18,13 +18,20 @@ static int AnimationList_DeleteAlert = 100;
 @interface AnimationListController ()
 @property (nonatomic, strong) IBOutlet UIBarButtonItem *cameraButton;
 @property (nonatomic, strong) IBOutlet UIView *helpView;
+@property (nonatomic, strong) IBOutlet UIWebView *wikiInfoView;
+@property (nonatomic, strong) IBOutlet UIButton *informationButton;
 @property (nonatomic, strong) NSString *navTitle;
 @property (nonatomic, strong) ImgurEntry *itemPendingDelete;
 
+-(IBAction)informationAction:(id)sender;
+
 - (void)configureCell:(UITableViewCell *)theCell atIndexPath:(NSIndexPath *)indexPath;
+
+
 @end
 
 @implementation AnimationListController
+
 
 #pragma mark - Segue
 
@@ -43,6 +50,42 @@ static int AnimationList_DeleteAlert = 100;
 }
 
 #pragma mark - Actions
+
+-(IBAction)informationAction:(id)sender
+{
+	if (self.informationButton.hidden)
+	{
+		return;
+	}
+	
+	__block CGRect frm = self.view.frame;
+	__block CGRect offscreenFrm = CGRectMake(0, -1 * frm.size.height, frm.size.width, frm.size.height);
+	
+	if (self.wikiInfoView.hidden)
+	{
+		[self.wikiInfoView.scrollView scrollRectToVisible:CGRectMake(0, 0, 100, 100) animated:NO];
+		self.wikiInfoView.frame = offscreenFrm;
+		self.wikiInfoView.hidden = NO;
+		self.informationButton.enabled = NO;
+		[UIView animateWithDuration:1.0 animations:^{
+			self.wikiInfoView.frame = frm;
+		} completion:^(BOOL finished) {
+			self.informationButton.enabled = YES;
+			self.informationButton.highlighted = YES;
+		}];
+	}
+	else
+	{
+		self.informationButton.enabled = NO;
+		self.informationButton.highlighted = NO;
+		[UIView animateWithDuration:1.0 animations:^{
+			self.wikiInfoView.frame = offscreenFrm;
+		} completion:^(BOOL finished) {
+			self.informationButton.enabled = YES;
+			self.wikiInfoView.hidden = YES;
+		}];
+	}
+}
 
 - (void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex
 {
@@ -69,6 +112,57 @@ static int AnimationList_DeleteAlert = 100;
 	}
 }
 
+#pragma mark - Help Wiki
+
+-(void)mainThreadEnableHelp:(NSString *)helpHtml
+{
+	self.informationButton.hidden = NO;
+	[self.wikiInfoView loadHTMLString:helpHtml baseURL:[NSURL URLWithString:@"https://github.com/dpedley/creeper/wiki/"]];
+}
+
+-(void)backgroundLoadHelpWiki
+{
+	// TODO: make the v1.0 in the follow read form the app bundle.
+	NSString *baseWiki = @"creeper_help_v1.0";
+	NSString *urlString = [NSString stringWithFormat:@"https://github.com/dpedley/creeper/wiki/%@", baseWiki];
+	NSString *wikiHTML = [NSString stringWithContentsOfURL:[NSURL URLWithString:urlString] encoding:NSUTF8StringEncoding error:nil];
+	if (wikiHTML)
+	{
+		NSRange start = [wikiHTML rangeOfString:[NSString stringWithFormat:@"%@_begin", baseWiki]];
+		NSRange end = [wikiHTML rangeOfString:[NSString stringWithFormat:@"%@_end", baseWiki]];
+		
+		if (start.location!=NSNotFound && end.location!=NSNotFound)
+		{
+			if ((start.location + start.length) < end.location)
+			{
+				NSRange wikiHelpRange = NSMakeRange((start.location + start.length), end.location - (start.location + start.length) );
+				NSString *wikiHelp = [wikiHTML substringWithRange:wikiHelpRange];
+				[self performSelectorOnMainThread:@selector(mainThreadEnableHelp:) withObject:wikiHelp waitUntilDone:NO  ];
+			}
+		}
+	}
+}
+
+#pragma mark - Utilities
+
+-(void)updateUI
+{
+	id <NSFetchedResultsSectionInfo> sectionInfo = [self.fetchedResultsController sections][0];
+	int vidCount = [sectionInfo numberOfObjects];
+	if (vidCount>0)
+	{
+		self.editButtonItem.enabled = YES;
+	}
+	else
+	{
+		self.editButtonItem.enabled = NO;
+		if (self.tableView.isEditing)
+		{
+			[self.tableView setEditing:NO animated:YES];
+		}
+	}
+}
+
 #pragma mark - Object Lifecycle
 
 - (void)awakeFromNib
@@ -82,6 +176,12 @@ static int AnimationList_DeleteAlert = 100;
 	
 	self.navTitle = self.title;
 	self.navigationItem.leftBarButtonItem = self.editButtonItem;
+	[self.view addSubview:self.wikiInfoView];
+	self.wikiInfoView.hidden = YES;
+	
+	self.informationButton.hidden = YES;
+	[self performSelectorInBackground:@selector(backgroundLoadHelpWiki) withObject:nil];
+	[self updateUI];
 }
 
 - (void)didReceiveMemoryWarning
@@ -253,6 +353,7 @@ static int AnimationList_DeleteAlert = 100;
 - (void)controllerDidChangeContent:(NSFetchedResultsController *)controller
 {
     [self.tableView endUpdates];
+	[self updateUI];
 }
 
 /*
