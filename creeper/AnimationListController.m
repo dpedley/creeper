@@ -12,10 +12,14 @@
 #import "ImgurCell.h"
 #import "ImgurIOS.h"
 
+
+static int AnimationList_DeleteAlert = 100;
+
 @interface AnimationListController ()
 @property (nonatomic, strong) IBOutlet UIBarButtonItem *cameraButton;
 @property (nonatomic, strong) IBOutlet UIView *helpView;
 @property (nonatomic, strong) NSString *navTitle;
+@property (nonatomic, strong) ImgurEntry *itemPendingDelete;
 
 - (void)configureCell:(UITableViewCell *)theCell atIndexPath:(NSIndexPath *)indexPath;
 @end
@@ -39,6 +43,31 @@
 }
 
 #pragma mark - Actions
+
+- (void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex
+{
+	if (alertView.tag==AnimationList_DeleteAlert)
+	{
+		if (buttonIndex==1)
+		{
+			[self.itemPendingDelete remove]; // This removes and saves.
+			self.itemPendingDelete = nil;
+		}
+		else if (buttonIndex==2)
+		{
+			[SVProgressHUD showWithStatus:@"Deleting..." maskType:SVProgressHUDMaskTypeGradient];
+			[ImgurIOS deleteImageWithHashToken:self.itemPendingDelete.deletehash deleteComplete:^(BOOL success) {
+				[self.itemPendingDelete remove]; // This removes and saves.
+				self.itemPendingDelete = nil;
+				[SVProgressHUD dismiss];
+			}];
+		}
+		else
+		{
+			self.itemPendingDelete = nil;
+		}
+	}
+}
 
 #pragma mark - Object Lifecycle
 
@@ -123,17 +152,10 @@
 {
     if (editingStyle == UITableViewCellEditingStyleDelete)
 	{
-        ImgurEntry *item = [[self fetchedResultsController] objectAtIndexPath:indexPath];
-		[SVProgressHUD showWithStatus:@"Deleting..." maskType:SVProgressHUDMaskTypeGradient];
-		[ImgurIOS deleteImageWithHashToken:item.deletehash deleteComplete:^(BOOL success) {
-			[SVProgressHUD dismiss];
-			id <NSFetchedResultsSectionInfo> sectionInfo = [self.fetchedResultsController sections][indexPath.section];
-			int vidCount = [sectionInfo numberOfObjects];
-			if (vidCount==0)
-			{
-				[self.tableView reloadData];
-			}
-		}];
+		self.itemPendingDelete = [self.fetchedResultsController objectAtIndexPath:indexPath];
+		UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Delete" message:@"Do you want to just remove it locally or delete from Imgur as well?" delegate:self cancelButtonTitle:@"Cancel" otherButtonTitles:@"Local only", @"Also delete imgur", nil];
+		alert.tag = AnimationList_DeleteAlert;
+		[alert show];
     }
 }
 

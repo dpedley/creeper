@@ -63,6 +63,7 @@
 		CD4E884616E56C53006333CB /* libsqlite3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = CD4E884516E56C53006333CB /* libsqlite3.dylib */; settings = {ATTRIBUTES = (Weak, ); }; };
 		CD4E884816E56C66006333CB /* Social.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CD4E884716E56C66006333CB /* Social.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
 		CD4E884D16E578CC006333CB /* CreeperSHKConfigurator.m in Sources */ = {isa = PBXBuildFile; fileRef = CD4E884C16E578CC006333CB /* CreeperSHKConfigurator.m */; };
+		CD4E885316E5CE2F006333CB /* ImgurViewTemplate.html in Resources */ = {isa = PBXBuildFile; fileRef = CD4E885216E5CE2F006333CB /* ImgurViewTemplate.html */; };
 		CD69A22816DF3EAA0045BD19 /* SceneCapture.m in Sources */ = {isa = PBXBuildFile; fileRef = CD69A22716DF3EAA0045BD19 /* SceneCapture.m */; };
 		CDEE01C916DF41920096DA0E /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CDEE01C816DF41920096DA0E /* AVFoundation.framework */; };
 		CDEE01CB16DF475A0096DA0E /* CoreVideo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CDEE01CA16DF475A0096DA0E /* CoreVideo.framework */; };
@@ -441,6 +442,9 @@
 		CD4E884716E56C66006333CB /* Social.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Social.framework; path = System/Library/Frameworks/Social.framework; sourceTree = SDKROOT; };
 		CD4E884B16E578CC006333CB /* CreeperSHKConfigurator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CreeperSHKConfigurator.h; sourceTree = "<group>"; };
 		CD4E884C16E578CC006333CB /* CreeperSHKConfigurator.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CreeperSHKConfigurator.m; sourceTree = "<group>"; };
+		CD4E884F16E5B1A1006333CB /* CreeperSHKConfigurator.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CreeperSHKConfigurator.m; sourceTree = "<group>"; };
+		CD4E885016E5B1A1006333CB /* ImgurAPICredentials.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ImgurAPICredentials.h; sourceTree = "<group>"; };
+		CD4E885216E5CE2F006333CB /* ImgurViewTemplate.html */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.html; path = ImgurViewTemplate.html; sourceTree = "<group>"; };
 		CD69A22616DF3EAA0045BD19 /* SceneCapture.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SceneCapture.h; sourceTree = "<group>"; };
 		CD69A22716DF3EAA0045BD19 /* SceneCapture.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SceneCapture.m; sourceTree = "<group>"; };
 		CDEE01C816DF41920096DA0E /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
@@ -484,6 +488,7 @@
 		CD08A49016DEBFC300E0D420 = {
 			isa = PBXGroup;
 			children = (
+				CD4E884E16E5B1A1006333CB /* credentials */,
 				CD3F74B216E3FA5500447E93 /* externals */,
 				CD08A4A416DEBFC300E0D420 /* creeper */,
 				CD08A49B16DEBFC300E0D420 /* Frameworks */,
@@ -675,6 +680,7 @@
 				CD3F748C16E2FE8F00447E93 /* ImgurCell.m */,
 				CD08A4BF16DEBFC300E0D420 /* ImgurWebViewController.h */,
 				CD08A4C016DEBFC300E0D420 /* ImgurWebViewController.m */,
+				CD4E885216E5CE2F006333CB /* ImgurViewTemplate.html */,
 			);
 			name = Imgur;
 			sourceTree = "<group>";
@@ -753,6 +759,15 @@
 				CD4E882E16E5696F006333CB /* libReadability.a */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		CD4E884E16E5B1A1006333CB /* credentials */ = {
+			isa = PBXGroup;
+			children = (
+				CD4E884F16E5B1A1006333CB /* CreeperSHKConfigurator.m */,
+				CD4E885016E5B1A1006333CB /* ImgurAPICredentials.h */,
+			);
+			path = credentials;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -1098,6 +1113,7 @@
 				CD3F74F416E3FB3000447E93 /* README.md in Resources */,
 				CD3F75C316E3FF0900447E93 /* LGPL.txt in Resources */,
 				CD3F75CC16E3FF9500447E93 /* LICENSE in Resources */,
+				CD4E885316E5CE2F006333CB /* ImgurViewTemplate.html in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -13,6 +13,7 @@
 
 @interface ImgurCell ()
 
+@property (nonatomic, strong) IBOutlet UIButton *deleteCover;
 @end
 
 @implementation ImgurCell
@@ -62,4 +63,37 @@
 	NSDate *creationDate = [NSDate dateWithTimeIntervalSince1970:epochTime];
 	self.timestampLabel.text = [NSString stringWithFormat:@"Created: %@", [creationDate timeAgo]];
 }
+
+-(void)willTransitionToState:(UITableViewCellStateMask)state
+{
+	switch (state)
+	{
+		case UITableViewCellStateDefaultMask:
+		{
+			[UIView animateWithDuration:0.2 animations:^{
+				[self.deleteCover setAlpha:0.0f];
+			}];
+		}
+			break;
+			
+		case UITableViewCellStateShowingEditControlMask:
+		{
+			[UIView animateWithDuration:0.2 animations:^{
+				[self.deleteCover setAlpha:1.0f];
+			}];
+		}
+			break;
+			
+//		case <#constant#>:
+//		{
+//			<#statements#>
+//		}
+			break;
+			
+		default:
+			break;
+	}
+	[super willTransitionToState:state];
+}
+
 @end

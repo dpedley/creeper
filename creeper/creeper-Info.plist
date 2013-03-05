@@ -36,6 +36,15 @@
 		<dict>
 			<key>Style</key>
 			<string>UIBarStyleDefault</string>
+			<key>TintColor</key>
+			<dict>
+				<key>Blue</key>
+				<real>0.0</real>
+				<key>Green</key>
+				<real>0.29411764705882354</real>
+				<key>Red</key>
+				<real>0.72156862745098038</real>
+			</dict>
 			<key>Translucent</key>
 			<false/>
 		</dict>

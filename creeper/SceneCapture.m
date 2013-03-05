@@ -27,6 +27,7 @@ static int maxFrameCount_Large = 16;
 @property (nonatomic, strong) IBOutlet UIProgressView *animationProgress;
 @property (nonatomic, strong) IBOutlet UILongPressGestureRecognizer *longPress;
 @property (nonatomic, strong) IBOutlet UIBarButtonItem *doneButton;
+@property (nonatomic, strong) IBOutlet UIBarButtonItem *trashButton;
 @property (nonatomic, strong) IBOutlet UIBarButtonItem *frameDisplay;
 @property (nonatomic, strong) IBOutlet UISegmentedControl *resolutionSelect;
 @property (nonatomic, assign) BOOL animationActive;
@@ -105,7 +106,24 @@ static int maxFrameCount_Large = 16;
 
 -(void)updateFrameDisplay
 {
-	[self.frameDisplay performSelectorOnMainThread:@selector(setTitle:) withObject:[NSString stringWithFormat:@"%@%d/%d", (self.frameCount<10)?@" ":@"", self.frameCount, self.maxFrameCount] waitUntilDone:NO];
+	if (![NSThread isMainThread])
+	{
+		[self performSelectorOnMainThread:@selector(updateFrameDisplay) withObject:nil waitUntilDone:NO];
+		return;
+	}
+	
+	if (self.frameCount==0)
+	{
+		[self.doneButton setEnabled:NO];
+		[self.trashButton setEnabled:NO];
+	}
+	else
+	{
+		[self.doneButton setEnabled:YES];
+		[self.trashButton setEnabled:YES];
+	}
+	
+	[self.frameDisplay setTitle:[NSString stringWithFormat:@"%@%d/%d", (self.frameCount<10)?@" ":@"", self.frameCount, self.maxFrameCount]];
 	if (self.frameCount < self.maxFrameCount)
 	{
 		[self.frameDisplay setEnabled:YES];
@@ -522,7 +540,8 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
 			[self.animationFrames addObject:image];
 			[self performSelectorOnMainThread:@selector(updateProgress) withObject:nil waitUntilDone:NO];
 			[self performSelectorInBackground:@selector(createAnimatedGifFromFrames) withObject:nil];
-			if (self.longPress.state!=UIGestureRecognizerStateBegan)
+			if ( (self.longPress.state!=UIGestureRecognizerStateBegan) &&
+				  (self.longPress.state!=UIGestureRecognizerStateChanged) )
 			{
 				self.animationActive = NO;
 			}

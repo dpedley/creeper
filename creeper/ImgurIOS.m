@@ -154,7 +154,6 @@
 			
 			ImgurEntry *newEntry = [ImgurEntry withAttributeNamed:@"deletehash" matchingValue:hashToken];
 			[newEntry removeFromCache:newEntry.deletehash];
-			[newEntry remove]; // This removes and saves.
 			completion(YES);
 		}
 		else
@@ -190,7 +189,6 @@
 			
 			ImgurEntry *newEntry = [ImgurEntry withAttributeNamed:@"deletehash" matchingValue:hashToken];
 			[newEntry removeFromCache:newEntry.deletehash];
-			[newEntry remove]; // This removes and saves.
 			completion(YES);
 		}
 		else
