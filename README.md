@@ -3,7 +3,8 @@ Creeper
 
 Creeper is an iPhone app to create animated gifs from video capture device. Imgur is used as the storage solution.
 
-Imgur api requires a API client id. You can obtain one at http://api.imgur.com and copy the id string provided into the ImgurAPICredentials.h located in the Imgur group in the project.
+Imgur api requires a API client id. You can obtain one at http://api.imgur.com and copy the id string provided into 
+the ImgurAPICredentials.h located in the Imgur group in the project.
 
 Compiling instructions.
 
@@ -25,3 +26,14 @@ PNGNQ (vwersion 1.1 as of this writing)
 1. download from http://sourceforge.net/projects/pngnq/files/latest/download
 2. extract to a temporary folder
 3. cp pngnq-1.1/src/neuquant32.[ch] externals/giflib-ios/giflib-ios/giflib-ios/
+
+Imagery
+=======
+
+The splash screen is an illustration of Eurasian Treecreepers by Henrik Grönvold. It is dated from 1904-1905. 
+Henrik passed away in 1940. This image became part of the the public domain in the European Union and non-EU 
+countries in 2010 with a copyright term of 70 years. I found the image and copyright information on wikimedia
+at the following url.
+
+http://commons.wikimedia.org/wiki/File:Tree_Creeper_Gr%C3%B6nvold.jpg
+
