@@ -3,7 +3,26 @@
 //  creeper
 //
 //  Created by Douglas Pedley on 2/27/13.
-//  Copyright (c) 2013 dpedley. All rights reserved.
+//
+//  Copyright (c) 2013 Doug Pedley. All rights reserved.
+//
+//  Redistribution and use in source and binary forms, with or without
+//  modification, are permitted provided that the following conditions are met:
+//
+//  1. Redistributions of source code must retain the above copyright notice, this
+//     list of conditions and the following disclaimer.
+//  2. Redistributions in binary form must reproduce the above copyright notice,
+//     this list of conditions and the following disclaimer in the documentation
+//     and/or other materials provided with the distribution.
+//
+//  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED
+//  WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+//  PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
+//  ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+//  TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+//  HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+//  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+//  POSSIBILITY OF SUCH DAMAGE.
 //
 
 #import "ImgurWebViewController.h"
@@ -78,7 +97,7 @@ static int ImgurWebView_ShareAlert = 100;
 {
 //	NSString *html = [webView stringByEvaluatingJavaScriptFromString:
 //					  @"document.body.innerHTML"];
-//	CLog(@"Mobile imgur:\n\n%@\n\n", html);
+//	DLog(@"Mobile imgur:\n\n%@\n\n", html);
 	[SVProgressHUD dismiss];
 }
 
@@ -133,7 +152,7 @@ static int ImgurWebView_ShareAlert = 100;
 		}
 		else
 		{
-			CLog(@"Done parsing");
+			DLog(@"Done parsing");
 			parsing = NO;
 		}
 	}
@@ -152,14 +171,14 @@ static int ImgurWebView_ShareAlert = 100;
 
 		if (!htmlTemplate)
 		{
-			CLog(@"No template");
+			DLog(@"No template");
 			[self.webView loadData:self.imgur.imageData MIMEType:@"image/gif" textEncodingName:@"utf-8" baseURL:[NSURL URLWithString:@"http://i.imgur.com"]];
 			return;
 		}
 		
 		NSString *pageParsed = [self template:htmlTemplate parseWithImgurEntry:self.imgur];
 		
-		CLog(@"Opening Data: %@", pageParsed);
+		DLog(@"Opening Data: %@", pageParsed);
 		NSData *pageData = [pageParsed dataUsingEncoding:NSUTF8StringEncoding];
 		
 		[self.webView loadData:pageData MIMEType:@"text/html" textEncodingName:@"utf-8" baseURL:[NSURL URLWithString:@"http://i.imgur.com"]];

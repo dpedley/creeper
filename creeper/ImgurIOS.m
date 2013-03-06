@@ -3,7 +3,26 @@
 //  creeper
 //
 //  Created by Douglas Pedley on 3/1/13.
-//  Copyright (c) 2013 dpedley. All rights reserved.
+//
+//  Copyright (c) 2013 Doug Pedley. All rights reserved.
+//
+//  Redistribution and use in source and binary forms, with or without
+//  modification, are permitted provided that the following conditions are met:
+//
+//  1. Redistributions of source code must retain the above copyright notice, this
+//     list of conditions and the following disclaimer.
+//  2. Redistributions in binary form must reproduce the above copyright notice,
+//     this list of conditions and the following disclaimer in the documentation
+//     and/or other materials provided with the distribution.
+//
+//  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED
+//  WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+//  PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
+//  ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+//  TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+//  HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+//  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+//  POSSIBILITY OF SUCH DAMAGE.
 //
 
 #import "ImgurIOS.h"
@@ -150,7 +169,7 @@
 		
 		if (imageGone)
 		{
-			CLog(@"Imgur Delete Response: %@", JSON);
+			DLog(@"Imgur Delete Response: %@", JSON);
 			
 			ImgurEntry *newEntry = [ImgurEntry withAttributeNamed:@"deletehash" matchingValue:hashToken];
 			[newEntry removeFromCache:newEntry.deletehash];
@@ -162,7 +181,7 @@
 		}
 		
 	} failure:^(NSURLRequest *request, NSHTTPURLResponse *response, NSError *error, id JSON) {
-		CLog(@"er res: %@", JSON);
+		DLog(@"er res: %@", JSON);
 		
 		NSNumber *status = [JSON objectForKey:@"status"];
 		NSNumber *success = [JSON objectForKey:@"success"];
@@ -185,7 +204,7 @@
 		
 		if (imageGone)
 		{
-			CLog(@"Imgur Delete Response: %@", JSON);
+			DLog(@"Imgur Delete Response: %@", JSON);
 			
 			ImgurEntry *newEntry = [ImgurEntry withAttributeNamed:@"deletehash" matchingValue:hashToken];
 			[newEntry removeFromCache:newEntry.deletehash];
@@ -237,7 +256,7 @@
 //						   img
 //						   ];
 	NSString *base64EncodedImage = [data base64EncodingWithLineLength:0];
-//	CLog(@"base64:\n\n%@\n\n", [self postValueEncoding:base64EncodedImage]);
+//	DLog(@"base64:\n\n%@\n\n", [self postValueEncoding:base64EncodedImage]);
 	NSString* post_data = [NSString stringWithFormat:@"%@type=base64&image=%@",
 						   optionalParams,
 						   [self postValueEncoding:base64EncodedImage]
@@ -270,7 +289,7 @@
 			
 			// Cache the image data for later
 			[newEntry saveImageData:data toCache:newEntry.deletehash];
-			CLog(@"Saved: %@", JSON);
+			DLog(@"Saved: %@", JSON);
 			completion(YES);
 		}
 		else
@@ -280,7 +299,7 @@
 		
 	} failure:^(NSURLRequest *request, NSHTTPURLResponse *response, NSError *error, id JSON) {
 		completion(NO);
-		CLog(@"er res: %@", JSON);
+		DLog(@"er res: %@", JSON);
 	}];
 	
 	[operation start];
