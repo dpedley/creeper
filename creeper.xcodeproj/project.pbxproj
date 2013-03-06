@@ -67,6 +67,7 @@
 		CD4E886216E6765A006333CB /* Icon.png in Resources */ = {isa = PBXBuildFile; fileRef = CD4E886016E6765A006333CB /* Icon.png */; };
 		CD4E886316E6765A006333CB /* Icon@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = CD4E886116E6765A006333CB /* Icon@2x.png */; };
 		CD69A22816DF3EAA0045BD19 /* SceneCapture.m in Sources */ = {isa = PBXBuildFile; fileRef = CD69A22716DF3EAA0045BD19 /* SceneCapture.m */; };
+		CDE9DD8D16E719A300F4B213 /* Crashlytics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CDE9DD8C16E719A300F4B213 /* Crashlytics.framework */; };
 		CDEE01C916DF41920096DA0E /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CDEE01C816DF41920096DA0E /* AVFoundation.framework */; };
 		CDEE01CB16DF475A0096DA0E /* CoreVideo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CDEE01CA16DF475A0096DA0E /* CoreVideo.framework */; };
 		CDEE01CD16DF478A0096DA0E /* CoreMedia.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CDEE01CC16DF478A0096DA0E /* CoreMedia.framework */; };
@@ -451,6 +452,7 @@
 		CD4E886116E6765A006333CB /* Icon@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Icon@2x.png"; sourceTree = "<group>"; };
 		CD69A22616DF3EAA0045BD19 /* SceneCapture.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SceneCapture.h; sourceTree = "<group>"; };
 		CD69A22716DF3EAA0045BD19 /* SceneCapture.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SceneCapture.m; sourceTree = "<group>"; };
+		CDE9DD8C16E719A300F4B213 /* Crashlytics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = Crashlytics.framework; sourceTree = "<group>"; };
 		CDEE01C816DF41920096DA0E /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
 		CDEE01CA16DF475A0096DA0E /* CoreVideo.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreVideo.framework; path = System/Library/Frameworks/CoreVideo.framework; sourceTree = SDKROOT; };
 		CDEE01CC16DF478A0096DA0E /* CoreMedia.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMedia.framework; path = System/Library/Frameworks/CoreMedia.framework; sourceTree = SDKROOT; };
@@ -483,6 +485,7 @@
 				CD08A49F16DEBFC300E0D420 /* Foundation.framework in Frameworks */,
 				CD08A4A116DEBFC300E0D420 /* CoreGraphics.framework in Frameworks */,
 				CD08A4A316DEBFC300E0D420 /* CoreData.framework in Frameworks */,
+				CDE9DD8D16E719A300F4B213 /* Crashlytics.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -511,6 +514,7 @@
 		CD08A49B16DEBFC300E0D420 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				CDE9DD8C16E719A300F4B213 /* Crashlytics.framework */,
 				CD4E884516E56C53006333CB /* libsqlite3.dylib */,
 				CD4E884316E56C30006333CB /* Accounts.framework */,
 				CD4E884116E56C24006333CB /* AdSupport.framework */,
@@ -786,6 +790,7 @@
 				CD08A49516DEBFC300E0D420 /* Sources */,
 				CD08A49616DEBFC300E0D420 /* Frameworks */,
 				CD08A49716DEBFC300E0D420 /* Resources */,
+				CDE9DD8B16E718D000F4B213 /* ShellScript */,
 			);
 			buildRules = (
 			);
@@ -1127,6 +1132,22 @@
 		};
 /* End PBXResourcesBuildPhase section */
 
+/* Begin PBXShellScriptBuildPhase section */
+		CDE9DD8B16E718D000F4B213 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "./Crashlytics.framework/run fd3f6967e102239a822d38d3308fd603225e8334";
+		};
+/* End PBXShellScriptBuildPhase section */
+
 /* Begin PBXSourcesBuildPhase section */
 		CD08A49516DEBFC300E0D420 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
@@ -1276,6 +1297,10 @@
 		CD08A4C516DEBFC300E0D420 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SRCROOT)\"",
+				);
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "creeper/creeper-Prefix.pch";
 				HEADER_SEARCH_PATHS = "externals/**";
@@ -1292,6 +1317,12 @@
 		CD08A4C616DEBFC300E0D420 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_IDENTITY = "iPhone Distribution";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution";
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SRCROOT)\"",
+				);
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "creeper/creeper-Prefix.pch";
 				HEADER_SEARCH_PATHS = "externals/**";
@@ -1301,6 +1332,8 @@
 					"-ObjC",
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE = "";
+				"PROVISIONING_PROFILE[sdk=iphoneos*]" = "";
 				WRAPPER_EXTENSION = app;
 			};
 			name = Release;

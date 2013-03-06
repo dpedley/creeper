@@ -10,7 +10,7 @@
 #import "ImgurIOS.h"
 #import "SceneCapture.h"
 
-static NSString *creeperPrefix = @"ccf8837e-83d0-11e2-b939-f23c91aec05e";
+static NSString *creeperPrefix = @"ccf8837e-83d0-11e2-b939-f23c91aec05e"; // Note this doubles as the app store SKU
 
 typedef enum
 {
