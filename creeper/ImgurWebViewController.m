@@ -62,7 +62,7 @@ static int ImgurWebView_ShareAlert = 100;
 			// Create the item to share (in this example, a url)
 			SHKItem *item = nil;
 			
-			if (buttonIndex==1)
+			if (buttonIndex==3)
 			{
 				item = [SHKItem file:self.imgur.imageData filename:@"creeper.gif" mimeType:@"image/gif" title:@"Creeper animation"];
 			}
@@ -88,7 +88,11 @@ static int ImgurWebView_ShareAlert = 100;
 
 -(IBAction)shareAction:(id)sender
 {
-	UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Utilities" message:@"Please choose an option below" delegate:self cancelButtonTitle:@"Cancel" otherButtonTitles:@"Open Browser", @"Copy Link", @"Share Original", @"Share Link", nil];
+	UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Utilities"
+													message:@"Please choose an option below"
+												   delegate:self
+										  cancelButtonTitle:@"Cancel"
+										  otherButtonTitles:@"Open Browser", @"Copy Link", @"Share Original", @"Share Link", nil];
 	alert.tag = ImgurWebView_ShareAlert;
 	[alert show];
 }
