@@ -483,6 +483,12 @@ static int maxFrameCount_Large = 16;
 
 -(IBAction)changeResolution:(id)sender
 {
+	UISegmentedControl *sendingControl = sender;
+	if (![self.resolutionSelect isEqual:sendingControl])
+	{
+		[self.resolutionSelect setSelectedSegmentIndex:sendingControl.selectedSegmentIndex];
+	}
+	
 	if (self.encoder || self.frameCount>0)
 	{
 		UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Change resolution" message:@"To change resolution will clear your current recording?" delegate:self cancelButtonTitle:@"No" otherButtonTitles:@"Yes", nil];
@@ -611,19 +617,25 @@ static int maxFrameCount_Large = 16;
 
 - (void)orientationChanged:(NSNotification *)notification
 {
-	[self performSelectorInBackground:@selector(setupCaptureSession) withObject:nil];
     UIDeviceOrientation deviceOrientation = [UIDevice currentDevice].orientation;
     if (UIDeviceOrientationIsLandscape(deviceOrientation) && !self.isShowingLandscapeView)
     {
         [self performSegueWithIdentifier:@"LandscapeCamera" sender:self];
         self.isShowingLandscapeView = YES;
+		[SVProgressHUD showWithStatus:@"Rotating video" maskType:SVProgressHUDMaskTypeGradient];
+		[self performSelectorInBackground:@selector(setupCaptureSession) withObject:nil];
+		[self updateFrameDisplay];
+		[self updateProgress];
     }
     else if (UIDeviceOrientationIsPortrait(deviceOrientation) && self.isShowingLandscapeView)
     {
         [self dismissViewControllerAnimated:YES completion:nil];
         self.isShowingLandscapeView = NO;
+		[SVProgressHUD showWithStatus:@"Rotating video" maskType:SVProgressHUDMaskTypeGradient];
+		[self performSelectorInBackground:@selector(setupCaptureSession) withObject:nil];
+		[self updateFrameDisplay];
+		[self updateProgress];
     }
-	[SVProgressHUD showWithStatus:@"Rotating video" maskType:SVProgressHUDMaskTypeGradient];
 }
 
 #pragma mark - The delegate
@@ -636,7 +648,7 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
 	self.previewFrameCount++;
 	if ((self.previewFrameCount%4)==1)
 	{
-		if ( (self.animationActive) && (self.frameCount < self.maxFrameCount) )
+		if ( (self.animationActive) ) // && (self.frameCount < self.maxFrameCount) )
 		{
 			self.frameCount++;
 			[self updateFrameDisplay];
@@ -659,6 +671,8 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
 
 
 @end
+
+#pragma mark -
 
 @implementation LandscapeSceneCapture
 
