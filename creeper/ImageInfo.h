@@ -31,6 +31,6 @@
 
 @interface ImageInfo : UIViewController
 
-@property (nonatomic, weak) SceneCapture *cc;
+@property (nonatomic, weak) SceneCapture *sceneCapture;
 
 @end

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="2.0" toolsVersion="3084" systemVersion="11G63" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" initialViewController="3">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="2.0" toolsVersion="3084" systemVersion="12C3012" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" initialViewController="3">
     <dependencies>
         <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="2083"/>
     </dependencies>
@@ -195,6 +195,119 @@
             </objects>
             <point key="canvasLocation" x="409" y="-308"/>
         </scene>
+        <!--Landscape Scene Capture-->
+        <scene sceneID="lgP-Tg-xV3">
+            <objects>
+                <viewController id="a3t-3H-ig7" customClass="LandscapeSceneCapture" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="S0g-xO-NpM">
+                        <rect key="frame" x="0.0" y="20" width="568" height="300"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                        <subviews>
+                            <label opaque="NO" clipsSubviews="YES" contentMode="left" text="" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="cPD-e8-7dc" userLabel="ScreenshotView">
+                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
+                                <nil key="highlightedColor"/>
+                                <connections>
+                                    <outletCollection property="gestureRecognizers" destination="cQW-gI-9QZ" appends="YES" id="4K8-Z6-PXU"/>
+                                </connections>
+                            </label>
+                            <segmentedControl opaque="NO" alpha="0.59999999999999998" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="top" segmentControlStyle="bar" selectedSegmentIndex="0" translatesAutoresizingMaskIntoConstraints="NO" id="Z6W-Wt-jhS">
+                                <constraints>
+                                    <constraint firstAttribute="width" constant="161" id="qwk-A1-LyX"/>
+                                </constraints>
+                                <segments>
+                                    <segment title="Small"/>
+                                    <segment title="Normal"/>
+                                </segments>
+                                <color key="tintColor" white="0.33333333333333331" alpha="1" colorSpace="calibratedWhite"/>
+                                <connections>
+                                    <action selector="changeResolution:" destination="a3t-3H-ig7" eventType="valueChanged" id="rpg-b4-mq3"/>
+                                </connections>
+                            </segmentedControl>
+                            <toolbar opaque="NO" clearsContextBeforeDrawing="NO" alpha="0.59999999999999998" contentMode="scaleToFill" barStyle="blackTranslucent" translatesAutoresizingMaskIntoConstraints="NO" id="ADN-3D-0QU">
+                                <items>
+                                    <barButtonItem systemItem="trash" id="eHB-WK-IVx">
+                                        <connections>
+                                            <action selector="clearRecordingAction:" destination="a3t-3H-ig7" id="KCV-LD-2y6"/>
+                                        </connections>
+                                    </barButtonItem>
+                                    <barButtonItem style="plain" systemItem="flexibleSpace" id="Ewc-A2-aC5"/>
+                                    <barButtonItem title="0/50" style="plain" id="Ws2-sl-OXJ">
+                                        <connections>
+                                            <action selector="frameAdvanceAction:" destination="a3t-3H-ig7" id="16W-22-ToH"/>
+                                        </connections>
+                                    </barButtonItem>
+                                    <barButtonItem style="plain" systemItem="flexibleSpace" id="owz-ab-GaP"/>
+                                    <barButtonItem style="done" systemItem="done" id="vxD-JL-K7m">
+                                        <connections>
+                                            <action selector="doneAction:" destination="a3t-3H-ig7" id="4ze-MF-gVr"/>
+                                        </connections>
+                                    </barButtonItem>
+                                </items>
+                            </toolbar>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="bCM-Eg-HLg" userLabel="Frame Step Button">
+                                <constraints>
+                                    <constraint firstAttribute="width" constant="334" id="ONP-PJ-gX6"/>
+                                </constraints>
+                                <fontDescription key="fontDescription" type="boldSystem" pointSize="15"/>
+                                <state key="normal">
+                                    <color key="titleColor" red="0.19607843459999999" green="0.30980393290000002" blue="0.52156865600000002" alpha="1" colorSpace="calibratedRGB"/>
+                                    <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
+                                </state>
+                                <state key="highlighted">
+                                    <color key="titleColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                                </state>
+                                <connections>
+                                    <action selector="frameAdvanceAction:" destination="a3t-3H-ig7" eventType="touchUpInside" id="RjQ-0k-964"/>
+                                </connections>
+                            </button>
+                            <progressView opaque="NO" alpha="0.59999999999999998" contentMode="scaleToFill" progress="0.5" translatesAutoresizingMaskIntoConstraints="NO" id="pCe-s1-oTC">
+                                <color key="progressTintColor" white="0.33333333333333331" alpha="1" colorSpace="calibratedWhite"/>
+                                <color key="trackTintColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
+                            </progressView>
+                        </subviews>
+                        <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
+                        <constraints>
+                            <constraint firstItem="pCe-s1-oTC" firstAttribute="centerY" secondItem="Z6W-Wt-jhS" secondAttribute="centerY" type="default" id="12u-RL-kUC"/>
+                            <constraint firstItem="bCM-Eg-HLg" firstAttribute="top" secondItem="ADN-3D-0QU" secondAttribute="top" type="default" id="Aqw-fv-BAq"/>
+                            <constraint firstItem="cPD-e8-7dc" firstAttribute="bottom" secondItem="S0g-xO-NpM" secondAttribute="bottom" type="default" id="C7q-0t-eWm"/>
+                            <constraint firstItem="ADN-3D-0QU" firstAttribute="centerX" secondItem="bCM-Eg-HLg" secondAttribute="centerX" type="default" id="EmJ-eJ-wqK"/>
+                            <constraint firstItem="Z6W-Wt-jhS" firstAttribute="leading" secondItem="pCe-s1-oTC" secondAttribute="trailing" constant="8" symbolic="YES" type="default" id="LKT-ot-U4H"/>
+                            <constraint firstItem="cPD-e8-7dc" firstAttribute="top" secondItem="S0g-xO-NpM" secondAttribute="top" type="default" id="Loo-RV-Tme"/>
+                            <constraint firstItem="cPD-e8-7dc" firstAttribute="leading" secondItem="S0g-xO-NpM" secondAttribute="leading" type="default" id="Q0f-Od-Gr7"/>
+                            <constraint firstAttribute="trailing" secondItem="Z6W-Wt-jhS" secondAttribute="trailing" constant="20" symbolic="YES" type="default" id="Q7I-m6-zmg"/>
+                            <constraint firstItem="ADN-3D-0QU" firstAttribute="trailing" secondItem="S0g-xO-NpM" secondAttribute="trailing" type="default" id="T0m-Qc-dIt"/>
+                            <constraint firstItem="ADN-3D-0QU" firstAttribute="bottom" secondItem="S0g-xO-NpM" secondAttribute="bottom" type="default" id="UKh-PN-QcW"/>
+                            <constraint firstItem="cPD-e8-7dc" firstAttribute="trailing" secondItem="S0g-xO-NpM" secondAttribute="trailing" type="default" id="WUC-Ca-cvL"/>
+                            <constraint firstItem="pCe-s1-oTC" firstAttribute="leading" secondItem="S0g-xO-NpM" secondAttribute="leading" constant="20" symbolic="YES" type="default" id="aaI-I5-SFw"/>
+                            <constraint firstItem="bCM-Eg-HLg" firstAttribute="bottom" secondItem="S0g-xO-NpM" secondAttribute="bottom" type="default" id="bhg-hS-j0W"/>
+                            <constraint firstItem="Z6W-Wt-jhS" firstAttribute="top" secondItem="S0g-xO-NpM" secondAttribute="top" constant="20" symbolic="YES" type="default" id="msR-IR-FsH"/>
+                            <constraint firstItem="ADN-3D-0QU" firstAttribute="leading" secondItem="S0g-xO-NpM" secondAttribute="leading" type="default" id="nkc-TY-aMa"/>
+                        </constraints>
+                        <simulatedOrientationMetrics key="simulatedOrientationMetrics" orientation="landscapeRight"/>
+                    </view>
+                    <toolbarItems/>
+                    <nil key="simulatedTopBarMetrics"/>
+                    <simulatedOrientationMetrics key="simulatedOrientationMetrics" orientation="landscapeRight"/>
+                    <connections>
+                        <outlet property="animationProgress" destination="pCe-s1-oTC" id="IBR-0a-aJW"/>
+                        <outlet property="doneButton" destination="vxD-JL-K7m" id="zOp-y5-4e3"/>
+                        <outlet property="frameDisplay" destination="Ws2-sl-OXJ" id="c9p-Tt-mhs"/>
+                        <outlet property="longPress" destination="cQW-gI-9QZ" id="2I9-Qw-BN6"/>
+                        <outlet property="resolutionSelect" destination="Z6W-Wt-jhS" id="AkD-zL-xmI"/>
+                        <outlet property="screenShotView" destination="cPD-e8-7dc" id="znx-UG-x34"/>
+                        <outlet property="trashButton" destination="eHB-WK-IVx" id="znc-ep-MWZ"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="qb3-kT-333" userLabel="First Responder" sceneMemberID="firstResponder"/>
+                <pongPressGestureRecognizer allowableMovement="10" minimumPressDuration="0.5" id="cQW-gI-9QZ">
+                    <connections>
+                        <action selector="recordActionStateChange:" destination="a3t-3H-ig7" id="XWk-Bc-Yrf"/>
+                    </connections>
+                </pongPressGestureRecognizer>
+            </objects>
+            <point key="canvasLocation" x="1178" y="-1170"/>
+        </scene>
         <!--Scene Capture - Creep Cam-->
         <scene sceneID="5kM-TP-SWj">
             <objects>
@@ -285,6 +398,7 @@
                         <outlet property="resolutionSelect" destination="QgI-AT-M9A" id="hAk-3Y-WeT"/>
                         <outlet property="screenShotView" destination="49W-j9-Jde" id="Ig1-Qg-DzQ"/>
                         <outlet property="trashButton" destination="8Hp-l6-V4i" id="sEG-oN-cNq"/>
+                        <segue destination="a3t-3H-ig7" kind="modal" identifier="LandscapeCamera" modalTransitionStyle="crossDissolve" id="haM-bG-5tE"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="jWd-nb-940" userLabel="First Responder" sceneMemberID="firstResponder"/>
@@ -386,7 +500,7 @@
                     </connections>
                 </barButtonItem>
             </objects>
-            <point key="canvasLocation" x="1289" y="-683"/>
+            <point key="canvasLocation" x="1388" y="-661"/>
         </scene>
         <!--Imgur Web View Controller - Detail-->
         <scene sceneID="24">
@@ -467,6 +581,23 @@
             <relationships>
                 <relationship kind="action" name="shareAction:"/>
                 <relationship kind="outlet" name="webView" candidateClass="UIWebView"/>
+            </relationships>
+        </class>
+        <class className="LandscapeSceneCapture" superclassName="UIViewController">
+            <source key="sourceIdentifier" type="project" relativePath="./Classes/LandscapeSceneCapture.h"/>
+            <relationships>
+                <relationship kind="action" name="changeResolution:"/>
+                <relationship kind="action" name="clearRecordingAction:"/>
+                <relationship kind="action" name="doneAction:"/>
+                <relationship kind="action" name="frameAdvanceAction:"/>
+                <relationship kind="action" name="recordActionStateChange:"/>
+                <relationship kind="outlet" name="animationProgress" candidateClass="UIProgressView"/>
+                <relationship kind="outlet" name="doneButton" candidateClass="UIBarButtonItem"/>
+                <relationship kind="outlet" name="frameDisplay" candidateClass="UIBarButtonItem"/>
+                <relationship kind="outlet" name="longPress" candidateClass="UILongPressGestureRecognizer"/>
+                <relationship kind="outlet" name="resolutionSelect" candidateClass="UISegmentedControl"/>
+                <relationship kind="outlet" name="screenShotView" candidateClass="UIView"/>
+                <relationship kind="outlet" name="trashButton" candidateClass="UIBarButtonItem"/>
             </relationships>
         </class>
         <class className="NSLayoutConstraint" superclassName="NSObject">

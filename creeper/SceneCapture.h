@@ -1,5 +1,5 @@
 //
-//  CreepCam.h
+//  SceneCapture.h
 //  creeper
 //
 //  Created by Douglas Pedley on 2/27/13.
@@ -35,5 +35,25 @@
 @property (nonatomic, readonly) NSData *imageData;
 
 -(void)completeEncoding;
+
+@end
+
+@interface LandscapeSceneCapture : UIViewController
+
+@property (nonatomic, weak) SceneCapture *sceneCapture;
+
+@property (nonatomic, strong) IBOutlet UIView *screenShotView;
+@property (nonatomic, strong) IBOutlet UIProgressView *animationProgress;
+@property (nonatomic, strong) IBOutlet UILongPressGestureRecognizer *longPress;
+@property (nonatomic, strong) IBOutlet UIBarButtonItem *doneButton;
+@property (nonatomic, strong) IBOutlet UIBarButtonItem *trashButton;
+@property (nonatomic, strong) IBOutlet UIBarButtonItem *frameDisplay;
+@property (nonatomic, strong) IBOutlet UISegmentedControl *resolutionSelect;
+
+-(IBAction)recordActionStateChange:(id)sender;
+-(IBAction)clearRecordingAction:(id)sender;
+-(IBAction)changeResolution:(id)sender;
+-(IBAction)frameAdvanceAction:(id)sender;
+-(IBAction)doneAction:(id)sender;
 
 @end

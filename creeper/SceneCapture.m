@@ -1,5 +1,5 @@
 //
-//  CreepCam.m
+//  SceneCapture.m
 //  creeper
 //
 //  Created by Douglas Pedley on 2/27/13.
@@ -31,6 +31,8 @@
 #import <giflib/GifEncode.h>
 #import <giflib/giflib_ios.h>
 #import "ImageInfo.h"
+#import <objc/message.h>
+
 
 #define RGB(r,g,b) [UIColor colorWithRed: ((double)r / 255.0) green: ((double)g / 255.0) blue: ((double)b / 255.0) alpha:1.0]
 static int SceneCapture_ClearAlert = 404;
@@ -57,6 +59,14 @@ static int maxFrameCount_Large = 16;
 @property (nonatomic, readonly) int maxFrameCount;
 @property (nonatomic, strong) UIColor *goColor;
 @property (nonatomic, strong) UIColor *stopColor;
+@property (nonatomic, assign) BOOL isShowingLandscapeView;
+
+@property (nonatomic, readonly) UIView *orientScreenShotView;
+@property (nonatomic, readonly) UIProgressView *orientAnimationProgress;
+@property (nonatomic, readonly) UIBarButtonItem *orientDoneButton;
+@property (nonatomic, readonly) UIBarButtonItem *orientTrashButton;
+@property (nonatomic, readonly) UIBarButtonItem *orientFrameDisplay;
+@property (nonatomic, readonly) UISegmentedControl *orientResolutionSelect;
 
 -(IBAction)recordActionStateChange:(id)sender;
 -(IBAction)clearRecordingAction:(id)sender;
@@ -93,7 +103,7 @@ static int maxFrameCount_Large = 16;
 @dynamic maxFrameCount;
 -(int)maxFrameCount
 {
-	if (self.resolutionSelect.selectedSegmentIndex==1)
+	if (self.orientResolutionSelect.selectedSegmentIndex==1)
 	{
 		return maxFrameCount_Large;
 	}
@@ -107,7 +117,12 @@ static int maxFrameCount_Large = 16;
     if ([[segue identifier] isEqualToString:@"ShowInfoSegue"])
 	{
         ImageInfo *ii = [segue destinationViewController];
-		ii.cc = self;
+		ii.sceneCapture = self;
+    }
+    else if ([[segue identifier] isEqualToString:@"LandscapeCamera"])
+	{
+        LandscapeSceneCapture *lc = [segue destinationViewController];
+		lc.sceneCapture = self;
     }
 }
 
@@ -133,31 +148,31 @@ static int maxFrameCount_Large = 16;
 	
 	if (self.frameCount==0)
 	{
-		[self.doneButton setEnabled:NO];
-		[self.trashButton setEnabled:NO];
+		[self.orientDoneButton setEnabled:NO];
+		[self.orientTrashButton setEnabled:NO];
 	}
 	else
 	{
-		[self.doneButton setEnabled:YES];
-		[self.trashButton setEnabled:YES];
+		[self.orientDoneButton setEnabled:YES];
+		[self.orientTrashButton setEnabled:YES];
 	}
 	
-	[self.frameDisplay setTitle:[NSString stringWithFormat:@"%@%d/%d", (self.frameCount<10)?@" ":@"", self.frameCount, self.maxFrameCount]];
+	[self.orientFrameDisplay setTitle:[NSString stringWithFormat:@"%@%d/%d", (self.frameCount<10)?@" ":@"", self.frameCount, self.maxFrameCount]];
 	if (self.frameCount < self.maxFrameCount)
 	{
-		[self.frameDisplay setEnabled:YES];
-		[self.frameDisplay setTintColor:self.goColor];
+		[self.orientFrameDisplay setEnabled:YES];
+		[self.orientFrameDisplay setTintColor:self.goColor];
 	}
 	else
 	{
-		[self.frameDisplay setEnabled:NO];
-		[self.frameDisplay setTintColor:self.stopColor];
+		[self.orientFrameDisplay setEnabled:NO];
+		[self.orientFrameDisplay setTintColor:self.stopColor];
 	}
 }
 
 -(void)updateProgress
 {
-	[self.animationProgress setProgress: ( (double)self.frameCount / (double)self.maxFrameCount ) animated:NO];
+	[self.orientAnimationProgress setProgress: ( (double)self.frameCount / (double)self.maxFrameCount ) animated:NO];
 }
 
 - (void)setupCaptureSession
@@ -181,7 +196,7 @@ static int maxFrameCount_Large = 16;
     // Create the session
     self.session = [[AVCaptureSession alloc] init];
 
-	if (self.resolutionSelect.selectedSegmentIndex==1)
+	if (self.orientResolutionSelect.selectedSegmentIndex==1)
 	{
 		self.session.sessionPreset = AVCaptureSessionPresetMedium;
 	}
@@ -270,10 +285,11 @@ static int maxFrameCount_Large = 16;
 		[self.session startRunning];
 		
 		// create a preview layer to show the output from the camera
-		CGRect frm = self.screenShotView.bounds;
-		self.screenShotView.frame = frm;
+		UIView *ss = self.orientScreenShotView;
+		CGRect frm = ss.bounds;
+		ss.frame = frm;
 		self.previewLayer = [AVCaptureVideoPreviewLayer layerWithSession:self.session];
-		[self.previewLayer setVideoGravity:AVLayerVideoGravityResizeAspect];
+		[self.previewLayer setVideoGravity:AVLayerVideoGravityResizeAspectFill];
 		self.previewLayer.frame = CGRectMake(0, 0, frm.size.width, frm.size.height);
 		
 		AVCaptureConnection *previewLayerConnection=self.previewLayer.connection;
@@ -281,7 +297,7 @@ static int maxFrameCount_Large = 16;
 		{
 			[previewLayerConnection setVideoOrientation:conn.videoOrientation];
 		}
-		[self.screenShotView.layer addSublayer:self.previewLayer];
+		[ss.layer addSublayer:self.previewLayer];
 	}
 	[SVProgressHUD dismiss];
 }
@@ -407,7 +423,7 @@ static int maxFrameCount_Large = 16;
 		{
 			self.encoder = nil;
 			[self.animationFrames removeAllObjects];
-			[self.animationProgress setProgress:0.0 animated:YES];
+			[self.orientAnimationProgress setProgress:0.0 animated:YES];
 			self.frameCount = 0;
 			[self updateFrameDisplay];
 		}
@@ -422,7 +438,7 @@ static int maxFrameCount_Large = 16;
 		{
 			self.encoder = nil;
 			[self.animationFrames removeAllObjects];
-			[self.animationProgress setProgress:0.0 animated:YES];
+			[self.orientAnimationProgress setProgress:0.0 animated:YES];
 			self.frameCount = 0;
 			[SVProgressHUD showWithStatus:@"Changing resolution" maskType:SVProgressHUDMaskTypeGradient];
 			[self performSelectorInBackground:@selector(setupCaptureSession) withObject:nil];
@@ -430,7 +446,7 @@ static int maxFrameCount_Large = 16;
 		else
 		{
 			// Cancelled
-			[self.resolutionSelect setSelectedSegmentIndex:(self.resolutionSelect==0)?1:0];
+			[self.orientResolutionSelect setSelectedSegmentIndex:(self.orientResolutionSelect==0)?1:0];
 		}
 	}
 	else if (alertView.tag==SceneCapture_RotationAlert)
@@ -439,7 +455,7 @@ static int maxFrameCount_Large = 16;
 		{
 			self.encoder = nil;
 			[self.animationFrames removeAllObjects];
-			[self.animationProgress setProgress:0.0 animated:YES];
+			[self.orientAnimationProgress setProgress:0.0 animated:YES];
 			self.frameCount = 0;
 			[SVProgressHUD showWithStatus:@"Rotating video" maskType:SVProgressHUDMaskTypeGradient];
 			[self performSelectorInBackground:@selector(setupCaptureSession) withObject:nil];
@@ -484,6 +500,7 @@ static int maxFrameCount_Large = 16;
 
 #pragma mark - Object lifecycle
 
+/*
 -(void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation
 {
 	if (self.encoder || self.frameCount>0)
@@ -498,6 +515,7 @@ static int maxFrameCount_Large = 16;
 		[self performSelectorInBackground:@selector(setupCaptureSession) withObject:nil];
 	}
 }
+*/
 
 - (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
 {
@@ -512,7 +530,7 @@ static int maxFrameCount_Large = 16;
 {
     [super viewDidLoad];
 
-	[self.animationProgress setProgress:0.0];
+	[self.orientAnimationProgress setProgress:0.0];
 	self.animationActive = NO;
 	self.animationFrames = [NSMutableArray array];
 	self.goColor = RGB(27,188,43);
@@ -523,7 +541,14 @@ static int maxFrameCount_Large = 16;
 -(void)viewDidAppear:(BOOL)animated
 {
 	[super viewDidAppear:animated];
-	
+
+	self.isShowingLandscapeView = NO;
+    [[UIDevice currentDevice] beginGeneratingDeviceOrientationNotifications];
+    [[NSNotificationCenter defaultCenter] addObserver:self
+											 selector:@selector(orientationChanged:)
+												 name:UIDeviceOrientationDidChangeNotification
+											   object:nil];
+
 	if (!self.session)
 	{
 		[SVProgressHUD showWithStatus:@"Setting up capture" maskType:SVProgressHUDMaskTypeGradient];
@@ -535,6 +560,59 @@ static int maxFrameCount_Large = 16;
 {
     [super didReceiveMemoryWarning];
     // Dispose of any resources that can be recreated.
+}
+
+#pragma mark - Orientation
+
+-(id)orient:(SEL)propSelector
+{
+	if (self.isShowingLandscapeView)
+	{
+		if ([self.presentedViewController isKindOfClass:[LandscapeSceneCapture class]])
+		{
+			if ([self.presentedViewController respondsToSelector:propSelector])
+			{
+				return objc_msgSend(self.presentedViewController, propSelector);
+			}
+		}
+	}
+	
+	if ([self respondsToSelector:propSelector])
+	{
+		return objc_msgSend(self, propSelector);
+	}
+	
+	return NULL;
+}
+
+@dynamic orientScreenShotView;
+-(UIView *)orientScreenShotView { return [self orient:@selector(screenShotView)]; }
+@dynamic orientAnimationProgress;
+-(UIProgressView *)orientAnimationProgress { return [self orient:@selector(animationProgress)]; }
+@dynamic orientDoneButton;
+-(UIBarButtonItem *)orientDoneButton { return [self orient:@selector(doneButton)]; }
+@dynamic orientTrashButton;
+-(UIBarButtonItem *)orientTrashButton { return [self orient:@selector(trashButton)]; }
+@dynamic orientFrameDisplay;
+-(UIBarButtonItem *)orientFrameDisplay { return [self orient:@selector(frameDisplay)]; }
+@dynamic orientResolutionSelect;
+-(UISegmentedControl *)orientResolutionSelect { return [self orient:@selector(resolutionSelect)]; }
+
+- (void)orientationChanged:(NSNotification *)notification
+{
+	[self performSelectorInBackground:@selector(setupCaptureSession) withObject:nil];
+    UIDeviceOrientation deviceOrientation = [UIDevice currentDevice].orientation;
+    if (UIDeviceOrientationIsLandscape(deviceOrientation) && !self.isShowingLandscapeView)
+    {
+        [self performSegueWithIdentifier:@"LandscapeCamera" sender:self];
+        self.isShowingLandscapeView = YES;
+    }
+    else if (UIDeviceOrientationIsPortrait(deviceOrientation) && self.isShowingLandscapeView)
+    {
+        [self dismissViewControllerAnimated:YES completion:nil];
+        self.isShowingLandscapeView = NO;
+    }
+	[SVProgressHUD showWithStatus:@"Rotating video" maskType:SVProgressHUDMaskTypeGradient];
 }
 
 #pragma mark - The delegate
@@ -568,5 +646,20 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
 
 }
 
+
+@end
+
+@implementation LandscapeSceneCapture
+
+-(IBAction)recordActionStateChange:(id)sender { [self.sceneCapture recordActionStateChange:sender]; }
+-(IBAction)clearRecordingAction:(id)sender    { [self.sceneCapture clearRecordingAction:sender]; }
+-(IBAction)changeResolution:(id)sender        { [self.sceneCapture changeResolution:sender]; }
+-(IBAction)frameAdvanceAction:(id)sender      { [self.sceneCapture frameAdvanceAction:sender]; }
+-(IBAction)doneAction:(id)sender
+{
+	[self dismissViewControllerAnimated:YES completion:nil];
+	self.sceneCapture.isShowingLandscapeView = NO;
+	[self.sceneCapture performSegueWithIdentifier:@"ShowInfoSegue" sender:sender];
+}
 
 @end

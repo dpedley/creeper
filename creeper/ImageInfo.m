@@ -55,8 +55,8 @@ static NSString *creeperPrefix = @"ccf8837e-83d0-11e2-b939-f23c91aec05e"; // Not
 
 -(void)saveWhenReady
 {
-	int workload = [self.cc encodingWorkload];
-	int frameCount = self.cc.frameCount;
+	int workload = [self.sceneCapture encodingWorkload];
+	int frameCount = self.sceneCapture.frameCount;
 	if (workload>0)
 	{
 		[SVProgressHUD showProgress:1.00 - ((double)frameCount / (double) workload)
@@ -66,9 +66,9 @@ static NSString *creeperPrefix = @"ccf8837e-83d0-11e2-b939-f23c91aec05e"; // Not
 		return;
 	}
 	
-	[self.cc completeEncoding];
+	[self.sceneCapture completeEncoding];
 	[SVProgressHUD showWithStatus:@"Uploading animation" maskType:SVProgressHUDMaskTypeGradient];
-	[ImgurIOS uploadImageData:self.cc.imageData
+	[ImgurIOS uploadImageData:self.sceneCapture.imageData
 						 name:[self uniqueName]
 						title:self.titleEdit.text
 				  description:self.descriptionEdit.text

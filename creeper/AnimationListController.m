@@ -1,5 +1,5 @@
 //
-//  MasterViewController.m
+//  AnimationListController.m
 //  creeper
 //
 //  Created by Douglas Pedley on 2/27/13.
