@@ -211,7 +211,7 @@
                                     <outletCollection property="gestureRecognizers" destination="cQW-gI-9QZ" appends="YES" id="4K8-Z6-PXU"/>
                                 </connections>
                             </label>
-                            <segmentedControl opaque="NO" alpha="0.59999999999999998" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="top" segmentControlStyle="bar" selectedSegmentIndex="0" translatesAutoresizingMaskIntoConstraints="NO" id="Z6W-Wt-jhS">
+                            <segmentedControl opaque="NO" alpha="0.60000000000000009" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="top" segmentControlStyle="bar" selectedSegmentIndex="0" translatesAutoresizingMaskIntoConstraints="NO" id="Z6W-Wt-jhS">
                                 <constraints>
                                     <constraint firstAttribute="width" constant="161" id="qwk-A1-LyX"/>
                                 </constraints>
@@ -219,12 +219,12 @@
                                     <segment title="Small"/>
                                     <segment title="Normal"/>
                                 </segments>
-                                <color key="tintColor" white="0.33333333333333331" alpha="1" colorSpace="calibratedWhite"/>
+                                <color key="tintColor" red="0.71963205649999995" green="0.29334677419999999" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
                                 <connections>
                                     <action selector="changeResolution:" destination="a3t-3H-ig7" eventType="valueChanged" id="rpg-b4-mq3"/>
                                 </connections>
                             </segmentedControl>
-                            <toolbar opaque="NO" clearsContextBeforeDrawing="NO" alpha="0.59999999999999998" contentMode="scaleToFill" barStyle="blackTranslucent" translatesAutoresizingMaskIntoConstraints="NO" id="ADN-3D-0QU">
+                            <toolbar opaque="NO" clearsContextBeforeDrawing="NO" alpha="0.60000000000000009" contentMode="scaleToFill" barStyle="blackTranslucent" translatesAutoresizingMaskIntoConstraints="NO" id="ADN-3D-0QU">
                                 <items>
                                     <barButtonItem systemItem="trash" id="eHB-WK-IVx">
                                         <connections>
@@ -244,6 +244,7 @@
                                         </connections>
                                     </barButtonItem>
                                 </items>
+                                <color key="tintColor" red="0.71963205649999995" green="0.29334677419999999" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
                             </toolbar>
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="bCM-Eg-HLg" userLabel="Frame Step Button">
                                 <constraints>
@@ -261,19 +262,20 @@
                                     <action selector="frameAdvanceAction:" destination="a3t-3H-ig7" eventType="touchUpInside" id="RjQ-0k-964"/>
                                 </connections>
                             </button>
-                            <progressView opaque="NO" alpha="0.59999999999999998" contentMode="scaleToFill" progress="0.5" translatesAutoresizingMaskIntoConstraints="NO" id="pCe-s1-oTC">
-                                <color key="progressTintColor" white="0.33333333333333331" alpha="1" colorSpace="calibratedWhite"/>
+                            <progressView opaque="NO" alpha="0.80000000000000004" contentMode="scaleToFill" progress="0.5" translatesAutoresizingMaskIntoConstraints="NO" id="pCe-s1-oTC">
+                                <color key="progressTintColor" red="0.71963205649999995" green="0.29334677419999999" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
                                 <color key="trackTintColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
                             </progressView>
                         </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
                         <constraints>
-                            <constraint firstItem="pCe-s1-oTC" firstAttribute="centerY" secondItem="Z6W-Wt-jhS" secondAttribute="centerY" type="default" id="12u-RL-kUC"/>
+                            <constraint firstItem="Z6W-Wt-jhS" firstAttribute="centerY" secondItem="pCe-s1-oTC" secondAttribute="centerY" type="default" id="8q6-RB-Zl3"/>
                             <constraint firstItem="bCM-Eg-HLg" firstAttribute="top" secondItem="ADN-3D-0QU" secondAttribute="top" type="default" id="Aqw-fv-BAq"/>
                             <constraint firstItem="cPD-e8-7dc" firstAttribute="bottom" secondItem="S0g-xO-NpM" secondAttribute="bottom" type="default" id="C7q-0t-eWm"/>
                             <constraint firstItem="ADN-3D-0QU" firstAttribute="centerX" secondItem="bCM-Eg-HLg" secondAttribute="centerX" type="default" id="EmJ-eJ-wqK"/>
                             <constraint firstItem="Z6W-Wt-jhS" firstAttribute="leading" secondItem="pCe-s1-oTC" secondAttribute="trailing" constant="8" symbolic="YES" type="default" id="LKT-ot-U4H"/>
                             <constraint firstItem="cPD-e8-7dc" firstAttribute="top" secondItem="S0g-xO-NpM" secondAttribute="top" type="default" id="Loo-RV-Tme"/>
+                            <constraint firstItem="Z6W-Wt-jhS" firstAttribute="top" secondItem="S0g-xO-NpM" secondAttribute="top" constant="4" id="NrE-4c-BkS"/>
                             <constraint firstItem="cPD-e8-7dc" firstAttribute="leading" secondItem="S0g-xO-NpM" secondAttribute="leading" type="default" id="Q0f-Od-Gr7"/>
                             <constraint firstAttribute="trailing" secondItem="Z6W-Wt-jhS" secondAttribute="trailing" constant="20" symbolic="YES" type="default" id="Q7I-m6-zmg"/>
                             <constraint firstItem="ADN-3D-0QU" firstAttribute="trailing" secondItem="S0g-xO-NpM" secondAttribute="trailing" type="default" id="T0m-Qc-dIt"/>
@@ -281,7 +283,6 @@
                             <constraint firstItem="cPD-e8-7dc" firstAttribute="trailing" secondItem="S0g-xO-NpM" secondAttribute="trailing" type="default" id="WUC-Ca-cvL"/>
                             <constraint firstItem="pCe-s1-oTC" firstAttribute="leading" secondItem="S0g-xO-NpM" secondAttribute="leading" constant="20" symbolic="YES" type="default" id="aaI-I5-SFw"/>
                             <constraint firstItem="bCM-Eg-HLg" firstAttribute="bottom" secondItem="S0g-xO-NpM" secondAttribute="bottom" type="default" id="bhg-hS-j0W"/>
-                            <constraint firstItem="Z6W-Wt-jhS" firstAttribute="top" secondItem="S0g-xO-NpM" secondAttribute="top" constant="20" symbolic="YES" type="default" id="msR-IR-FsH"/>
                             <constraint firstItem="ADN-3D-0QU" firstAttribute="leading" secondItem="S0g-xO-NpM" secondAttribute="leading" type="default" id="nkc-TY-aMa"/>
                         </constraints>
                         <simulatedOrientationMetrics key="simulatedOrientationMetrics" orientation="landscapeRight"/>

@@ -63,6 +63,7 @@ static int maxFrameCount_Large = 16;
 
 @property (nonatomic, readonly) UIView *orientScreenShotView;
 @property (nonatomic, readonly) UIProgressView *orientAnimationProgress;
+@property (nonatomic, readonly) UILongPressGestureRecognizer *orientLongPress;
 @property (nonatomic, readonly) UIBarButtonItem *orientDoneButton;
 @property (nonatomic, readonly) UIBarButtonItem *orientTrashButton;
 @property (nonatomic, readonly) UIBarButtonItem *orientFrameDisplay;
@@ -116,6 +117,8 @@ static int maxFrameCount_Large = 16;
 {
     if ([[segue identifier] isEqualToString:@"ShowInfoSegue"])
 	{
+		self.session = nil;
+		[[NSNotificationCenter defaultCenter] removeObserver:self];
         ImageInfo *ii = [segue destinationViewController];
 		ii.sceneCapture = self;
     }
@@ -396,7 +399,7 @@ static int maxFrameCount_Large = 16;
 
 -(IBAction)recordActionStateChange:(id)sender
 {
-	switch (self.longPress.state)
+	switch (self.orientLongPress.state)
 	{
 		case UIGestureRecognizerStateBegan:
 		{
@@ -517,6 +520,11 @@ static int maxFrameCount_Large = 16;
 }
 */
 
+-(void)dealloc
+{
+	[[NSNotificationCenter defaultCenter] removeObserver:self];
+}
+
 - (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
 {
     self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
@@ -530,7 +538,7 @@ static int maxFrameCount_Large = 16;
 {
     [super viewDidLoad];
 
-	[self.orientAnimationProgress setProgress:0.0];
+	[self.animationProgress setProgress:0.0];
 	self.animationActive = NO;
 	self.animationFrames = [NSMutableArray array];
 	self.goColor = RGB(27,188,43);
@@ -555,6 +563,7 @@ static int maxFrameCount_Large = 16;
 		[self performSelectorInBackground:@selector(setupCaptureSession) withObject:nil];
 	}
 }
+
 
 - (void)didReceiveMemoryWarning
 {
@@ -587,6 +596,8 @@ static int maxFrameCount_Large = 16;
 
 @dynamic orientScreenShotView;
 -(UIView *)orientScreenShotView { return [self orient:@selector(screenShotView)]; }
+@dynamic orientLongPress;
+-(UILongPressGestureRecognizer *)orientLongPress { return [self orient:@selector(longPress)]; }
 @dynamic orientAnimationProgress;
 -(UIProgressView *)orientAnimationProgress { return [self orient:@selector(animationProgress)]; }
 @dynamic orientDoneButton;
@@ -629,15 +640,15 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
 		{
 			self.frameCount++;
 			[self updateFrameDisplay];
-			DLog(@"Capturing image [%d] [%d]: %@", self.longPress.state, self.frameCount, [NSDate date]);
+			DLog(@"Capturing image [%d] [%d]: %@", self.orientLongPress.state, self.frameCount, [NSDate date]);
 			// Create a UIImage from the sample buffer data
 			UIImage *image = [self imageFromSampleBuffer:sampleBuffer];
 			
 			[self.animationFrames addObject:image];
 			[self performSelectorOnMainThread:@selector(updateProgress) withObject:nil waitUntilDone:NO];
 			[self performSelectorInBackground:@selector(createAnimatedGifFromFrames) withObject:nil];
-			if ( (self.longPress.state!=UIGestureRecognizerStateBegan) &&
-				  (self.longPress.state!=UIGestureRecognizerStateChanged) )
+			if ( (self.orientLongPress.state!=UIGestureRecognizerStateBegan) &&
+				  (self.orientLongPress.state!=UIGestureRecognizerStateChanged) )
 			{
 				self.animationActive = NO;
 			}
@@ -650,6 +661,12 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
 @end
 
 @implementation LandscapeSceneCapture
+
+-(void)viewDidLoad
+{
+    [super viewDidLoad];
+	[self.animationProgress setProgress:self.sceneCapture.animationProgress.progress];
+}
 
 -(IBAction)recordActionStateChange:(id)sender { [self.sceneCapture recordActionStateChange:sender]; }
 -(IBAction)clearRecordingAction:(id)sender    { [self.sceneCapture clearRecordingAction:sender]; }
