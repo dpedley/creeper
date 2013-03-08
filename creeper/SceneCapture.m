@@ -129,7 +129,7 @@ static int maxFrameCount_Large = 16;
     }
 }
 
-#pragma mark - utilities
+#pragma mark - Utilities
 
 -(void)completeEncoding
 {
@@ -182,127 +182,130 @@ static int maxFrameCount_Large = 16;
 {
     NSError *error = nil;
 	
-	if (self.previewLayer)
-	{
-		[self.previewLayer removeFromSuperlayer];
-		self.previewLayer = nil;
-	}
-	
-	if (self.session)
-	{
-		[self.session stopRunning];
-		self.session = nil;
-	}
-	
-	[self updateFrameDisplay];
-	
-    // Create the session
-    self.session = [[AVCaptureSession alloc] init];
+    @synchronized(self)
+    {
+        if (self.previewLayer)
+        {
+            [self.previewLayer removeFromSuperlayer];
+            self.previewLayer = nil;
+        }
+        
+        if (self.session)
+        {
+            [self.session stopRunning];
+            self.session = nil;
+        }
+        
+        [self updateFrameDisplay];
+        
+        // Create the session
+        self.session = [[AVCaptureSession alloc] init];
 
-	if (self.orientResolutionSelect.selectedSegmentIndex==1)
-	{
-		self.session.sessionPreset = AVCaptureSessionPresetMedium;
-	}
-	else
-	{
-		self.session.sessionPreset = AVCaptureSessionPresetLow;
-	}
-	
-    // Find a suitable AVCaptureDevice
-    AVCaptureDevice *device = [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeVideo];
-	
-	if (device)
-	{
-		// Create a device input with the device and add it to the session.
-		AVCaptureDeviceInput *input = [AVCaptureDeviceInput deviceInputWithDevice:device error:&error];
-		if (error)
-		{
-			// Handling the error appropriately.
-			NSLog(@"Input error: %@", error);
-			[SVProgressHUD dismiss];
-			return;
-		}
-		
-		if ([self.session canAddInput:input])
-		{
-			[self.session addInput:input];
-		}
-		else
-		{
-			DLog(@"Couldn't add input");
-			[SVProgressHUD dismiss];
-			return;
-		}
-		
-		// Add Audio Input
-//		DLog(@"Adding audio input");
-//		AVCaptureDevice *audioCaptureDevice = [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeAudio];
-//		NSError *error = nil;
-//		AVCaptureDeviceInput *audioInput = [AVCaptureDeviceInput deviceInputWithDevice:audioCaptureDevice error:&error];
-//		if (audioInput)
-//		{
-//			[CaptureSession addInput:audioInput];
-//		}
-		
-		
-		// Create a VideoDataOutput and add it to the session
-		AVCaptureVideoDataOutput *output = [[AVCaptureVideoDataOutput alloc] init];
-		[self.session addOutput:output];
-		
-		// Configure your output.
-		dispatch_queue_t queue = dispatch_queue_create("captureQueue", NULL);
-		[output setSampleBufferDelegate:self queue:queue];
-		
-		// Specify the pixel format
-		output.videoSettings = [NSDictionary dictionaryWithObject:[NSNumber numberWithInt:kCVPixelFormatType_32BGRA]
-														   forKey:(id)kCVPixelBufferPixelFormatTypeKey];
-		
-		
-		AVCaptureConnection *conn = [output connectionWithMediaType:AVMediaTypeVideo];
-		
-		if (conn.isVideoMinFrameDurationSupported)
-			conn.videoMinFrameDuration = CMTimeMake(1, 12);
-		if (conn.isVideoMaxFrameDurationSupported)
-			conn.videoMaxFrameDuration = CMTimeMake(1, 12);
-		
-		switch (self.interfaceOrientation)
-		{
-			case UIDeviceOrientationPortrait:
-				conn.videoOrientation = AVCaptureVideoOrientationPortrait;
-				break;
-				
-			case UIDeviceOrientationLandscapeRight:
-				conn.videoOrientation = AVCaptureVideoOrientationLandscapeLeft;
-				break;
-				
-			case UIDeviceOrientationLandscapeLeft:
-				conn.videoOrientation = AVCaptureVideoOrientationLandscapeRight;
-				break;
-				
-			default:
-				conn.videoOrientation = AVCaptureVideoOrientationPortrait;
-				break;
-		}
-		
-		// Start the session running to start the flow of data
-		[self.session startRunning];
-		
-		// create a preview layer to show the output from the camera
-		UIView *ss = self.orientScreenShotView;
-		CGRect frm = ss.bounds;
-		ss.frame = frm;
-		self.previewLayer = [AVCaptureVideoPreviewLayer layerWithSession:self.session];
-		[self.previewLayer setVideoGravity:AVLayerVideoGravityResizeAspectFill];
-		self.previewLayer.frame = CGRectMake(0, 0, frm.size.width, frm.size.height);
-		
-		AVCaptureConnection *previewLayerConnection=self.previewLayer.connection;
-		if ([previewLayerConnection isVideoOrientationSupported])
-		{
-			[previewLayerConnection setVideoOrientation:conn.videoOrientation];
-		}
-		[ss.layer addSublayer:self.previewLayer];
-	}
-	[SVProgressHUD dismiss];
+        if (self.orientResolutionSelect.selectedSegmentIndex==1)
+        {
+            self.session.sessionPreset = AVCaptureSessionPresetMedium;
+        }
+        else
+        {
+            self.session.sessionPreset = AVCaptureSessionPresetLow;
+        }
+        
+        // Find a suitable AVCaptureDevice
+        AVCaptureDevice *device = [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeVideo];
+        
+        if (device)
+        {
+            // Create a device input with the device and add it to the session.
+            AVCaptureDeviceInput *input = [AVCaptureDeviceInput deviceInputWithDevice:device error:&error];
+            if (error)
+            {
+                // Handling the error appropriately.
+                NSLog(@"Input error: %@", error);
+                [SVProgressHUD dismiss];
+                return;
+            }
+            
+            if ([self.session canAddInput:input])
+            {
+                [self.session addInput:input];
+            }
+            else
+            {
+                DLog(@"Couldn't add input");
+                [SVProgressHUD dismiss];
+                return;
+            }
+            
+            // Add Audio Input
+    //		DLog(@"Adding audio input");
+    //		AVCaptureDevice *audioCaptureDevice = [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeAudio];
+    //		NSError *error = nil;
+    //		AVCaptureDeviceInput *audioInput = [AVCaptureDeviceInput deviceInputWithDevice:audioCaptureDevice error:&error];
+    //		if (audioInput)
+    //		{
+    //			[CaptureSession addInput:audioInput];
+    //		}
+            
+            
+            // Create a VideoDataOutput and add it to the session
+            AVCaptureVideoDataOutput *output = [[AVCaptureVideoDataOutput alloc] init];
+            [self.session addOutput:output];
+            
+            // Configure your output.
+            dispatch_queue_t queue = dispatch_queue_create("captureQueue", NULL);
+            [output setSampleBufferDelegate:self queue:queue];
+            
+            // Specify the pixel format
+            output.videoSettings = [NSDictionary dictionaryWithObject:[NSNumber numberWithInt:kCVPixelFormatType_32BGRA]
+                                                               forKey:(id)kCVPixelBufferPixelFormatTypeKey];
+            
+            
+            AVCaptureConnection *conn = [output connectionWithMediaType:AVMediaTypeVideo];
+            
+            if (conn.isVideoMinFrameDurationSupported)
+                conn.videoMinFrameDuration = CMTimeMake(1, 12);
+            if (conn.isVideoMaxFrameDurationSupported)
+                conn.videoMaxFrameDuration = CMTimeMake(1, 12);
+            
+            switch (self.interfaceOrientation)
+            {
+                case UIDeviceOrientationPortrait:
+                    conn.videoOrientation = AVCaptureVideoOrientationPortrait;
+                    break;
+                    
+                case UIDeviceOrientationLandscapeRight:
+                    conn.videoOrientation = AVCaptureVideoOrientationLandscapeLeft;
+                    break;
+                    
+                case UIDeviceOrientationLandscapeLeft:
+                    conn.videoOrientation = AVCaptureVideoOrientationLandscapeRight;
+                    break;
+                    
+                default:
+                    conn.videoOrientation = AVCaptureVideoOrientationPortrait;
+                    break;
+            }
+            
+            // Start the session running to start the flow of data
+            [self.session startRunning];
+            
+            // create a preview layer to show the output from the camera
+            UIView *ss = self.orientScreenShotView;
+            CGRect frm = ss.bounds;
+            ss.frame = frm;
+            self.previewLayer = [AVCaptureVideoPreviewLayer layerWithSession:self.session];
+            [self.previewLayer setVideoGravity:AVLayerVideoGravityResizeAspectFill];
+            self.previewLayer.frame = CGRectMake(0, 0, frm.size.width, frm.size.height);
+            
+            AVCaptureConnection *previewLayerConnection=self.previewLayer.connection;
+            if ([previewLayerConnection isVideoOrientationSupported])
+            {
+                [previewLayerConnection setVideoOrientation:conn.videoOrientation];
+            }
+            [ss.layer addSublayer:self.previewLayer];
+        }
+        [SVProgressHUD popActivity];
+    }
 }
 
 // Create a UIImage from sample buffer data
@@ -579,42 +582,6 @@ static int maxFrameCount_Large = 16;
 
 #pragma mark - Orientation
 
--(id)orient:(SEL)propSelector
-{
-	if (self.isShowingLandscapeView)
-	{
-		if ([self.presentedViewController isKindOfClass:[LandscapeSceneCapture class]])
-		{
-			if ([self.presentedViewController respondsToSelector:propSelector])
-			{
-				return objc_msgSend(self.presentedViewController, propSelector);
-			}
-		}
-	}
-	
-	if ([self respondsToSelector:propSelector])
-	{
-		return objc_msgSend(self, propSelector);
-	}
-	
-	return NULL;
-}
-
-@dynamic orientScreenShotView;
--(UIView *)orientScreenShotView { return [self orient:@selector(screenShotView)]; }
-@dynamic orientLongPress;
--(UILongPressGestureRecognizer *)orientLongPress { return [self orient:@selector(longPress)]; }
-@dynamic orientAnimationProgress;
--(UIProgressView *)orientAnimationProgress { return [self orient:@selector(animationProgress)]; }
-@dynamic orientDoneButton;
--(UIBarButtonItem *)orientDoneButton { return [self orient:@selector(doneButton)]; }
-@dynamic orientTrashButton;
--(UIBarButtonItem *)orientTrashButton { return [self orient:@selector(trashButton)]; }
-@dynamic orientFrameDisplay;
--(UIBarButtonItem *)orientFrameDisplay { return [self orient:@selector(frameDisplay)]; }
-@dynamic orientResolutionSelect;
--(UISegmentedControl *)orientResolutionSelect { return [self orient:@selector(resolutionSelect)]; }
-
 - (void)orientationChanged:(NSNotification *)notification
 {
     UIDeviceOrientation deviceOrientation = [UIDevice currentDevice].orientation;
@@ -669,6 +636,43 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
 
 }
 
+#pragma mark - Orientation Property Pass Through
+
+-(id)orient:(SEL)propSelector
+{
+	if (self.isShowingLandscapeView)
+	{
+		if ([self.presentedViewController isKindOfClass:[LandscapeSceneCapture class]])
+		{
+			if ([self.presentedViewController respondsToSelector:propSelector])
+			{
+				return objc_msgSend(self.presentedViewController, propSelector);
+			}
+		}
+	}
+	
+	if ([self respondsToSelector:propSelector])
+	{
+		return objc_msgSend(self, propSelector);
+	}
+	
+	return NULL;
+}
+
+@dynamic orientScreenShotView;
+-(UIView *)orientScreenShotView { return [self orient:@selector(screenShotView)]; }
+@dynamic orientLongPress;
+-(UILongPressGestureRecognizer *)orientLongPress { return [self orient:@selector(longPress)]; }
+@dynamic orientAnimationProgress;
+-(UIProgressView *)orientAnimationProgress { return [self orient:@selector(animationProgress)]; }
+@dynamic orientDoneButton;
+-(UIBarButtonItem *)orientDoneButton { return [self orient:@selector(doneButton)]; }
+@dynamic orientTrashButton;
+-(UIBarButtonItem *)orientTrashButton { return [self orient:@selector(trashButton)]; }
+@dynamic orientFrameDisplay;
+-(UIBarButtonItem *)orientFrameDisplay { return [self orient:@selector(frameDisplay)]; }
+@dynamic orientResolutionSelect;
+-(UISegmentedControl *)orientResolutionSelect { return [self orient:@selector(resolutionSelect)]; }
 
 @end
 

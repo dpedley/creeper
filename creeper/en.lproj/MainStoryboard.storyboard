@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="2.0" toolsVersion="3084" systemVersion="12C3012" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" initialViewController="3">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="2.0" toolsVersion="3084" systemVersion="11G63" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" initialViewController="3">
     <dependencies>
         <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="2083"/>
     </dependencies>
@@ -264,7 +264,7 @@
                             </button>
                             <progressView opaque="NO" alpha="0.80000000000000004" contentMode="scaleToFill" progress="0.5" translatesAutoresizingMaskIntoConstraints="NO" id="pCe-s1-oTC">
                                 <constraints>
-                                    <constraint firstAttribute="width" constant="359" id="xuq-9Y-yLD"/>
+                                    <constraint firstAttribute="width" constant="244" id="9Yk-me-giu"/>
                                 </constraints>
                                 <color key="progressTintColor" red="0.71963205649999995" green="0.29334677419999999" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
                                 <color key="trackTintColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
@@ -272,18 +272,18 @@
                         </subviews>
                         <color key="backgroundColor" red="0.5215686559677124" green="0.72156864404678345" blue="0.21568629145622253" alpha="1" colorSpace="deviceRGB"/>
                         <constraints>
-                            <constraint firstItem="pCe-s1-oTC" firstAttribute="leading" secondItem="S0g-xO-NpM" secondAttribute="leading" constant="80" id="4h5-1U-kqV"/>
                             <constraint firstItem="bCM-Eg-HLg" firstAttribute="top" secondItem="ADN-3D-0QU" secondAttribute="top" type="default" id="Aqw-fv-BAq"/>
                             <constraint firstItem="cPD-e8-7dc" firstAttribute="bottom" secondItem="S0g-xO-NpM" secondAttribute="bottom" type="default" id="C7q-0t-eWm"/>
-                            <constraint firstItem="Z6W-Wt-jhS" firstAttribute="centerX" secondItem="bCM-Eg-HLg" secondAttribute="centerX" type="default" id="EM5-Yj-MAx"/>
                             <constraint firstItem="ADN-3D-0QU" firstAttribute="centerX" secondItem="bCM-Eg-HLg" secondAttribute="centerX" type="default" id="EmJ-eJ-wqK"/>
                             <constraint firstItem="cPD-e8-7dc" firstAttribute="top" secondItem="S0g-xO-NpM" secondAttribute="top" type="default" id="Loo-RV-Tme"/>
                             <constraint firstItem="cPD-e8-7dc" firstAttribute="leading" secondItem="S0g-xO-NpM" secondAttribute="leading" type="default" id="Q0f-Od-Gr7"/>
                             <constraint firstItem="ADN-3D-0QU" firstAttribute="bottom" secondItem="S0g-xO-NpM" secondAttribute="bottom" type="default" id="UKh-PN-QcW"/>
                             <constraint firstAttribute="bottom" secondItem="pCe-s1-oTC" secondAttribute="bottom" constant="18" id="Uh2-on-gui"/>
+                            <constraint firstItem="pCe-s1-oTC" firstAttribute="centerX" secondItem="Z6W-Wt-jhS" secondAttribute="centerX" type="default" id="WES-zd-gxt"/>
                             <constraint firstItem="cPD-e8-7dc" firstAttribute="trailing" secondItem="S0g-xO-NpM" secondAttribute="trailing" type="default" id="WUC-Ca-cvL"/>
-                            <constraint firstItem="Z6W-Wt-jhS" firstAttribute="centerX" secondItem="cPD-e8-7dc" secondAttribute="centerX" type="default" id="b9K-HV-DqP"/>
+                            <constraint firstItem="pCe-s1-oTC" firstAttribute="centerX" secondItem="bCM-Eg-HLg" secondAttribute="centerX" type="default" id="XlV-1U-JT9"/>
                             <constraint firstItem="bCM-Eg-HLg" firstAttribute="bottom" secondItem="S0g-xO-NpM" secondAttribute="bottom" type="default" id="bhg-hS-j0W"/>
+                            <constraint firstItem="ADN-3D-0QU" firstAttribute="trailing" secondItem="S0g-xO-NpM" secondAttribute="trailing" type="default" id="bn0-MB-eRk"/>
                             <constraint firstItem="ADN-3D-0QU" firstAttribute="leading" secondItem="S0g-xO-NpM" secondAttribute="leading" type="default" id="nkc-TY-aMa"/>
                             <constraint firstItem="Z6W-Wt-jhS" firstAttribute="top" secondItem="S0g-xO-NpM" secondAttribute="top" constant="6" id="pUI-xN-dR8"/>
                         </constraints>
