@@ -573,7 +573,6 @@ static int maxFrameCount_Large = 16;
 	}
 }
 
-
 - (void)didReceiveMemoryWarning
 {
     [super didReceiveMemoryWarning];
@@ -584,6 +583,11 @@ static int maxFrameCount_Large = 16;
 
 - (void)orientationChanged:(NSNotification *)notification
 {
+	if (self.frameCount>0)
+	{
+		return;
+	}
+	
     UIDeviceOrientation deviceOrientation = [UIDevice currentDevice].orientation;
     if (UIDeviceOrientationIsLandscape(deviceOrientation) && !self.isShowingLandscapeView)
     {

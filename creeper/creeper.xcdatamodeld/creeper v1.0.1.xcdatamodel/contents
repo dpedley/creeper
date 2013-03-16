@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<model name="" userDefinedModelVersionIdentifier="" type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="2057" systemVersion="12C3012" minimumToolsVersion="Automatic" macOSVersion="Automatic" iOSVersion="Automatic">
+    <entity name="ImgurEntry" representedClassName="ImgurEntry" syncable="YES">
+        <attribute name="deletehash" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="imgDescription" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="imgName" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="imgTitle" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="imgurID" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="link" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="timestamp" optional="YES" attributeType="Double" defaultValueString="0.0" syncable="YES"/>
+    </entity>
+    <elements>
+        <element name="ImgurEntry" positionX="160" positionY="192" width="128" height="150"/>
+    </elements>
+</model>

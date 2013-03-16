@@ -1,8 +1,8 @@
 //
-//  ImgurAPICredentials.h
+//  ExternalServices.m
 //  creeper
 //
-//  Created by Douglas Pedley on 3/3/13.
+//  Created by Douglas Pedley on 3/14/13.
 //
 //  Copyright (c) 2013 Doug Pedley. All rights reserved.
 //
@@ -25,12 +25,27 @@
 //  POSSIBILITY OF SUCH DAMAGE.
 //
 
-#ifndef creeper_ImgurAPICredentials_h
-#define creeper_ImgurAPICredentials_h
-
-// The following should be a valid ImgurClientID
-// go to https://api.imgur.com/ to get yours
-
-static NSString *ImgurClientID = @"YOUR_API_KEY";
-
+#import "ExternalServices.h"
+#import "iOSRedditAPI.h"
+#ifdef CRASHLYTICS_API_KEY
+#import <Crashlytics/Crashlytics.h>
 #endif
+
+@implementation ExternalServices
+
++(void)appServiceStartup
+{
+#ifdef CRASHLYTICS_API_KEY
+    [Crashlytics startWithAPIKey:CRASHLYTICS_API_KEY];
+#endif
+
+	
+}
+
++(void)addBasicAuthorization:(NSMutableURLRequest *)request
+{
+	
+}
+
+
+@end

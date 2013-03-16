@@ -29,7 +29,7 @@
 #import "NSData+Base64.h"
 #import "AFNetworking.h"
 #import "ImgurEntry.h"
-#import "ImgurAPICredentials.h"
+#import "ExternalServices.h"
 
 @interface ImgurIOS ()
 
@@ -144,7 +144,7 @@
 	
 	NSMutableURLRequest* urlRequest = [[NSMutableURLRequest alloc]initWithURL:url];
 	[urlRequest setHTTPMethod:@"DELETE"];
-	[urlRequest setValue:[NSString stringWithFormat:@"Client-ID %@", ImgurClientID] forHTTPHeaderField:@"Authorization"];
+	[urlRequest setValue:[NSString stringWithFormat:@"Client-ID %@", IMGUR_CLIENTID] forHTTPHeaderField:@"Authorization"];
 	
 	AFJSONRequestOperation *operation = [AFJSONRequestOperation JSONRequestOperationWithRequest:urlRequest success:^(NSURLRequest *request, NSHTTPURLResponse *response, id JSON) {
 		
@@ -266,7 +266,7 @@
 	NSMutableURLRequest* urlRequest = [[NSMutableURLRequest alloc]initWithURL:url];
 	[urlRequest setHTTPMethod:@"POST"];
 	[urlRequest setHTTPBody:[post_data dataUsingEncoding:NSASCIIStringEncoding]];
-	[urlRequest setValue:[NSString stringWithFormat:@"Client-ID %@", ImgurClientID] forHTTPHeaderField:@"Authorization"];
+	[urlRequest setValue:[NSString stringWithFormat:@"Client-ID %@", IMGUR_CLIENTID] forHTTPHeaderField:@"Authorization"];
 	
 	__block NSTimeInterval createStamp = [[NSDate date] timeIntervalSince1970];
 	

@@ -29,6 +29,18 @@
 #import "ImgurIOS.h"
 #import "SHK.h"
 #import "NSDate+TimeAgo.h"
+#import "iOSRedditAPI.h"
+#import "SVProgressHUD.h"
+
+typedef enum {
+	
+	ImageShareAlertOption_Cancel = 0,
+	ImageShareAlertOption_RedditSubmit,
+	ImageShareAlertOption_Browser,
+	ImageShareAlertOption_CopyLink,
+	ImageShareAlertOption_ShareOriginal,
+	ImageShareAlertOption_ShareLink
+} ImageShareAlertOption;
 
 static int ImgurWebView_ShareAlert = 100;
 
@@ -43,45 +55,71 @@ static int ImgurWebView_ShareAlert = 100;
 
 @implementation ImgurWebViewController
 
+-(void)shareItem:(SHKItem *)item
+{
+	// Get the ShareKit action sheet
+	SHKActionSheet *actionSheet = [SHKActionSheet actionSheetForItem:item];
+	
+	// ShareKit detects top view controller (the one intended to present ShareKit UI) automatically,
+	// but sometimes it may not find one. To be safe, set it explicitly
+	[SHK setRootViewController:self];
+	
+	// Display the action sheet
+	[actionSheet showFromToolbar:self.navigationController.toolbar];
+}
+
 - (void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex
 {
 	if (alertView.tag==ImgurWebView_ShareAlert)
 	{
-		if (buttonIndex==1)
+		switch (buttonIndex)
 		{
-			NSURL *url = [NSURL URLWithString:[NSString stringWithFormat:@"http://i.imgur.com/%@", self.imgur.imgurID]];
-			[[UIApplication sharedApplication] openURL:url];
-		}
-		else if (buttonIndex==2)
-		{
-			UIPasteboard *pasteboard = [UIPasteboard generalPasteboard];
-			pasteboard.string = self.imgur.link;
-		}
-		else if (buttonIndex!=0)
-		{
-			// Create the item to share (in this example, a url)
-			SHKItem *item = nil;
-			
-			if (buttonIndex==3)
+			case ImageShareAlertOption_Cancel:
 			{
-				item = [SHKItem file:self.imgur.imageData filename:@"creeper.gif" mimeType:@"image/gif" title:@"Creeper animation"];
+				// No action needed.
 			}
-			else
+				break;
+				
+			case ImageShareAlertOption_RedditSubmit:
+			{
+				[[iOSRedditAPI shared] submitLink:self.imgur.link toSubreddit:@"creeperapp" withTitle:self.imgur.imgTitle captchaVC:self submitted:^(BOOL success) {
+					NSLog(@"submitted: %c", success);
+				}];
+			}
+				break;
+				
+			case ImageShareAlertOption_Browser:
 			{
 				NSURL *url = [NSURL URLWithString:[NSString stringWithFormat:@"http://i.imgur.com/%@", self.imgur.imgurID]];
-				item = [SHKItem URL:url title:@"Creeper animation" contentType:SHKURLContentTypeWebpage];
+				[[UIApplication sharedApplication] openURL:url];
 			}
-			// Get the ShareKit action sheet
-			SHKActionSheet *actionSheet = [SHKActionSheet actionSheetForItem:item];
-			
-			// ShareKit detects top view controller (the one intended to present ShareKit UI) automatically,
-			// but sometimes it may not find one. To be safe, set it explicitly
-			[SHK setRootViewController:self];
-			
-			// Display the action sheet
-			[actionSheet showFromToolbar:self.navigationController.toolbar];
-		}
-		
+				break;
+				
+			case ImageShareAlertOption_CopyLink:
+			{
+				UIPasteboard *pasteboard = [UIPasteboard generalPasteboard];
+				pasteboard.string = self.imgur.link;
+			}
+				break;
+				
+			case ImageShareAlertOption_ShareOriginal:
+			{
+				SHKItem *item = [SHKItem file:self.imgur.imageData filename:@"creeper.gif" mimeType:@"image/gif" title:@"Creeper animation"];
+				[self shareItem:item];
+			}
+				break;
+				
+			case ImageShareAlertOption_ShareLink:
+			{
+				NSURL *url = [NSURL URLWithString:[NSString stringWithFormat:@"http://i.imgur.com/%@", self.imgur.imgurID]];
+				SHKItem *item = [SHKItem URL:url title:@"Creeper animation" contentType:SHKURLContentTypeWebpage];
+				[self shareItem:item];
+			}
+				break;
+				
+			default:
+				break;
+		}	
 	}
 	[alertView dismissWithClickedButtonIndex:buttonIndex animated:YES];
 }
@@ -92,7 +130,8 @@ static int ImgurWebView_ShareAlert = 100;
 													message:@"Please choose an option below"
 												   delegate:self
 										  cancelButtonTitle:@"Cancel"
-										  otherButtonTitles:@"Open Browser", @"Copy Link", @"Share Original", @"Share Link", nil];
+										  otherButtonTitles:
+			@"Post to Reddit", @"Open Browser", @"Copy Link", @"Share Original", @"Share Link", nil];
 	alert.tag = ImgurWebView_ShareAlert;
 	[alert show];
 }
@@ -182,7 +221,7 @@ static int ImgurWebView_ShareAlert = 100;
 		
 		NSString *pageParsed = [self template:htmlTemplate parseWithImgurEntry:self.imgur];
 		
-		DLog(@"Opening Data: %@", pageParsed);
+//		DLog(@"Opening Data: %@", pageParsed);
 		NSData *pageData = [pageParsed dataUsingEncoding:NSUTF8StringEncoding];
 		
 		[self.webView loadData:pageData MIMEType:@"text/html" textEncodingName:@"utf-8" baseURL:[NSURL URLWithString:@"http://i.imgur.com"]];

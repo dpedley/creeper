@@ -30,7 +30,7 @@
 #import "ImgurEntry.h"
 #import "ImgurCell.h"
 #import "ImgurIOS.h"
-
+#import "iOSRedditAPI.h"
 
 static int AnimationList_DeleteAlert = 100;
 

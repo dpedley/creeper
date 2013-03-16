@@ -32,6 +32,7 @@
 #import "SHK.h"
 #import "SHKConfiguration.h"
 #import <Crashlytics/Crashlytics.h>
+#import "ExternalServices.h"
 
 @implementation AppDelegate
 
@@ -41,14 +42,15 @@
 	UINavigationController *navigationController = (UINavigationController *)self.window.rootViewController;
 	AnimationListController *controller = (AnimationListController *)navigationController.topViewController;
 	
-    [Crashlytics startWithAPIKey:@"fd3f6967e102239a822d38d3308fd603225e8334"];
-    
+	[ExternalServices appServiceStartup];
+	
 	// Init mochi
 	[Mochi settingsFromDictionary:@{ @"database" : @"creeper", @"model" : @"creeper" }];
 	controller.managedObjectContext = [[Mochi mochiForClass:[ImgurEntry class]] managedObjectContext];
 	
 	CreeperSHKConfigurator *configurator = [[CreeperSHKConfigurator alloc] init];
 	[SHKConfiguration sharedInstanceWithConfigurator:configurator];
+	
 	
     return YES;
 }
