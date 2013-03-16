@@ -13,6 +13,3 @@
 [submodule "externals/ShareKit"]
 	path = externals/ShareKit
 	url = https://github.com/ShareKit/ShareKit.git
-[submodule "externals/OAuth2Client"]
-	path = externals/OAuth2Client
-	url = git://github.com/nxtbgthng/OAuth2Client.git
