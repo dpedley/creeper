@@ -38,7 +38,7 @@ There are two copies of these files listed in the project. The ones in the folde
 application. They are only referenced there to make developers lives easier, and help avoid pushing private credential
 information to github.
 
-1. ImgurAPICredentials.h - You application ID registered with https://api.imgur.com/
+1. ExternalServices.h - You application ID registered with https://api.imgur.com/ (And optional crashlytics api key)
 2. CreeperSHKConfigurator.m - ShareKit integration keys instructions at: http://getsharekit.com/install/ 
 
 
