@@ -27,13 +27,17 @@
 
 #import <Foundation/Foundation.h>
 
-typedef void (^iOSRedditWebEngineDataBlock)(NSData *data, NSError *error);
+@class RedditPost;
+
+typedef void (^iOSRedditPostCompletion)(BOOL success, RedditPost *post);
 
 @interface iOSRedditAPI : NSObject
 
 +(iOSRedditAPI *)shared;
 
--(void)submitLink:(NSString *)link toSubreddit:(NSString *)sr withTitle:(NSString *)title captchaVC:(UIViewController *)vc submitted:(void (^)(BOOL success))completionBlock;
+-(BOOL)hasModHash;
+-(void)submitLink:(NSString *)link toSubreddit:(NSString *)sr withTitle:(NSString *)title captchaVC:(UIViewController *)vc submitted:(iOSRedditPostCompletion)completionBlock;
+-(void)login:(NSString *)user passwd:(NSString *)passwd success:(void (^)(BOOL success))completionBlock;
 
 @end
 

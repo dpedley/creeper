@@ -27,12 +27,14 @@
 
 #import "AppDelegate.h"
 #import "AnimationListController.h"
-#import "ImgurEntry.h"
+#import "FeedItem.h"
 #import "CreeperSHKConfigurator.h"
 #import "SHK.h"
 #import "SHKConfiguration.h"
 #import <Crashlytics/Crashlytics.h>
 #import "ExternalServices.h"
+
+NSString *creeperPrefix = @"ccf8837e-83d0-11e2-b939-f23c91aec05e"; // Note this doubles as the app store SKU
 
 @implementation AppDelegate
 
@@ -46,7 +48,7 @@
 	
 	// Init mochi
 	[Mochi settingsFromDictionary:@{ @"database" : @"creeper", @"model" : @"creeper" }];
-	controller.managedObjectContext = [[Mochi mochiForClass:[ImgurEntry class]] managedObjectContext];
+	controller.managedObjectContext = [[Mochi mochiForClass:[FeedItem class]] managedObjectContext];
 	
 	CreeperSHKConfigurator *configurator = [[CreeperSHKConfigurator alloc] init];
 	[SHKConfiguration sharedInstanceWithConfigurator:configurator];

@@ -26,11 +26,12 @@
 //
 
 #import <UIKit/UIKit.h>
+#import "FeedItem.h"
 
 @class SceneCapture;
 
-@interface ImageInfo : UIViewController
+@interface ImageInfo : UIViewController <UITextFieldDelegate>
 
-@property (nonatomic, weak) SceneCapture *sceneCapture;
+@property (nonatomic, strong) FeedItem *item;
 
 @end

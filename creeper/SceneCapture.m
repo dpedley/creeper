@@ -28,11 +28,13 @@
 #import "SceneCapture.h"
 #import <AVFoundation/AVFoundation.h>
 #import <QuartzCore/CALayer.h>
-#import <giflib/GifEncode.h>
-#import <giflib/giflib_ios.h>
+#import "GifCreationManager.h"
 #import "ImageInfo.h"
 #import <objc/message.h>
+#import "FeedItem.h"
+#import "CreeperDataExtensions.h"
 
+static NSTimeInterval frmDelay = 0.125;
 
 #define RGB(r,g,b) [UIColor colorWithRed: ((double)r / 255.0) green: ((double)g / 255.0) blue: ((double)b / 255.0) alpha:1.0]
 static int SceneCapture_ClearAlert = 404;
@@ -52,10 +54,8 @@ static int maxFrameCount_Large = 16;
 @property (nonatomic, strong) IBOutlet UIBarButtonItem *frameDisplay;
 @property (nonatomic, strong) IBOutlet UISegmentedControl *resolutionSelect;
 @property (nonatomic, assign) BOOL animationActive;
-@property (nonatomic, strong) NSMutableArray *animationFrames;
 @property (nonatomic, assign) int previewFrameCount;
-@property (nonatomic, strong) GifEncode *encoder;
-@property (nonatomic, assign) BOOL encoderActive;
+@property (nonatomic, strong) NSString *encoderID;
 @property (nonatomic, readonly) int maxFrameCount;
 @property (nonatomic, strong) UIColor *goColor;
 @property (nonatomic, strong) UIColor *stopColor;
@@ -77,29 +77,11 @@ static int maxFrameCount_Large = 16;
 @property (nonatomic, strong) AVCaptureSession *session;
 @property (nonatomic, strong) AVCaptureVideoPreviewLayer *previewLayer;
 
--(void)createAnimatedGifFromFrames;
--(NSString *)temporaryFileLocation;
+-(void)addGifFrame:(UIImage *)img;
 
 @end
 
 @implementation SceneCapture
-
-@dynamic encodingWorkload;
--(int)encodingWorkload
-{
-	if (self.encoderActive)
-	{
-		return [self.animationFrames count] + 1;
-	}
-	
-	return [self.animationFrames count];
-}
-
-@dynamic imageData;
--(NSData *)imageData
-{
-	return [NSData dataWithContentsOfFile:[self temporaryFileLocation]];
-}
 
 @dynamic maxFrameCount;
 -(int)maxFrameCount
@@ -115,14 +97,7 @@ static int maxFrameCount_Large = 16;
 
 - (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender
 {
-    if ([[segue identifier] isEqualToString:@"ShowInfoSegue"])
-	{
-		self.session = nil;
-		[[NSNotificationCenter defaultCenter] removeObserver:self];
-        ImageInfo *ii = [segue destinationViewController];
-		ii.sceneCapture = self;
-    }
-    else if ([[segue identifier] isEqualToString:@"LandscapeCamera"])
+	if ([[segue identifier] isEqualToString:@"LandscapeCamera"])
 	{
         LandscapeSceneCapture *lc = [segue destinationViewController];
 		lc.sceneCapture = self;
@@ -130,16 +105,6 @@ static int maxFrameCount_Large = 16;
 }
 
 #pragma mark - Utilities
-
--(void)completeEncoding
-{
-	[self.encoder close];
-}
-
--(NSString *)temporaryFileLocation
-{
-	return [NSHomeDirectory() stringByAppendingString:@"/Library/Caches/temp.gif"];
-}
 
 -(void)updateFrameDisplay
 {
@@ -263,9 +228,9 @@ static int maxFrameCount_Large = 16;
             AVCaptureConnection *conn = [output connectionWithMediaType:AVMediaTypeVideo];
             
             if (conn.isVideoMinFrameDurationSupported)
-                conn.videoMinFrameDuration = CMTimeMake(1, 12);
+                conn.videoMinFrameDuration = CMTimeMake(1, 8);
             if (conn.isVideoMaxFrameDurationSupported)
-                conn.videoMaxFrameDuration = CMTimeMake(1, 12);
+                conn.videoMaxFrameDuration = CMTimeMake(1, 8);
             
             switch (self.interfaceOrientation)
             {
@@ -349,53 +314,36 @@ static int maxFrameCount_Large = 16;
     return (image);
 }
 
--(void)createAnimatedGifFromFrames
+-(void)createInitialFeedItem
 {
-	if ( (self.encoderActive) || ([self.animationFrames count]==0) )
+	if (![NSThread mainThread])
 	{
+		[self performSelectorOnMainThread:@selector(createInitialFeedItem) withObject:nil waitUntilDone:YES];
 		return;
 	}
-	self.encoderActive = YES;
-	
-	NSTimeInterval frmDelay = 0.333;
-	CGRect imgBounds;
-	
-	while ( [self.animationFrames count] > 0 )
-	{
-		UIImage *img = [self.animationFrames objectAtIndex:0];
-		[self.animationFrames removeObjectAtIndex:0];
-		DLog( @"Encode frame... %d", [self.animationFrames count]);
-		
-		if (!self.encoder)
+	FeedItem *newItem = [FeedItem addNew];
+	newItem.timestamp = [NSDate date];
+	newItem.encoderID = self.encoderID;
+	newItem.feedItemType = FeedItemType_Encoding;
+	[FeedItem save];
+}
+
+-(void)addGifFrame:(UIImage *)img
+{
+	GifCreationManager *gcm = [GifCreationManager sharedInstance];
+	if (!self.encoderID)
+	{		
+		self.encoderID = [gcm createEncoderWithSize:img.size];
+		if (!self.encoderID)
 		{
-			self.encoder = [[GifEncode alloc] initWithFile:[self temporaryFileLocation]
-												targetSize:img.size
-												 loopCount:0
-												  optimize:YES ];
-			if (self.encoder.error != 0)
-			{
-				NSLog(@"Encoder init error: %d", self.encoder.error);
-				return;
-			}
-			
-		}
-		imgBounds = CGRectMake(0, 0, img.size.width, img.size.height);
-		
-		[self.encoder putImageAsFrame:img
-						  frameBounds:imgBounds
-							delayTime:frmDelay
-						 disposalMode:DISPOSE_DO_NOT
-					   alphaThreshold:0.5];
-		
-		if (self.encoder.error != 0)
-		{
-			NSLog(@"Encoder put image error: %d", self.encoder.error);
+			DLog(@"No encoder ID returned");
 			return;
 		}
+		[self createInitialFeedItem];
 	}
-	
-	self.encoderActive = NO;
-	DLog(@"Encoder not active.");
+
+	DLog(@"Adding frame");
+	[gcm addFrame:[GifQueueFrame withImage:img andDelay:frmDelay] toEncoder:self.encoderID];
 }
 
 #pragma mark - Actions
@@ -427,8 +375,11 @@ static int maxFrameCount_Large = 16;
 	{
 		if (buttonIndex==1)
 		{
-			self.encoder = nil;
-			[self.animationFrames removeAllObjects];
+			if (self.encoderID)
+			{
+				[[GifCreationManager sharedInstance] clearEncoder:self.encoderID];
+				self.encoderID = nil;
+			}
 			[self.orientAnimationProgress setProgress:0.0 animated:YES];
 			self.frameCount = 0;
 			[self updateFrameDisplay];
@@ -442,8 +393,8 @@ static int maxFrameCount_Large = 16;
 	{
 		if (buttonIndex==1)
 		{
-			self.encoder = nil;
-			[self.animationFrames removeAllObjects];
+			[[GifCreationManager sharedInstance] clearEncoder:self.encoderID];
+			self.encoderID = nil;
 			[self.orientAnimationProgress setProgress:0.0 animated:YES];
 			self.frameCount = 0;
 			[SVProgressHUD showWithStatus:@"Changing resolution" maskType:SVProgressHUDMaskTypeGradient];
@@ -459,8 +410,8 @@ static int maxFrameCount_Large = 16;
 	{
 		if (buttonIndex==1)
 		{
-			self.encoder = nil;
-			[self.animationFrames removeAllObjects];
+			[[GifCreationManager sharedInstance] clearEncoder:self.encoderID];
+			self.encoderID = nil;
 			[self.orientAnimationProgress setProgress:0.0 animated:YES];
 			self.frameCount = 0;
 			[SVProgressHUD showWithStatus:@"Rotating video" maskType:SVProgressHUDMaskTypeGradient];
@@ -492,7 +443,7 @@ static int maxFrameCount_Large = 16;
 		[self.resolutionSelect setSelectedSegmentIndex:sendingControl.selectedSegmentIndex];
 	}
 	
-	if (self.encoder || self.frameCount>0)
+	if (self.encoderID || self.frameCount>0)
 	{
 		UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Change resolution" message:@"To change resolution will clear your current recording?" delegate:self cancelButtonTitle:@"No" otherButtonTitles:@"Yes", nil];
 		alert.tag = SceneCapture_ResolutionChangeAlert;
@@ -508,6 +459,12 @@ static int maxFrameCount_Large = 16;
 -(IBAction)frameAdvanceAction:(id)sender
 {
 	self.animationActive = YES;
+}
+
+-(IBAction)doneAction:(id)sender
+{
+	[[GifCreationManager sharedInstance] closeEncoder:self.encoderID];
+	[self.navigationController popViewControllerAnimated:YES];
 }
 
 #pragma mark - Object lifecycle
@@ -549,7 +506,6 @@ static int maxFrameCount_Large = 16;
 
 	[self.animationProgress setProgress:0.0];
 	self.animationActive = NO;
-	self.animationFrames = [NSMutableArray array];
 	self.goColor = RGB(27,188,43);
 	self.stopColor = RGB(210,48,15);
 	[self updateFrameDisplay];
@@ -617,27 +573,24 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
 	   fromConnection:(AVCaptureConnection *)connection
 {
 	self.previewFrameCount++;
-	if ((self.previewFrameCount%4)==1)
+
+	if ( (self.animationActive) ) // && (self.frameCount < self.maxFrameCount) )
 	{
-		if ( (self.animationActive) ) // && (self.frameCount < self.maxFrameCount) )
+		self.frameCount++;
+		DLog(@"%d", self.frameCount);
+		[self updateFrameDisplay];
+//			DLog(@"Capturing image [%d] [%d]: %@", self.orientLongPress.state, self.frameCount, [NSDate date]);
+		// Create a UIImage from the sample buffer data
+		UIImage *image = [self imageFromSampleBuffer:sampleBuffer];
+		
+		[self addGifFrame:image];
+		[self performSelectorOnMainThread:@selector(updateProgress) withObject:nil waitUntilDone:NO];
+		if ( (self.orientLongPress.state!=UIGestureRecognizerStateBegan) &&
+			  (self.orientLongPress.state!=UIGestureRecognizerStateChanged) )
 		{
-			self.frameCount++;
-			[self updateFrameDisplay];
-			DLog(@"Capturing image [%d] [%d]: %@", self.orientLongPress.state, self.frameCount, [NSDate date]);
-			// Create a UIImage from the sample buffer data
-			UIImage *image = [self imageFromSampleBuffer:sampleBuffer];
-			
-			[self.animationFrames addObject:image];
-			[self performSelectorOnMainThread:@selector(updateProgress) withObject:nil waitUntilDone:NO];
-			[self performSelectorInBackground:@selector(createAnimatedGifFromFrames) withObject:nil];
-			if ( (self.orientLongPress.state!=UIGestureRecognizerStateBegan) &&
-				  (self.orientLongPress.state!=UIGestureRecognizerStateChanged) )
-			{
-				self.animationActive = NO;
-			}
+			self.animationActive = NO;
 		}
 	}
-
 }
 
 #pragma mark - Orientation Property Pass Through
@@ -698,7 +651,7 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
 {
 	[self dismissViewControllerAnimated:YES completion:nil];
 	self.sceneCapture.isShowingLandscapeView = NO;
-	[self.sceneCapture performSegueWithIdentifier:@"ShowInfoSegue" sender:sender];
+	[self.sceneCapture doneAction:sender];
 }
 
 @end

@@ -164,8 +164,12 @@ static NSDictionary *mochiClasses;
     NSURL *pscUrl = [NSURL fileURLWithPath:mochiDir];
     persistentStoreCoordinator = [[NSPersistentStoreCoordinator alloc] initWithManagedObjectModel:[self managedObjectModel]];
 	
+	NSDictionary *options = [NSDictionary dictionaryWithObjectsAndKeys:
+							 [NSNumber numberWithBool:YES], NSMigratePersistentStoresAutomaticallyOption,
+							 [NSNumber numberWithBool:YES], NSInferMappingModelAutomaticallyOption, nil];
+    
 	NSError *error;
-    if (![persistentStoreCoordinator addPersistentStoreWithType:NSSQLiteStoreType configuration:nil URL:pscUrl options:nil error:&error]) 
+    if (![persistentStoreCoordinator addPersistentStoreWithType:NSSQLiteStoreType configuration:nil URL:pscUrl options:options error:&error])
 	{
 		NSLog(@"Error adding persistant store coordinator %@", [error localizedDescription]);
     }

@@ -1,8 +1,8 @@
 //
-//  iOSRedditCaptcha.m
+//  iOSRedditLogin.m
 //  creeper
 //
-//  Created by Douglas Pedley on 3/15/13.
+//  Created by Douglas Pedley on 3/16/13.
 //
 //  Copyright (c) 2013 Doug Pedley. All rights reserved.
 //
@@ -25,26 +25,31 @@
 //  POSSIBILITY OF SUCH DAMAGE.
 //
 
-#import "iOSRedditCaptcha.h"
 
-@interface iOSRedditCaptcha ()
+#import "iOSRedditLogin.h"
+#import "iOSRedditAPI.h"
 
-@property (nonatomic, strong) NSString *iden;
-@property (nonatomic, strong) IBOutlet UIImageView *captcha;
-@property (nonatomic, strong) IBOutlet UITextField *captchaGuess;
+@interface iOSRedditLogin ()
 
-@property (nonatomic, copy) iOSRedditCaptchaResponse responseBlock;
--(IBAction)submit:(id)sender;
+@property (nonatomic, copy) iOSRedditLoginResponse responseBlock;
+@property (nonatomic, strong) IBOutlet UILabel *errorLabel;
+
+-(IBAction)login:(id)sender;
 
 @end
 
-@implementation iOSRedditCaptcha
+@implementation iOSRedditLogin
 
-+(id)captchaWithIden:(NSString *)theIden responseBlock:(iOSRedditCaptchaResponse)aResponseBlock
++(id)withResponseBlock:(iOSRedditLoginResponse)aResponseBlock
 {
-	iOSRedditCaptcha *vc = [[iOSRedditCaptcha alloc] initWithNibName:@"iOSRedditCaptcha" bundle:[NSBundle mainBundle]];
+	if ([[iOSRedditAPI shared] hasModHash])
+	{
+		aResponseBlock(YES);
+		return nil;
+	}
+
+	iOSRedditLogin *vc = [[iOSRedditLogin alloc] initWithNibName:@"iOSRedditLogin" bundle:[NSBundle mainBundle]];
 	vc.responseBlock = aResponseBlock;
-	vc.iden = theIden;
 	return vc;
 }
 
@@ -61,14 +66,7 @@
 {
     [super viewDidLoad];
     // Do any additional setup after loading the view from its nib.
-	
-	if (self.iden)
-	{
-		NSURL *captchaURL = [NSURL URLWithString:[NSString stringWithFormat:@"http://www.reddit.com/captcha/%@.png", self.iden]];
-		self.captcha.image = [UIImage imageWithData:[NSData dataWithContentsOfURL:captchaURL]];
-	}
-	
-	[self.captchaGuess becomeFirstResponder];
+	[self.errorLabel setHidden:YES];
 }
 
 - (void)didReceiveMemoryWarning
@@ -77,18 +75,26 @@
     // Dispose of any resources that can be recreated.
 }
 
--(IBAction)submit:(id)sender
+-(IBAction)login:(id)sender
 {
-	if (self.responseBlock)
-	{
-		self.responseBlock(self.captchaGuess.text);
-		
-	}
+	[[iOSRedditAPI shared] login:self.user.text passwd:self.passwd.text success:^(BOOL success) {
+		if (success)
+		{
+			if (self.responseBlock)
+			{
+				self.responseBlock(YES);
+			}
+		}
+		else
+		{
+			[self.errorLabel setHidden:NO];
+		}
+	}];
 }
 
 - (BOOL)textFieldShouldReturn:(UITextField *)textField
 {
-	[self submit:textField];
+	[self login:textField];
 	return YES;
 }
 

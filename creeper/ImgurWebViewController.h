@@ -30,6 +30,6 @@
 
 @interface ImgurWebViewController : UIViewController
 
-@property (nonatomic, strong) ImgurEntry *imgur;
+@property (nonatomic, strong) FeedItem *item;
 
 @end

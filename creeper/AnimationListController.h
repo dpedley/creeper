@@ -29,6 +29,16 @@
 
 #import <CoreData/CoreData.h>
 
+@class FeedItem;
+
+@protocol FeedItemCell <NSObject>
+
+-(void)configureWithItem:(FeedItem *)item;
+-(BOOL)isCorrectCellForItem:(FeedItem *)item;
+-(void)setIsOnscreen:(BOOL)visible;
+
+@end
+
 @interface AnimationListController : UITableViewController <NSFetchedResultsControllerDelegate>
 
 @property (strong, nonatomic) NSFetchedResultsController *fetchedResultsController;

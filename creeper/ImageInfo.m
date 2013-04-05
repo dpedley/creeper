@@ -27,10 +27,10 @@
 
 
 #import "ImageInfo.h"
-#import "ImgurIOS.h"
+#import "iOSRedditAPI.h"
 #import "SceneCapture.h"
-
-static NSString *creeperPrefix = @"ccf8837e-83d0-11e2-b939-f23c91aec05e"; // Note this doubles as the app store SKU
+#import "ImgurEntry.h"
+#import "CreeperDataExtensions.h"
 
 @interface ImageInfo ()
 
@@ -45,47 +45,48 @@ static NSString *creeperPrefix = @"ccf8837e-83d0-11e2-b939-f23c91aec05e"; // Not
 
 #pragma mark - actions
 
--(NSString *)uniqueName
+-(NSString *)subredditFromText:(NSString *)theSub
 {
-	CFUUIDRef theUUID = CFUUIDCreate(NULL);
-	CFStringRef uuidString = CFUUIDCreateString(NULL, theUUID);
-	CFRelease(theUUID);
-	return [NSString stringWithFormat:@"%@_%@", creeperPrefix, uuidString];
+	if (!theSub || [theSub length]==0)
+	{
+		return @"creeperapp";
+	}
+	
+	if ([[theSub substringToIndex:3] isEqualToString:@"/r/"])
+	{
+		theSub = [theSub substringFromIndex:3];
+		
+		NSRange r = [theSub rangeOfCharacterFromSet:[[NSCharacterSet alphanumericCharacterSet] invertedSet]];
+		if (r.location != NSNotFound)
+		{
+			return nil;
+		}
+		return theSub;
+	}
+	
+	return @"creeperapp";
 }
 
--(void)saveWhenReady
+-(void)saveNewReddit:(RedditPost *)post
 {
-	int workload = [self.sceneCapture encodingWorkload];
-	int frameCount = self.sceneCapture.frameCount;
-	if (workload>0)
+	if (![NSThread isMainThread])
 	{
-		[SVProgressHUD showProgress:1.00 - ((double)frameCount / (double) workload)
-							 status: [NSString stringWithFormat:@"Encoding %d of %d", frameCount - workload, frameCount]
-						   maskType:SVProgressHUDMaskTypeGradient];
-		[self performSelector:@selector(saveWhenReady) withObject:nil afterDelay:0.1];
+		[self performSelectorOnMainThread:@selector(saveNewReddit) withObject:nil waitUntilDone:YES];
 		return;
 	}
 	
-	[self.sceneCapture completeEncoding];
-	[SVProgressHUD showWithStatus:@"Uploading animation" maskType:SVProgressHUDMaskTypeGradient];
-	[ImgurIOS uploadImageData:self.sceneCapture.imageData
-						 name:[self uniqueName]
-						title:self.titleEdit.text
-				  description:self.descriptionEdit.text
-			   uploadComplete:^(BOOL success)
-	 {
-		 [SVProgressHUD dismiss];
-		 if (!success)
-		 {
-			 UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Upload failed" message:@"An unknown server error occured" delegate:self cancelButtonTitle:@"Close" otherButtonTitles:nil];
-			 [alert show];
-		 }
-		 else
-		 {
-			 [self.navigationController popToRootViewControllerAnimated:YES];
-		 }
-	 }
-	];
+	// reload it here
+	FeedItem *theItem = [FeedItem withEncoderID:self.item.encoderID];
+	if (!theItem)
+	{
+		DLog(@"no item");
+	}
+	else
+	{
+		theItem.reddit = post;
+		theItem.feedItemType = FeedItemType_Reddit;
+		[FeedItem save];
+	}	
 }
 
 -(IBAction)saveAction:(id)sender
@@ -100,9 +101,60 @@ static NSString *creeperPrefix = @"ccf8837e-83d0-11e2-b939-f23c91aec05e"; // Not
 		[self.descriptionEdit resignFirstResponder];
 	}
 	
-	[self saveWhenReady];
+	if (!self.titleEdit.text || [self.titleEdit.text length]==0)
+	{
+		UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Submission failed" message:@"The title is required." delegate:self cancelButtonTitle:@"Close" otherButtonTitles:nil];
+		[alert show];
+	}
+	else
+	{
+		NSString *subreddit = [self subredditFromText:self.descriptionEdit.text];
+
+		if (!subreddit)
+		{
+			UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Submission failed" message:@"The subreddit is invalid." delegate:self cancelButtonTitle:@"Close" otherButtonTitles:nil];
+			[alert show];
+		}
+		else
+		{
+			__weak ImageInfo *blockSelf = self;
+			[[iOSRedditAPI shared] submitLink:self.item.imgur.link toSubreddit:subreddit withTitle:self.titleEdit.text captchaVC:self submitted:^(BOOL success, RedditPost *post) {
+				if (!success)
+				{
+					UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Submission failed" message:@"An unknown server error occured" delegate:self cancelButtonTitle:@"Close" otherButtonTitles:nil];
+					[alert show];
+				}
+				else
+				{
+					[blockSelf saveNewReddit:post];
+					[self.navigationController popToRootViewControllerAnimated:YES];
+				}
+			}];
+		}
+	}
 }
 
+#pragma mark - UITextFieldDelegate
+
+- (BOOL)textField:(UITextField *)textField shouldChangeCharactersInRange:(NSRange)range replacementString:(NSString *)string
+{
+	if ([textField isEqual:self.descriptionEdit])
+	{
+		NSString *current = self.descriptionEdit.text;
+		NSString *newText = [self.descriptionEdit.text stringByReplacingCharactersInRange:range withString:string];
+		
+		if (current.length==0 && newText.length>0)
+		{
+			if (![[newText substringToIndex:3] isEqualToString:@"/r/"])
+			{
+				textField.text = [NSString stringWithFormat:@"/r/%@", newText];
+				return NO;
+			}
+		}
+	}
+	
+	return YES;
+}
 
 #pragma mark - object lifecycle
 

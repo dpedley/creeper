@@ -31,10 +31,8 @@
 @interface SceneCapture : UIViewController <AVCaptureVideoDataOutputSampleBufferDelegate>
 
 @property (nonatomic, assign) int frameCount;
-@property (nonatomic, readonly) int encodingWorkload;
-@property (nonatomic, readonly) NSData *imageData;
 
--(void)completeEncoding;
+-(IBAction)doneAction:(id)sender;
 
 @end
 

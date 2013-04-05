@@ -27,10 +27,13 @@
 
 #import "AnimationListController.h"
 #import "ImgurWebViewController.h"
+#import "GifProcessingCell.h"
 #import "ImgurEntry.h"
-#import "ImgurCell.h"
+#import "FeedItem.h"
+#import "CreeperDataExtensions.h"
 #import "ImgurIOS.h"
 #import "iOSRedditAPI.h"
+#import "ImageInfo.h"
 
 static int AnimationList_DeleteAlert = 100;
 
@@ -40,7 +43,7 @@ static int AnimationList_DeleteAlert = 100;
 @property (nonatomic, strong) IBOutlet UIWebView *wikiInfoView;
 @property (nonatomic, strong) IBOutlet UIButton *informationButton;
 @property (nonatomic, strong) NSString *navTitle;
-@property (nonatomic, strong) ImgurEntry *itemPendingDelete;
+@property (nonatomic, strong) FeedItem *itemPendingDelete;
 
 -(IBAction)informationAction:(id)sender;
 
@@ -54,14 +57,42 @@ static int AnimationList_DeleteAlert = 100;
 
 #pragma mark - Segue
 
+- (UITableViewCell *)findCellFromView:(UIView *)v
+{
+	UIView *superView = [v superview];
+	
+	while (superView && ![superView isKindOfClass:[UITableViewCell class]])
+	{
+		superView = [superView superview];
+	}
+	return (UITableViewCell *)superView;
+}
+
 - (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender
 {
-//    self.title = @"Back";
-    if ([[segue identifier] isEqualToString:@"showDetail"])
+	if ([[segue identifier] isEqualToString:@"RedditPost"])
 	{
-        NSIndexPath *indexPath = [self.tableView indexPathForSelectedRow];
-        ImgurEntry *item = [[self fetchedResultsController] objectAtIndexPath:indexPath];
-        [(ImgurWebViewController *)[segue destinationViewController] setImgur:item];
+		UITableViewCell *cell = [self findCellFromView:sender];
+		if (cell)
+		{
+			NSLog(@"RedditPosting: %@", [cell description]);
+			NSIndexPath *indexPath = [self.tableView indexPathForCell:cell];
+			FeedItem *item = [[self fetchedResultsController] objectAtIndexPath:indexPath];
+
+			[(ImageInfo *)[segue destinationViewController] setItem:item];
+		}
+    }
+    else if ([[segue identifier] isEqualToString:@"ViewRedditPost"])
+	{
+		UITableViewCell *cell = [self findCellFromView:sender];
+		if (cell)
+		{
+			NSLog(@"ViewRedditPosting: %@", [cell description]);
+			NSIndexPath *indexPath = [self.tableView indexPathForCell:cell];
+			FeedItem *item = [[self fetchedResultsController] objectAtIndexPath:indexPath];
+			
+			[(ImgurWebViewController *)[segue destinationViewController] setItem:item];
+		}
     }
     else if ([[segue identifier] isEqualToString:@"CameraSegue"])
 	{
@@ -118,7 +149,8 @@ static int AnimationList_DeleteAlert = 100;
 		else if (buttonIndex==2)
 		{
 			[SVProgressHUD showWithStatus:@"Deleting..." maskType:SVProgressHUDMaskTypeGradient];
-			[ImgurIOS deleteImageWithHashToken:self.itemPendingDelete.deletehash deleteComplete:^(BOOL success) {
+			[ImgurIOS deleteImageWithHashToken:self.itemPendingDelete.imgur.deletehash deleteComplete:^(BOOL success) {
+				
 				[self.itemPendingDelete remove]; // This removes and saves.
 				self.itemPendingDelete = nil;
 				[SVProgressHUD dismiss];
@@ -227,14 +259,58 @@ static int AnimationList_DeleteAlert = 100;
 {
 	id <NSFetchedResultsSectionInfo> sectionInfo = [self.fetchedResultsController sections][section];
 	int vidCount = [sectionInfo numberOfObjects];
+	DLog(@"vidcount: %d", vidCount);
 	return vidCount;
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
 {
-	ImgurCell *cell = [tableView dequeueReusableCellWithIdentifier:@"ImgurCell" forIndexPath:indexPath];
+	NSString *cellID = @"RedditPostCell";
+	
+	FeedItem *entry = [self.fetchedResultsController objectAtIndexPath:indexPath];
+	switch (entry.feedItemType)
+	{
+		case FeedItemType_Encoding:
+			cellID = @"GifProcessingCell";
+			break;
+			
+		case FeedItemType_Encoded:
+		case FeedItemType_Uploading:
+			cellID = @"ImageUploadingCell";
+			break;
+			
+		case FeedItemType_Online:
+			cellID = @"ImageOnlineCell";
+			break;
+			
+		case FeedItemType_Reddit:
+			cellID = @"RedditPostCell";
+			break;
+			
+		default:
+			break;
+	}
+	
+	UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:cellID forIndexPath:indexPath];
+	DLog(@"cell: %@ %@", [cell class], cellID);
 	[self configureCell:cell atIndexPath:indexPath];
 	return cell;
+}
+
+-(CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+	FeedItem *entry = [self.fetchedResultsController objectAtIndexPath:indexPath];
+
+	switch (entry.feedItemType)
+	{
+		case FeedItemType_Encoding:
+			return 80.0;
+			break;
+			
+		default:
+			break;
+	}
+	return 321.0;
 }
 
 -(UIView *)tableView:(UITableView *)tableView viewForHeaderInSection:(NSInteger)section
@@ -284,6 +360,22 @@ static int AnimationList_DeleteAlert = 100;
     return NO;
 }
 
+- (void)scrollViewDidScroll:(UIScrollView *)scrollView
+{
+	if ([scrollView isKindOfClass:[UITableView class]])
+	{
+		UITableView *tbl = (UITableView *)scrollView;
+		NSArray *rows = [tbl visibleCells];
+		
+		for (UITableViewCell *cell in rows)
+		{
+			// TODO: tighten this up
+			CGRectMake(cell.frame.origin.x, cell.frame.origin.y + 40, cell.frame.size.width, cell.frame.size.height - 80);
+			[(UITableViewCell <FeedItemCell>*)cell setIsOnscreen:CGRectContainsRect(self.tableView.bounds, cell.frame)];
+		}
+	}
+}
+
 #pragma mark - Fetched results controller
 
 - (NSFetchedResultsController *)fetchedResultsController
@@ -291,17 +383,17 @@ static int AnimationList_DeleteAlert = 100;
     if (_fetchedResultsController != nil) {
         return _fetchedResultsController;
     }
-    
+
     NSFetchRequest *fetchRequest = [[NSFetchRequest alloc] init];
     // Edit the entity name as appropriate.
-    NSEntityDescription *entity = [NSEntityDescription entityForName:@"ImgurEntry" inManagedObjectContext:self.managedObjectContext];
+    NSEntityDescription *entity = [NSEntityDescription entityForName:@"FeedItem" inManagedObjectContext:self.managedObjectContext];
     [fetchRequest setEntity:entity];
     
     // Set the batch size to a suitable number.
     [fetchRequest setFetchBatchSize:20];
     
     // Edit the sort key as appropriate.
-    NSSortDescriptor *sortDescriptor = [[NSSortDescriptor alloc] initWithKey:@"link" ascending:NO];
+    NSSortDescriptor *sortDescriptor = [[NSSortDescriptor alloc] initWithKey:@"timestamp" ascending:NO];
     NSArray *sortDescriptors = @[sortDescriptor];
     
     [fetchRequest setSortDescriptors:sortDescriptors];
@@ -359,7 +451,22 @@ static int AnimationList_DeleteAlert = 100;
             break;
             
         case NSFetchedResultsChangeUpdate:
-            [self configureCell:[tableView cellForRowAtIndexPath:indexPath] atIndexPath:indexPath];
+		{
+			FeedItem *item = [self.fetchedResultsController objectAtIndexPath:indexPath];
+			UITableViewCell *cell = [tableView cellForRowAtIndexPath:indexPath];
+			
+			if ([cell conformsToProtocol:@protocol(FeedItemCell)])
+			{
+				if ([(NSObject <FeedItemCell> *)cell isCorrectCellForItem:item])
+				{
+					[self configureCell:cell atIndexPath:indexPath];
+				}
+				else
+				{
+					[tableView reloadRowsAtIndexPaths:[NSArray arrayWithObject:indexPath] withRowAnimation:UITableViewRowAnimationFade];
+				}
+			}
+		}
             break;
             
         case NSFetchedResultsChangeMove:
@@ -387,10 +494,12 @@ static int AnimationList_DeleteAlert = 100;
 
 - (void)configureCell:(UITableViewCell *)theCell atIndexPath:(NSIndexPath *)indexPath
 {
-	ImgurCell *cell = (ImgurCell *)theCell;
-    ImgurEntry *entry = [self.fetchedResultsController objectAtIndexPath:indexPath];
-	
-	[cell configureWithEntry:entry];
+	FeedItem *entry = [self.fetchedResultsController objectAtIndexPath:indexPath];
+
+	if ([theCell conformsToProtocol:@protocol(FeedItemCell)])
+	{
+		[(UITableViewCell <FeedItemCell>*)theCell configureWithItem:entry];
+	}
 }
 
 @end

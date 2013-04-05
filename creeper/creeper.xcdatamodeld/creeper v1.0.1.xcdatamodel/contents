@@ -1,5 +1,15 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<model name="" userDefinedModelVersionIdentifier="" type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="2057" systemVersion="12C3012" minimumToolsVersion="Automatic" macOSVersion="Automatic" iOSVersion="Automatic">
+<model name="" userDefinedModelVersionIdentifier="" type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="2061" systemVersion="12D78" minimumToolsVersion="Automatic" macOSVersion="Automatic" iOSVersion="Automatic">
+    <entity name="FeedItem" representedClassName="FeedItem" syncable="YES">
+        <attribute name="encoderID" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="frameCount" optional="YES" attributeType="Integer 16" defaultValueString="0" syncable="YES"/>
+        <attribute name="frameEncodingCount" optional="YES" attributeType="Integer 16" defaultValueString="0" syncable="YES"/>
+        <attribute name="itemType" optional="YES" attributeType="Integer 16" defaultValueString="0" syncable="YES"/>
+        <attribute name="statusString" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="timestamp" optional="YES" attributeType="Date" syncable="YES"/>
+        <relationship name="imgur" optional="YES" minCount="1" maxCount="1" deletionRule="Nullify" destinationEntity="ImgurEntry" inverseName="feedItem" inverseEntity="ImgurEntry" syncable="YES"/>
+        <relationship name="reddit" optional="YES" minCount="1" maxCount="1" deletionRule="Nullify" destinationEntity="RedditPost" inverseName="feedItem" inverseEntity="RedditPost" syncable="YES"/>
+    </entity>
     <entity name="ImgurEntry" representedClassName="ImgurEntry" syncable="YES">
         <attribute name="deletehash" optional="YES" attributeType="String" syncable="YES"/>
         <attribute name="imgDescription" optional="YES" attributeType="String" syncable="YES"/>
@@ -8,8 +18,17 @@
         <attribute name="imgurID" optional="YES" attributeType="String" syncable="YES"/>
         <attribute name="link" optional="YES" attributeType="String" syncable="YES"/>
         <attribute name="timestamp" optional="YES" attributeType="Double" defaultValueString="0.0" syncable="YES"/>
+        <relationship name="feedItem" optional="YES" minCount="1" maxCount="1" deletionRule="Nullify" destinationEntity="FeedItem" inverseName="imgur" inverseEntity="FeedItem" syncable="YES"/>
+    </entity>
+    <entity name="RedditPost" representedClassName="RedditPost" syncable="YES">
+        <attribute name="postName" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="redditID" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="redditURL" optional="YES" attributeType="String" syncable="YES"/>
+        <relationship name="feedItem" optional="YES" minCount="1" maxCount="1" deletionRule="Nullify" destinationEntity="FeedItem" inverseName="reddit" inverseEntity="FeedItem" syncable="YES"/>
     </entity>
     <elements>
-        <element name="ImgurEntry" positionX="160" positionY="192" width="128" height="150"/>
+        <element name="FeedItem" positionX="160" positionY="192" width="128" height="165"/>
+        <element name="ImgurEntry" positionX="160" positionY="192" width="128" height="165"/>
+        <element name="RedditPost" positionX="160" positionY="192" width="128" height="105"/>
     </elements>
 </model>

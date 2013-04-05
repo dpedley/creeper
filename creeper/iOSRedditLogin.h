@@ -1,8 +1,8 @@
 //
-//  ImgurCell.h
+//  iOSRedditLogin.h
 //  creeper
 //
-//  Created by Douglas Pedley on 3/2/13.
+//  Created by Douglas Pedley on 3/16/13.
 //
 //  Copyright (c) 2013 Doug Pedley. All rights reserved.
 //
@@ -25,16 +25,16 @@
 //  POSSIBILITY OF SUCH DAMAGE.
 //
 
+
 #import <UIKit/UIKit.h>
 
-@class ImgurEntry;
+typedef void(^iOSRedditLoginResponse)(BOOL success);
 
-@interface ImgurCell : UITableViewCell
+@interface iOSRedditLogin : UIViewController <UITextFieldDelegate>
 
-@property (nonatomic, strong) IBOutlet UIImageView *preview;
-@property (nonatomic, strong) IBOutlet UILabel *infoLabel;
-@property (nonatomic, strong) IBOutlet UILabel *timestampLabel;
+@property (nonatomic, strong) IBOutlet UITextField *user;
+@property (nonatomic, strong) IBOutlet UITextField *passwd;
 
--(void)configureWithEntry:(ImgurEntry *)entry;
++(id)withResponseBlock:(iOSRedditLoginResponse)responseBlock;
 
 @end

@@ -31,9 +31,6 @@ typedef void(^iOSRedditCaptchaResponse)(NSString *guess);
 
 @interface iOSRedditCaptcha : UIViewController <UITextFieldDelegate>
 
-@property (nonatomic, strong) IBOutlet UITextField *user;
-@property (nonatomic, strong) IBOutlet UITextField *passwd;
-
 +(id)captchaWithIden:(NSString *)iden responseBlock:(iOSRedditCaptchaResponse)responseBlock;
 
 @end

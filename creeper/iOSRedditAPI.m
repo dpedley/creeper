@@ -28,6 +28,11 @@
 #import "iOSRedditAPI.h"
 #import "ExternalServices.h"
 #import "iOSRedditCaptcha.h"
+#import "iOSRedditLogin.h"
+#import "RedditPost.h"
+
+typedef void (^iOSRedditWebEngineDataBlock)(NSData *data, NSError *error);
+typedef void (^iOSRedditDismissedBlock)();
 
 @interface iOSRedditWebEngine : UIWebView <UIWebViewDelegate, NSURLConnectionDelegate>
 
@@ -47,10 +52,19 @@
 @property (nonatomic, strong) NSString *passwd;
 
 -(void)establishConnection:(void (^)(BOOL connectionEstablished))connectionBlock;
--(void)submitLink:(NSString *)link toSubreddit:(NSString *)sr withTitle:(NSString *)title iden:(NSString *)iden captchaVC:(UIViewController *)vc submitted:(void (^)(BOOL success))completionBlock;
+-(void)submitLink:(NSString *)link toSubreddit:(NSString *)sr withTitle:(NSString *)title iden:(NSString *)iden captchaVC:(UIViewController *)vc submitted:(iOSRedditPostCompletion)completionBlock;
 
 @end
 @implementation iOSRedditAPI
+
+-(BOOL)hasModHash
+{
+	if (self.modHash && [self.modHash length]>0)
+	{
+		return YES;
+	}
+	return NO;
+}
 
 @synthesize user=_user;
 -(NSString *)user
@@ -241,7 +255,14 @@
 	return request;
 }
 
--(void)submitLink:(NSString *)link captchaGuess:(NSString *)guess iden:(NSString *)iden subreddit:(NSString *)sr title:(NSString *)title captchaVC:(UIViewController *)vc submitted:(void (^)(BOOL success))completionBlock
+-(void)login:(NSString *)user passwd:(NSString *)passwd success:(void (^)(BOOL success))completionBlock
+{
+	self.user = user;
+	self.passwd = passwd;
+	[self establishConnection:completionBlock];
+}
+
+-(void)submitLink:(NSString *)link captchaGuess:(NSString *)guess iden:(NSString *)iden subreddit:(NSString *)sr title:(NSString *)title captchaVC:(UIViewController *)vc submitted:(iOSRedditPostCompletion)completionBlock
 {
 	NSURL *submit = [NSURL URLWithString:@"https://ssl.reddit.com/api/submit"];	
 	/*
@@ -280,7 +301,14 @@
 			 }
 			 */
 			NSLog(@"submitData: %@", submitData);
-			completionBlock(YES);
+			
+			RedditPost *newPost = [RedditPost addNew];
+			newPost.redditID = [submitData objectForKey:@"id"];
+			newPost.redditURL = [submitData objectForKey:@"url"];
+			newPost.postName = [submitData objectForKey:@"name"];
+			[RedditPost save];
+			
+			completionBlock(YES, newPost);
 			return;
 		}
 		NSDictionary *errorDictionary = [self errorFromResponse:data];
@@ -301,7 +329,7 @@
 			}
 		}
 		
-		completionBlock(NO);
+		completionBlock(NO, nil);
 	}];
 	NSURLConnection *conn = [[NSURLConnection alloc] initWithRequest:request delegate:self.engine startImmediately:YES];
 	if (!conn)
@@ -310,15 +338,9 @@
 	}
 }
 
--(void)submitLink:(NSString *)link toSubreddit:(NSString *)sr withTitle:(NSString *)title iden:(NSString *)iden captchaVC:(UIViewController *)vc submitted:(void (^)(BOOL success))completionBlock
+-(void)submitLink:(NSString *)link toSubreddit:(NSString *)sr withTitle:(NSString *)title iden:(NSString *)iden captchaVC:(UIViewController *)vc submitted:(iOSRedditPostCompletion)completionBlock
 {
-	__block iOSRedditCaptcha *captcha = [iOSRedditCaptcha captchaWithIden:iden responseBlock:^(NSString *guess) {
-		
-		if (!self.modHash)
-		{
-			self.user = captcha.user.text;
-			self.passwd = captcha.passwd.text;
-		}
+	iOSRedditCaptcha *captcha = [iOSRedditCaptcha captchaWithIden:iden responseBlock:^(NSString *guess) {
 		
 		NSLog(@"captcha: %@", guess);
 		[self establishConnection:^(BOOL connectionEstablished) {
@@ -331,27 +353,14 @@
 		}];
 	}];
 	
-	[vc presentViewController:captcha animated:YES completion:^{
-		if (self.user)
-		{
-			captcha.user.text = self.user;
-		}
-		
-		if (self.passwd)
-		{
-			captcha.passwd.text = self.passwd;
-		}
-		
-		
-		if (self.modHash)
-		{
-			[captcha.user setHidden:YES];
-			[captcha.passwd setHidden:YES];
-		}
-	}];
+	if (captcha)
+	{
+		[vc presentViewController:captcha animated:YES completion:^{
+		}];
+	}
 }
 
--(void)submitLink:(NSString *)link toSubreddit:(NSString *)sr withTitle:(NSString *)title captchaVC:(UIViewController *)vc submitted:(void (^)(BOOL success))completionBlock
+-(void)captcha:(void(^)(NSString *iden))captchaBlock
 {
 	NSURL *captcha = [NSURL URLWithString:@"https://ssl.reddit.com/api/new_captcha"];
 	
@@ -365,16 +374,63 @@
 			
 			if (iden)
 			{
-				[self submitLink:link toSubreddit:sr withTitle:title iden:iden captchaVC:vc submitted:completionBlock];
+				captchaBlock(iden);
 				return;
 			}
 		}
-		completionBlock(NO);
+		captchaBlock(nil);
 	}];
 	NSURLConnection *conn = [[NSURLConnection alloc] initWithRequest:request delegate:self.engine startImmediately:YES];
 	if (!conn)
 	{
 		NSLog(@"Couldn't make connection: %@", request.URL);
+		captchaBlock(nil);
+	}
+}
+
+-(void)submitLink:(NSString *)link toSubreddit:(NSString *)sr withTitle:(NSString *)title captchaVC:(UIViewController *)vc submitted:(iOSRedditPostCompletion)completionBlock
+{
+	__block iOSRedditLogin *loginVC = [iOSRedditLogin withResponseBlock:^(BOOL success) {
+		iOSRedditDismissedBlock dismissedBlock = ^{
+			if (success)
+			{
+				[self captcha:^(NSString *iden) {
+					if (iden)
+					{
+						[self submitLink:link toSubreddit:sr withTitle:title iden:iden captchaVC:vc submitted:completionBlock];
+						return;
+					}
+					completionBlock(NO, nil);
+				}];
+			}
+			else
+			{
+				completionBlock(NO, nil);
+			}
+		};
+		if (loginVC)
+		{
+			[vc dismissViewControllerAnimated:YES completion:dismissedBlock];
+		}
+		else
+		{
+			dismissedBlock();
+		}
+	}];
+	
+	if (loginVC)
+	{
+		[vc presentViewController:loginVC animated:YES completion:^{
+			if (self.user)
+			{
+				loginVC.user.text = self.user;
+			}
+			
+			if (self.passwd)
+			{
+				loginVC.passwd.text = self.passwd;
+			}
+		}];
 	}
 }
 
