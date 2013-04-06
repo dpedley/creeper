@@ -3,7 +3,26 @@
 //  creeper
 //
 //  Created by Douglas Pedley on 3/28/13.
-//  Copyright (c) 2013 dpedley. All rights reserved.
+//
+//  Copyright (c) 2013 Doug Pedley. All rights reserved.
+//
+//  Redistribution and use in source and binary forms, with or without
+//  modification, are permitted provided that the following conditions are met:
+//
+//  1. Redistributions of source code must retain the above copyright notice, this
+//     list of conditions and the following disclaimer.
+//  2. Redistributions in binary form must reproduce the above copyright notice,
+//     this list of conditions and the following disclaimer in the documentation
+//     and/or other materials provided with the distribution.
+//
+//  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED
+//  WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+//  PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
+//  ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+//  TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+//  HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+//  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+//  POSSIBILITY OF SUCH DAMAGE.
 //
 
 #import "GifCreationManager.h"
@@ -96,6 +115,17 @@ static GifCreationManager *_sharedInstance = nil;
 {
 	GifCreationQueue *encoderQueue = [self.encoders objectForKey:encoderID];
 	encoderQueue.closed = YES;
+	
+	@synchronized(_sharedInstance)
+	{
+		FeedItem *queueItem = [FeedItem withEncoderID:encoderID];
+		
+		if ([queueItem.frameCount isEqualToNumber:queueItem.frameEncodingCount])
+		{
+			queueItem.feedItemType = FeedItemType_Encoded;
+			[FeedItem save];
+		}		
+	}
 }
 
 -(void)clearEncoder:(NSString *)encoderID
@@ -120,7 +150,37 @@ static GifCreationManager *_sharedInstance = nil;
 
 #pragma mark -
 
+@interface GifCreationQueue ()
+
+@property (nonatomic, assign) NSUInteger lastSize;
+
+@end
+
 @implementation GifCreationQueue
+
+@dynamic storageSize;
+-(NSUInteger)storageSize
+{
+	if (self.lastSize==0)
+	{
+		NSFileManager *mgr = [NSFileManager defaultManager];
+		NSDictionary *fileAttributes = [mgr attributesOfItemAtPath:[GifCreationManager storageLocationForEncoderID:self.encoderID imageIndex:self.imageIndex] error:nil];
+		self.lastSize = (NSUInteger)fileAttributes.fileSize;
+	}
+	
+	return self.lastSize;
+}
+
+@dynamic approxStorageFrameSize;
+-(NSUInteger)approxStorageFrameSize
+{
+	if (self.encodedFrameCount<5)
+	{
+		// The estimate is wonky until we get a few frames processed.
+		return 25000;
+	}
+	return (NSUInteger)floor(self.storageSize/self.encodedFrameCount);
+}
 
 -(void)incrementFrameCount
 {
@@ -228,23 +288,15 @@ static GifCreationManager *_sharedInstance = nil;
 	@synchronized(_sharedInstance)
 	{
 		FeedItem *queueItem = [FeedItem withEncoderID:self.encoderID];
-		if (!queueItem)
-		{
-			DLog(@"no item");
-		}
-		else
-		{
-			DLog(@"item: %@ %@", queueItem.frameEncodingCount, queueItem.frameCount);
-		}
 		queueItem.frameEncodingCount = [NSNumber numberWithInt:[queueItem.frameEncodingCount integerValue] + 1];
+		GifCreationQueue *queue = [GifCreationManager queueByID:self.encoderID];
+		queue.encodedFrameCount = [queueItem.frameEncodingCount intValue];
+		queue.lastSize = 0;
 		
 		if ([queueItem.frameCount isEqualToNumber:queueItem.frameEncodingCount])
 		{
-			DLog(@"done?");
-			GifCreationQueue *queue = [GifCreationManager queueByID:self.encoderID];
 			if (queue.closed)
 			{
-				DLog(@"done...");
 				queueItem.feedItemType = FeedItemType_Encoded;
 			}
 		}

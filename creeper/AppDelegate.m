@@ -53,7 +53,8 @@ NSString *creeperPrefix = @"ccf8837e-83d0-11e2-b939-f23c91aec05e"; // Note this 
 	CreeperSHKConfigurator *configurator = [[CreeperSHKConfigurator alloc] init];
 	[SHKConfiguration sharedInstanceWithConfigurator:configurator];
 	
-	
+	self.currentOrientationMask = UIInterfaceOrientationMaskAllButUpsideDown;
+
     return YES;
 }
 							
@@ -81,6 +82,26 @@ NSString *creeperPrefix = @"ccf8837e-83d0-11e2-b939-f23c91aec05e"; // Note this 
 
 - (void)applicationWillTerminate:(UIApplication *)application
 {
+}
+
+#pragma mark - Orientation stuff
+
++(void)lockOrientation
+{
+	AppDelegate *app = (AppDelegate *)[[UIApplication sharedApplication] delegate];
+	app.currentOrientationMask = (1 << [[UIApplication sharedApplication] statusBarOrientation]);
+}
+
++(void)unlockOrientation
+{
+	AppDelegate *app = (AppDelegate *)[[UIApplication sharedApplication] delegate];
+	app.currentOrientationMask = UIInterfaceOrientationMaskAllButUpsideDown;
+}
+
+
+- (NSUInteger)application:(UIApplication *)application supportedInterfaceOrientationsForWindow:(UIWindow *)window
+{
+	return self.currentOrientationMask;
 }
 
 @end

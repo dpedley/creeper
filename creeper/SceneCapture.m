@@ -33,16 +33,15 @@
 #import <objc/message.h>
 #import "FeedItem.h"
 #import "CreeperDataExtensions.h"
+#import "AppDelegate.h"
 
+static NSUInteger TWOMEGS = 2000000;
 static NSTimeInterval frmDelay = 0.125;
 
 #define RGB(r,g,b) [UIColor colorWithRed: ((double)r / 255.0) green: ((double)g / 255.0) blue: ((double)b / 255.0) alpha:1.0]
 static int SceneCapture_ClearAlert = 404;
 static int SceneCapture_ResolutionChangeAlert = 204;
 static int SceneCapture_RotationAlert = 104;
-
-static int maxFrameCount_Small = 50;
-static int maxFrameCount_Large = 16;
 
 @interface SceneCapture ()
 
@@ -56,7 +55,6 @@ static int maxFrameCount_Large = 16;
 @property (nonatomic, assign) BOOL animationActive;
 @property (nonatomic, assign) int previewFrameCount;
 @property (nonatomic, strong) NSString *encoderID;
-@property (nonatomic, readonly) int maxFrameCount;
 @property (nonatomic, strong) UIColor *goColor;
 @property (nonatomic, strong) UIColor *stopColor;
 @property (nonatomic, assign) BOOL isShowingLandscapeView;
@@ -83,16 +81,6 @@ static int maxFrameCount_Large = 16;
 
 @implementation SceneCapture
 
-@dynamic maxFrameCount;
--(int)maxFrameCount
-{
-	if (self.orientResolutionSelect.selectedSegmentIndex==1)
-	{
-		return maxFrameCount_Large;
-	}
-	return maxFrameCount_Small;
-}
-
 #pragma mark - Segue
 
 - (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender
@@ -106,11 +94,11 @@ static int maxFrameCount_Large = 16;
 
 #pragma mark - Utilities
 
--(void)updateFrameDisplay
+-(void)updateFrameDisplay:(NSNumber *)currentSize
 {
 	if (![NSThread isMainThread])
 	{
-		[self performSelectorOnMainThread:@selector(updateFrameDisplay) withObject:nil waitUntilDone:NO];
+		[self performSelectorOnMainThread:@selector(updateFrameDisplay:) withObject:currentSize waitUntilDone:NO];
 		return;
 	}
 	
@@ -125,8 +113,8 @@ static int maxFrameCount_Large = 16;
 		[self.orientTrashButton setEnabled:YES];
 	}
 	
-	[self.orientFrameDisplay setTitle:[NSString stringWithFormat:@"%@%d/%d", (self.frameCount<10)?@" ":@"", self.frameCount, self.maxFrameCount]];
-	if (self.frameCount < self.maxFrameCount)
+	[self.orientFrameDisplay setTitle:[NSString stringWithFormat:@"%d", self.frameCount]];
+	if ([currentSize intValue] < TWOMEGS)
 	{
 		[self.orientFrameDisplay setEnabled:YES];
 		[self.orientFrameDisplay setTintColor:self.goColor];
@@ -138,9 +126,15 @@ static int maxFrameCount_Large = 16;
 	}
 }
 
--(void)updateProgress
+-(void)updateProgress:(NSNumber *)currentSize
 {
-	[self.orientAnimationProgress setProgress: ( (double)self.frameCount / (double)self.maxFrameCount ) animated:NO];
+	if (![NSThread isMainThread])
+	{
+		[self performSelectorOnMainThread:@selector(updateProgress:) withObject:currentSize waitUntilDone:NO];
+		return;
+	}
+	
+	[self.orientAnimationProgress setProgress: ( [currentSize doubleValue] / (double)TWOMEGS ) animated:NO];
 }
 
 - (void)setupCaptureSession
@@ -161,7 +155,7 @@ static int maxFrameCount_Large = 16;
             self.session = nil;
         }
         
-        [self updateFrameDisplay];
+        [self updateFrameDisplay:[NSNumber numberWithInt:0]];
         
         // Create the session
         self.session = [[AVCaptureSession alloc] init];
@@ -342,7 +336,6 @@ static int maxFrameCount_Large = 16;
 		[self createInitialFeedItem];
 	}
 
-	DLog(@"Adding frame");
 	[gcm addFrame:[GifQueueFrame withImage:img andDelay:frmDelay] toEncoder:self.encoderID];
 }
 
@@ -382,7 +375,8 @@ static int maxFrameCount_Large = 16;
 			}
 			[self.orientAnimationProgress setProgress:0.0 animated:YES];
 			self.frameCount = 0;
-			[self updateFrameDisplay];
+			[AppDelegate unlockOrientation];
+			[self updateFrameDisplay:[NSNumber numberWithInt:0]];
 		}
 		else
 		{
@@ -464,6 +458,7 @@ static int maxFrameCount_Large = 16;
 -(IBAction)doneAction:(id)sender
 {
 	[[GifCreationManager sharedInstance] closeEncoder:self.encoderID];
+	[AppDelegate unlockOrientation];
 	[self.navigationController popViewControllerAnimated:YES];
 }
 
@@ -508,7 +503,7 @@ static int maxFrameCount_Large = 16;
 	self.animationActive = NO;
 	self.goColor = RGB(27,188,43);
 	self.stopColor = RGB(210,48,15);
-	[self updateFrameDisplay];
+	[self updateFrameDisplay:[NSNumber numberWithInt:0]];
 }
 
 -(void)viewDidAppear:(BOOL)animated
@@ -551,8 +546,8 @@ static int maxFrameCount_Large = 16;
         self.isShowingLandscapeView = YES;
 		[SVProgressHUD showWithStatus:@"Rotating video" maskType:SVProgressHUDMaskTypeGradient];
 		[self performSelectorInBackground:@selector(setupCaptureSession) withObject:nil];
-		[self updateFrameDisplay];
-		[self updateProgress];
+        [self updateFrameDisplay:[NSNumber numberWithInt:0]];
+		[self updateProgress:[NSNumber numberWithInt:0]];
     }
     else if (UIDeviceOrientationIsPortrait(deviceOrientation) && self.isShowingLandscapeView)
     {
@@ -560,12 +555,12 @@ static int maxFrameCount_Large = 16;
         self.isShowingLandscapeView = NO;
 		[SVProgressHUD showWithStatus:@"Rotating video" maskType:SVProgressHUDMaskTypeGradient];
 		[self performSelectorInBackground:@selector(setupCaptureSession) withObject:nil];
-		[self updateFrameDisplay];
-		[self updateProgress];
+        [self updateFrameDisplay:[NSNumber numberWithInt:0]];
+		[self updateProgress:[NSNumber numberWithInt:0]];
     }
 }
 
-#pragma mark - The delegate
+#pragma mark - AV Delegate
 
 // Delegate routine that is called when a sample buffer was written
 - (void)captureOutput:(AVCaptureOutput *)captureOutput
@@ -574,21 +569,32 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
 {
 	self.previewFrameCount++;
 
-	if ( (self.animationActive) ) // && (self.frameCount < self.maxFrameCount) )
+	if (self.animationActive)
 	{
-		self.frameCount++;
-		DLog(@"%d", self.frameCount);
-		[self updateFrameDisplay];
-//			DLog(@"Capturing image [%d] [%d]: %@", self.orientLongPress.state, self.frameCount, [NSDate date]);
-		// Create a UIImage from the sample buffer data
-		UIImage *image = [self imageFromSampleBuffer:sampleBuffer];
+		GifCreationQueue *queue = [GifCreationManager queueByID:self.encoderID];
+		NSUInteger projectedStorageSize = queue.approxStorageFrameSize * (self.frameCount + 1);
 		
-		[self addGifFrame:image];
-		[self performSelectorOnMainThread:@selector(updateProgress) withObject:nil waitUntilDone:NO];
-		if ( (self.orientLongPress.state!=UIGestureRecognizerStateBegan) &&
-			  (self.orientLongPress.state!=UIGestureRecognizerStateChanged) )
+		if ( projectedStorageSize < TWOMEGS )
 		{
-			self.animationActive = NO;
+			NSLog(@"size: %d %d", projectedStorageSize, TWOMEGS);
+			if (self.frameCount==0)
+			{
+				[AppDelegate lockOrientation];
+			}
+			self.frameCount++;
+
+			// Create a UIImage from the sample buffer data
+			UIImage *image = [self imageFromSampleBuffer:sampleBuffer];
+			
+			[self addGifFrame:image];
+			
+			[self updateFrameDisplay:[NSNumber numberWithInt:projectedStorageSize]];
+			[self updateProgress:[NSNumber numberWithInt:projectedStorageSize]];
+			if ( (self.orientLongPress.state!=UIGestureRecognizerStateBegan) &&
+				  (self.orientLongPress.state!=UIGestureRecognizerStateChanged) )
+			{
+				self.animationActive = NO;
+			}
 		}
 	}
 }
@@ -649,9 +655,12 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
 -(IBAction)frameAdvanceAction:(id)sender      { [self.sceneCapture frameAdvanceAction:sender]; }
 -(IBAction)doneAction:(id)sender
 {
-	[self dismissViewControllerAnimated:YES completion:nil];
+	[AppDelegate unlockOrientation];
 	self.sceneCapture.isShowingLandscapeView = NO;
-	[self.sceneCapture doneAction:sender];
+	[[GifCreationManager sharedInstance] closeEncoder:self.sceneCapture.encoderID];
+	[self dismissViewControllerAnimated:YES completion:^{
+			[self.sceneCapture.navigationController popViewControllerAnimated:YES];
+	}];
 }
 
 @end

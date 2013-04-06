@@ -34,6 +34,7 @@
 #import "ImgurIOS.h"
 #import "iOSRedditAPI.h"
 #import "ImageInfo.h"
+#import "GifCreationManager.h"
 
 static int AnimationList_DeleteAlert = 100;
 
@@ -143,6 +144,10 @@ static int AnimationList_DeleteAlert = 100;
 	{
 		if (buttonIndex==1)
 		{
+			if (self.itemPendingDelete.feedItemType==FeedItemType_Encoding)
+			{
+				[[GifCreationManager sharedInstance] clearEncoder:self.itemPendingDelete.encoderID];
+			}
 			[self.itemPendingDelete remove]; // This removes and saves.
 			self.itemPendingDelete = nil;
 		}
@@ -259,7 +264,6 @@ static int AnimationList_DeleteAlert = 100;
 {
 	id <NSFetchedResultsSectionInfo> sectionInfo = [self.fetchedResultsController sections][section];
 	int vidCount = [sectionInfo numberOfObjects];
-	DLog(@"vidcount: %d", vidCount);
 	return vidCount;
 }
 
@@ -292,7 +296,6 @@ static int AnimationList_DeleteAlert = 100;
 	}
 	
 	UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:cellID forIndexPath:indexPath];
-	DLog(@"cell: %@ %@", [cell class], cellID);
 	[self configureCell:cell atIndexPath:indexPath];
 	return cell;
 }
@@ -348,7 +351,9 @@ static int AnimationList_DeleteAlert = 100;
     if (editingStyle == UITableViewCellEditingStyleDelete)
 	{
 		self.itemPendingDelete = [self.fetchedResultsController objectAtIndexPath:indexPath];
-		UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Delete" message:@"Do you want to just remove it locally or delete from Imgur as well?" delegate:self cancelButtonTitle:@"Cancel" otherButtonTitles:@"Local only", @"Also delete imgur", nil];
+		
+		NSString *optionDelete = (self.itemPendingDelete.feedItemType==FeedItemType_Encoding)?nil:@"Also online version";
+		UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Delete" message:@"Do you want to just remove it locally or delete from Imgur as well?" delegate:self cancelButtonTitle:@"Cancel" otherButtonTitles:@"Local only", optionDelete, nil];
 		alert.tag = AnimationList_DeleteAlert;
 		[alert show];
     }
