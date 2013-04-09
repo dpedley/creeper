@@ -40,7 +40,6 @@ static NSTimeInterval frmDelay = 0.125;
 
 #define RGB(r,g,b) [UIColor colorWithRed: ((double)r / 255.0) green: ((double)g / 255.0) blue: ((double)b / 255.0) alpha:1.0]
 static int SceneCapture_ClearAlert = 404;
-static int SceneCapture_ResolutionChangeAlert = 204;
 static int SceneCapture_RotationAlert = 104;
 
 @interface SceneCapture ()
@@ -51,7 +50,6 @@ static int SceneCapture_RotationAlert = 104;
 @property (nonatomic, strong) IBOutlet UIBarButtonItem *doneButton;
 @property (nonatomic, strong) IBOutlet UIBarButtonItem *trashButton;
 @property (nonatomic, strong) IBOutlet UIBarButtonItem *frameDisplay;
-@property (nonatomic, strong) IBOutlet UISegmentedControl *resolutionSelect;
 @property (nonatomic, assign) BOOL animationActive;
 @property (nonatomic, assign) int previewFrameCount;
 @property (nonatomic, strong) NSString *encoderID;
@@ -65,11 +63,9 @@ static int SceneCapture_RotationAlert = 104;
 @property (nonatomic, readonly) UIBarButtonItem *orientDoneButton;
 @property (nonatomic, readonly) UIBarButtonItem *orientTrashButton;
 @property (nonatomic, readonly) UIBarButtonItem *orientFrameDisplay;
-@property (nonatomic, readonly) UISegmentedControl *orientResolutionSelect;
 
 -(IBAction)recordActionStateChange:(id)sender;
 -(IBAction)clearRecordingAction:(id)sender;
--(IBAction)changeResolution:(id)sender;
 -(IBAction)frameAdvanceAction:(id)sender;
 
 @property (nonatomic, strong) AVCaptureSession *session;
@@ -160,14 +156,7 @@ static int SceneCapture_RotationAlert = 104;
         // Create the session
         self.session = [[AVCaptureSession alloc] init];
 
-        if (self.orientResolutionSelect.selectedSegmentIndex==1)
-        {
-            self.session.sessionPreset = AVCaptureSessionPresetMedium;
-        }
-        else
-        {
-            self.session.sessionPreset = AVCaptureSessionPresetLow;
-        }
+		self.session.sessionPreset = AVCaptureSessionPresetLow;
         
         // Find a suitable AVCaptureDevice
         AVCaptureDevice *device = [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeVideo];
@@ -383,23 +372,6 @@ static int SceneCapture_RotationAlert = 104;
 			// Cancelled
 		}
 	}
-	else if (alertView.tag==SceneCapture_ResolutionChangeAlert)
-	{
-		if (buttonIndex==1)
-		{
-			[[GifCreationManager sharedInstance] clearEncoder:self.encoderID];
-			self.encoderID = nil;
-			[self.orientAnimationProgress setProgress:0.0 animated:YES];
-			self.frameCount = 0;
-			[SVProgressHUD showWithStatus:@"Changing resolution" maskType:SVProgressHUDMaskTypeGradient];
-			[self performSelectorInBackground:@selector(setupCaptureSession) withObject:nil];
-		}
-		else
-		{
-			// Cancelled
-			[self.orientResolutionSelect setSelectedSegmentIndex:(self.orientResolutionSelect==0)?1:0];
-		}
-	}
 	else if (alertView.tag==SceneCapture_RotationAlert)
 	{
 		if (buttonIndex==1)
@@ -426,27 +398,6 @@ static int SceneCapture_RotationAlert = 104;
 		UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Are you sure" message:@"Do you want to clear your recording?" delegate:self cancelButtonTitle:@"No" otherButtonTitles:@"Yes", nil];
 		alert.tag = SceneCapture_ClearAlert;
 		[alert show];
-	}
-}
-
--(IBAction)changeResolution:(id)sender
-{
-	UISegmentedControl *sendingControl = sender;
-	if (![self.resolutionSelect isEqual:sendingControl])
-	{
-		[self.resolutionSelect setSelectedSegmentIndex:sendingControl.selectedSegmentIndex];
-	}
-	
-	if (self.encoderID || self.frameCount>0)
-	{
-		UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Change resolution" message:@"To change resolution will clear your current recording?" delegate:self cancelButtonTitle:@"No" otherButtonTitles:@"Yes", nil];
-		alert.tag = SceneCapture_ResolutionChangeAlert;
-		[alert show];
-	}
-	else
-	{
-		[SVProgressHUD showWithStatus:@"Changing resolution" maskType:SVProgressHUDMaskTypeGradient];
-		[self performSelectorInBackground:@selector(setupCaptureSession) withObject:nil];
 	}
 }
 
@@ -634,8 +585,6 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
 -(UIBarButtonItem *)orientTrashButton { return [self orient:@selector(trashButton)]; }
 @dynamic orientFrameDisplay;
 -(UIBarButtonItem *)orientFrameDisplay { return [self orient:@selector(frameDisplay)]; }
-@dynamic orientResolutionSelect;
--(UISegmentedControl *)orientResolutionSelect { return [self orient:@selector(resolutionSelect)]; }
 
 @end
 
@@ -651,7 +600,6 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
 
 -(IBAction)recordActionStateChange:(id)sender { [self.sceneCapture recordActionStateChange:sender]; }
 -(IBAction)clearRecordingAction:(id)sender    { [self.sceneCapture clearRecordingAction:sender]; }
--(IBAction)changeResolution:(id)sender        { [self.sceneCapture changeResolution:sender]; }
 -(IBAction)frameAdvanceAction:(id)sender      { [self.sceneCapture frameAdvanceAction:sender]; }
 -(IBAction)doneAction:(id)sender
 {

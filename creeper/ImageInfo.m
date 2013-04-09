@@ -134,28 +134,6 @@
 	}
 }
 
-#pragma mark - UITextFieldDelegate
-
-- (BOOL)textField:(UITextField *)textField shouldChangeCharactersInRange:(NSRange)range replacementString:(NSString *)string
-{
-	if ([textField isEqual:self.descriptionEdit])
-	{
-		NSString *current = self.descriptionEdit.text;
-		NSString *newText = [self.descriptionEdit.text stringByReplacingCharactersInRange:range withString:string];
-		
-		if (current.length==0 && newText.length>0)
-		{
-			if (![[newText substringToIndex:3] isEqualToString:@"/r/"])
-			{
-				textField.text = [NSString stringWithFormat:@"/r/%@", newText];
-				return NO;
-			}
-		}
-	}
-	
-	return YES;
-}
-
 #pragma mark - object lifecycle
 
 -(id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil

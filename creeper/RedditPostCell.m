@@ -47,6 +47,19 @@
 
 @implementation RedditPostCell
 
+- (void) prepareForReuse
+{
+	[self.actionButton setHidden:NO];
+	[self.activity setHidden:YES];
+	[self.infoLabel setHidden:YES];
+	self.encoderID = nil;
+	self.infoLabel.text = @"";
+	self.timestampLabel.text = @"";
+	self.preview.image = nil;
+	[self.preview stopAnimating];
+	[self.preview setAnimationImages:nil];
+}
+
 - (id)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier
 {
     self = [super initWithStyle:style reuseIdentifier:reuseIdentifier];

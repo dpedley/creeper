@@ -48,6 +48,19 @@
 
 @implementation ImageUploadingCell
 
+- (void) prepareForReuse
+{
+	[self.actionButton setHidden:NO];
+	[self.activity setHidden:YES];
+	[self.infoLabel setHidden:YES];
+	self.encoderID = nil;
+	self.infoLabel.text = @"";
+	self.timestampLabel.text = @"";
+	self.preview.image = nil;
+	[self.preview stopAnimating];
+	[self.preview setAnimationImages:nil];
+}
+
 -(NSString *)uniqueName
 {
 	CFUUIDRef theUUID = CFUUIDCreate(NULL);

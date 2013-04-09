@@ -31,13 +31,19 @@
 
 @interface GifProcessingCell ()
 
-@property (nonatomic, strong) IBOutlet UIImageView *preview;
 @property (nonatomic, strong) IBOutlet UILabel *infoLabel;
 @property (nonatomic, strong) IBOutlet UILabel *timestampLabel;
 
 @end
 
 @implementation GifProcessingCell
+
+- (void) prepareForReuse
+{
+	self.infoLabel.text = @"";
+	self.timestampLabel.text = @"";
+	self.imageView.image = nil;
+}
 
 - (id)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier
 {
