@@ -527,7 +527,6 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
 		
 		if ( projectedStorageSize < TWOMEGS )
 		{
-			NSLog(@"size: %d %d", projectedStorageSize, TWOMEGS);
 			if (self.frameCount==0)
 			{
 				[AppDelegate lockOrientation];

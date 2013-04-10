@@ -1,8 +1,8 @@
 //
-//  GifProcessingCell.m
+//  AnimatedItemCell.m
 //  creeper
 //
-//  Created by Douglas Pedley on 3/30/13.
+//  Created by Douglas Pedley on 4/9/13.
 //
 //  Copyright (c) 2013 Doug Pedley. All rights reserved.
 //
@@ -25,27 +25,22 @@
 //  POSSIBILITY OF SUCH DAMAGE.
 //
 
-#import "GifProcessingCell.h"
-#import "NSDate+TimeAgo.h"
+#import "AnimatedItemCell.h"
+#import "FeedItem.h"
 #import "CreeperDataExtensions.h"
+#import "GifCreationManager.h"
 
-@interface GifProcessingCell ()
+@interface AnimatedItemCell ()
 
-@property (nonatomic, strong) IBOutlet UIImageView *lastProcessedFrame;
+@property (nonatomic, assign) BOOL animationLoaded;
+@property (nonatomic, assign) BOOL shouldStartAnimatingAfterLoad;
 
-@property (nonatomic, strong) IBOutlet UILabel *infoLabel;
-@property (nonatomic, strong) IBOutlet UILabel *timestampLabel;
+-(void)startPreviewAnimation;
+-(void)stopPreviewAnimation;
 
 @end
 
-@implementation GifProcessingCell
-
-- (void) prepareForReuse
-{
-	self.infoLabel.text = @"";
-	self.timestampLabel.text = @"";
-	self.imageView.image = nil;
-}
+@implementation AnimatedItemCell
 
 - (id)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier
 {
@@ -63,16 +58,77 @@
     // Configure the view for the selected state
 }
 
+-(void) prepareForReuse
+{
+	self.preview.image = nil;
+	self.animationLoaded = NO;
+	self.shouldStartAnimatingAfterLoad = NO;
+	[self.preview stopAnimating];
+	[self.preview setAnimationImages:nil];
+}
+
+
+-(void)startPreviewAnimation
+{
+	if (!self.animationLoaded)
+	{
+		self.shouldStartAnimatingAfterLoad = YES;
+	}
+	else
+	{
+		[self.preview startAnimating];
+	}
+}
+
+-(void)stopPreviewAnimation
+{
+	self.shouldStartAnimatingAfterLoad = NO;
+	[self.preview stopAnimating];
+}
+
+-(void)loadAnimationInBackground:(FeedItem *)item
+{
+	self.animationLoaded = NO;
+	if ([NSThread isMainThread])
+	{
+		[self performSelectorInBackground:@selector(loadAnimationInBackground:) withObject:item];
+		return;
+	}
+	
+	NSArray *frames = [item buildAnimationFrames];
+	[self.preview setAnimationImages:frames];
+	[self.preview setAnimationDuration:[frames count]*0.125];
+	if (self.shouldStartAnimatingAfterLoad)
+	{
+		self.shouldStartAnimatingAfterLoad = NO;
+		[self.preview performSelectorOnMainThread:@selector(startAnimating) withObject:nil waitUntilDone:NO];
+	}
+	self.animationLoaded = YES;
+}
+
+-(void)setIsOnscreen:(BOOL)visible
+{
+	if (visible && !self.preview.isAnimating)
+	{
+		[self startPreviewAnimation];
+	}
+	
+	if (!visible && self.preview.isAnimating)
+	{
+		[self stopPreviewAnimation];
+	}
+}
+
 -(void)configureWithItem:(FeedItem *)item
 {
-	self.infoLabel.text = [NSString stringWithFormat:@"%@ of %@ frames encoded", item.frameEncodingCount, item.frameCount];
-	self.timestampLabel.text = [NSString stringWithFormat:@"Created: %@", [item.timestamp timeAgo]];
-	self.lastProcessedFrame.image = item.currentImage;
+	[self loadAnimationInBackground:item];
+	[self.preview setImage:[GifCreationManager previewFrameForEncoderID:item.encoderID imageIndex:0]];
 }
 
 -(BOOL)isCorrectCellForItem:(FeedItem *)item
 {
-	return (item.feedItemType==FeedItemType_Encoding);
+	NSAssert(NO, @"Override this method in your subclass");
+	return NO;
 }
 
 @end

@@ -1,8 +1,8 @@
 //
-//  ImageUploadingCell.h
+//  AnimatedItemCell.h
 //  creeper
 //
-//  Created by Douglas Pedley on 4/2/13.
+//  Created by Douglas Pedley on 4/9/13.
 //
 //  Copyright (c) 2013 Doug Pedley. All rights reserved.
 //
@@ -26,8 +26,12 @@
 //
 
 #import <UIKit/UIKit.h>
-#import "AnimatedItemCell.h"
+#import "AnimationListController.h"
 
-@interface ImageUploadingCell : AnimatedItemCell
+@interface AnimatedItemCell : UITableViewCell <FeedItemCell>
+
+@property (nonatomic, strong) IBOutlet UIImageView *preview;
+
+-(void)setIsOnscreen:(BOOL)visible;
 
 @end

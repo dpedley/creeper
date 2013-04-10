@@ -33,9 +33,17 @@
 #import "NSDate+TimeAgo.h"
 #import "GifCreationManager.h"
 
+typedef enum
+{
+	ImgurInfoAlertOption_Cancel = 0,
+	ImgurInfoAlertOption_ImgurID,
+	ImgurInfoAlertOption_ImgurLink,
+} ImgurInfoAlertOption;
+
+static int ImgurInfoAlert = 100;
+
 @interface RedditPostCell ()
 
-@property (nonatomic, strong) IBOutlet UIImageView *preview;
 @property (nonatomic, strong) IBOutlet UILabel *infoLabel;
 @property (nonatomic, strong) IBOutlet UIButton *actionButton;
 @property (nonatomic, strong) IBOutlet UILabel *timestampLabel;
@@ -43,21 +51,21 @@
 
 @property (nonatomic, strong) NSString *encoderID;
 
+-(IBAction)imageInfoAction:(id)sender;
+
 @end
 
 @implementation RedditPostCell
 
 - (void) prepareForReuse
 {
+	[super prepareForReuse];
 	[self.actionButton setHidden:NO];
 	[self.activity setHidden:YES];
 	[self.infoLabel setHidden:YES];
 	self.encoderID = nil;
 	self.infoLabel.text = @"";
 	self.timestampLabel.text = @"";
-	self.preview.image = nil;
-	[self.preview stopAnimating];
-	[self.preview setAnimationImages:nil];
 }
 
 - (id)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier
@@ -78,6 +86,7 @@
 
 -(void)configureWithItem:(FeedItem *)item
 {
+	[super configureWithItem:item];
 	if (!self.encoderID) // This must be our first load.
 	{
 		[self.actionButton setHidden:NO];
@@ -85,12 +94,7 @@
 		[self.infoLabel setHidden:YES];
 	}
 	self.encoderID = item.encoderID;
-	NSArray *frames = [item buildAnimationFrames];
-	[self.preview setImage:[frames objectAtIndex:(int)floor([frames count]/2)]];
-	[self.preview setAnimationImages:frames];
-	[self.preview setAnimationDuration:[frames count]*0.125];
-	[self.preview startAnimating];
-	
+
 	// Set the timestamp
 	self.timestampLabel.text = [NSString stringWithFormat:@"Created: %@", [item.timestamp timeAgo]];
 }
@@ -100,17 +104,52 @@
 	return (item.feedItemType==FeedItemType_Reddit);
 }
 
--(void)setIsOnscreen:(BOOL)visible
+- (void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex
 {
-	if (visible && !self.preview.isAnimating)
+	FeedItem *item = [FeedItem withEncoderID:self.encoderID];
+	if (alertView.tag==ImgurInfoAlert)
 	{
-		[self.preview startAnimating];
+		switch (buttonIndex)
+		{
+			case ImgurInfoAlertOption_Cancel:
+			{
+				// No action needed.
+			}
+				break;
+				
+			case ImgurInfoAlertOption_ImgurID:
+			{
+				UIPasteboard *pasteboard = [UIPasteboard generalPasteboard];
+				pasteboard.string = item.imgur.imgurID;
+			}
+				break;
+				
+			case ImgurInfoAlertOption_ImgurLink:
+			{
+				UIPasteboard *pasteboard = [UIPasteboard generalPasteboard];
+				pasteboard.string = item.imgur.link;
+			}
+				break;
+								
+			default:
+				break;
+		}
 	}
+	[alertView dismissWithClickedButtonIndex:buttonIndex animated:YES];
+}
+
+-(IBAction)imageInfoAction:(id)sender
+{
+	FeedItem *item = [FeedItem withEncoderID:self.encoderID];
 	
-	if (!visible && self.preview.isAnimating)
-	{
-		[self.preview stopAnimating];
-	}
+	UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Imgur Info"
+													message:item.imgur.imgurID
+												   delegate:self
+										  cancelButtonTitle:@"Close"
+										  otherButtonTitles:@"Copy Image ID", @"Copy link", 
+						  nil];
+	alert.tag = ImgurInfoAlert;
+	[alert show];
 }
 
 @end

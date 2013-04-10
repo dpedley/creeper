@@ -26,10 +26,8 @@
 //
 
 #import <UIKit/UIKit.h>
-#import "AnimationListController.h"
+#import "AnimatedItemCell.h"
 
-@class FeedItem;
-
-@interface ImageOnlineCell : UITableViewCell <FeedItemCell>
+@interface ImageOnlineCell : AnimatedItemCell
 
 @end

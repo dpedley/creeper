@@ -35,7 +35,6 @@
 
 -(void)configureWithItem:(FeedItem *)item;
 -(BOOL)isCorrectCellForItem:(FeedItem *)item;
--(void)setIsOnscreen:(BOOL)visible;
 
 @end
 

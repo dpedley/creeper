@@ -35,8 +35,8 @@
 #import "RedditPost.h"
 #import "CreeperDataExtensions.h"
 
-typedef enum {
-	
+typedef enum
+{
 	ImageShareAlertOption_Cancel = 0,
 	ImageShareAlertOption_Browser,
 	ImageShareAlertOption_CopyLink,

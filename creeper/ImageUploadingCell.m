@@ -34,7 +34,6 @@
 
 @interface ImageUploadingCell ()
 
-@property (nonatomic, strong) IBOutlet UIImageView *preview;
 @property (nonatomic, strong) IBOutlet UILabel *infoLabel;
 @property (nonatomic, strong) IBOutlet UIButton *actionButton;
 @property (nonatomic, strong) IBOutlet UILabel *timestampLabel;
@@ -48,17 +47,33 @@
 
 @implementation ImageUploadingCell
 
+- (void)uploadFailed
+{
+	if (![NSThread isMainThread])
+	{
+		[self performSelectorOnMainThread:@selector(uploadFailed) withObject:nil waitUntilDone:NO];
+		return;
+	}
+	
+	UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Sorry" message:@"The upload failed, please try again." delegate:self cancelButtonTitle:@"Close" otherButtonTitles:nil];
+	[alert show];
+	FeedItem *uploadingItem = [FeedItem withEncoderID:self.encoderID];
+	uploadingItem.feedItemType = FeedItemType_Encoded;
+	[FeedItem save];
+	[self.actionButton setHidden:NO];
+	[self.activity setHidden:YES];
+	[self.infoLabel setHidden:YES];
+}
+
 - (void) prepareForReuse
 {
+	[super prepareForReuse];
 	[self.actionButton setHidden:NO];
 	[self.activity setHidden:YES];
 	[self.infoLabel setHidden:YES];
 	self.encoderID = nil;
 	self.infoLabel.text = @"";
 	self.timestampLabel.text = @"";
-	self.preview.image = nil;
-	[self.preview stopAnimating];
-	[self.preview setAnimationImages:nil];
 }
 
 -(NSString *)uniqueName
@@ -87,6 +102,7 @@
 
 -(void)configureWithItem:(FeedItem *)item
 {
+	[super configureWithItem:item];
 	if (!self.encoderID) // This must be our first load.
 	{
 		[self.actionButton setHidden:NO];
@@ -94,11 +110,6 @@
 		[self.infoLabel setHidden:YES];
 	}
 	self.encoderID = item.encoderID;
-	NSArray *frames = [item buildAnimationFrames];
-	[self.preview setImage:[frames objectAtIndex:(int)floor([frames count]/2)]];
-	[self.preview setAnimationImages:frames];
-	[self.preview setAnimationDuration:[frames count]*0.125];
-	[self.preview startAnimating];
 	
 	// Set the timestamp
 	self.timestampLabel.text = [NSString stringWithFormat:@"Created: %@", [item.timestamp timeAgo]];
@@ -126,11 +137,28 @@
 	{
 		__weak ImageUploadingCell *blockSelf = self;
 		__block NSString *newName = [self uniqueName];
+		__block NSString *blockEncoderID = [[NSString alloc] initWithString:self.encoderID];
 		[ImgurIOS uploadImageData:gifData name:newName title:nil description:nil
 				   uploadComplete:^(BOOL success, ImgurEntry *imgur) {
 					   if (success)
 					   {
-						   [blockSelf attachFeedItemToImgur:imgur];
+						   FeedItem *item = [FeedItem withEncoderID:blockEncoderID];
+						   if (item)
+						   {
+							   [blockSelf attachFeedItemToImgur:imgur];
+						   }
+						   else
+						   {
+							   // we must have been deleted
+							   // let's assume we should remove the online version too.
+							   [ImgurIOS deleteImageWithHashToken:imgur.deletehash deleteComplete:^(BOOL success) {
+							   }];
+							   [imgur remove]; // This removes and saves.
+						   }
+					   }
+					   else
+					   {
+						   [blockSelf uploadFailed];
 					   }
 				   }];
 	}
@@ -152,19 +180,6 @@
 -(BOOL)isCorrectCellForItem:(FeedItem *)item
 {
 	return ( (item.feedItemType==FeedItemType_Encoded) | (item.feedItemType==FeedItemType_Uploading) );
-}
-
--(void)setIsOnscreen:(BOOL)visible
-{
-	if (visible && !self.preview.isAnimating)
-	{
-		[self.preview startAnimating];
-	}
-	
-	if (!visible && self.preview.isAnimating)
-	{
-		[self.preview stopAnimating];
-	}
 }
 
 @end

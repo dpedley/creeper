@@ -78,6 +78,7 @@
 		CDA5DEB6170E2C15001278D3 /* FeedItem.m in Sources */ = {isa = PBXBuildFile; fileRef = CDA5DEB5170E2C15001278D3 /* FeedItem.m */; };
 		CDA5DEB9170E2C15001278D3 /* ImgurEntry.m in Sources */ = {isa = PBXBuildFile; fileRef = CDA5DEB8170E2C15001278D3 /* ImgurEntry.m */; };
 		CDA5DEBC170E30EB001278D3 /* RedditPostCell.m in Sources */ = {isa = PBXBuildFile; fileRef = CDA5DEBB170E30EB001278D3 /* RedditPostCell.m */; };
+		CDA5DF1817152477001278D3 /* AnimatedItemCell.m in Sources */ = {isa = PBXBuildFile; fileRef = CDA5DF1717152476001278D3 /* AnimatedItemCell.m */; };
 		CDD961B316F4DB5B00D178B5 /* iOSRedditLogin.m in Sources */ = {isa = PBXBuildFile; fileRef = CDD961B116F4DB5B00D178B5 /* iOSRedditLogin.m */; };
 		CDD961B416F4DB5B00D178B5 /* iOSRedditLogin.xib in Resources */ = {isa = PBXBuildFile; fileRef = CDD961B216F4DB5B00D178B5 /* iOSRedditLogin.xib */; };
 		CDE9DD8D16E719A300F4B213 /* Crashlytics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CDE9DD8C16E719A300F4B213 /* Crashlytics.framework */; };
@@ -484,6 +485,8 @@
 		CDA5DEB8170E2C15001278D3 /* ImgurEntry.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ImgurEntry.m; sourceTree = "<group>"; };
 		CDA5DEBA170E30EB001278D3 /* RedditPostCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RedditPostCell.h; sourceTree = "<group>"; };
 		CDA5DEBB170E30EB001278D3 /* RedditPostCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RedditPostCell.m; sourceTree = "<group>"; };
+		CDA5DF1617152476001278D3 /* AnimatedItemCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AnimatedItemCell.h; sourceTree = "<group>"; };
+		CDA5DF1717152476001278D3 /* AnimatedItemCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AnimatedItemCell.m; sourceTree = "<group>"; };
 		CDD9618616F4277700D178B5 /* creeper v1.0.1.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = "creeper v1.0.1.xcdatamodel"; sourceTree = "<group>"; };
 		CDD961A916F4574900D178B5 /* ExternalServices.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ExternalServices.h; sourceTree = "<group>"; };
 		CDD961B016F4DB5B00D178B5 /* iOSRedditLogin.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = iOSRedditLogin.h; sourceTree = "<group>"; };
@@ -614,6 +617,8 @@
 				CDA5DE64170CA225001278D3 /* ImageOnlineCell.m */,
 				CDA5DEBA170E30EB001278D3 /* RedditPostCell.h */,
 				CDA5DEBB170E30EB001278D3 /* RedditPostCell.m */,
+				CDA5DF1617152476001278D3 /* AnimatedItemCell.h */,
+				CDA5DF1717152476001278D3 /* AnimatedItemCell.m */,
 			);
 			path = creeper;
 			sourceTree = "<group>";
@@ -1258,6 +1263,7 @@
 				CDA5DEB6170E2C15001278D3 /* FeedItem.m in Sources */,
 				CDA5DEB9170E2C15001278D3 /* ImgurEntry.m in Sources */,
 				CDA5DEBC170E30EB001278D3 /* RedditPostCell.m in Sources */,
+				CDA5DF1817152477001278D3 /* AnimatedItemCell.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -26,11 +26,10 @@
 //
 
 #import <UIKit/UIKit.h>
-
-#import "AnimationListController.h"
+#import "AnimatedItemCell.h"
 
 @class FeedItem;
 
-@interface RedditPostCell : UITableViewCell <FeedItemCell>
+@interface RedditPostCell : AnimatedItemCell
 
 @end

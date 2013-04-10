@@ -35,6 +35,7 @@
 #import "iOSRedditAPI.h"
 #import "ImageInfo.h"
 #import "GifCreationManager.h"
+#import "AnimatedItemCell.h"
 
 static int AnimationList_DeleteAlert = 100;
 
@@ -45,6 +46,7 @@ static int AnimationList_DeleteAlert = 100;
 @property (nonatomic, strong) IBOutlet UIButton *informationButton;
 @property (nonatomic, strong) NSString *navTitle;
 @property (nonatomic, strong) FeedItem *itemPendingDelete;
+@property (nonatomic, assign) BOOL beganDragging;
 
 -(IBAction)informationAction:(id)sender;
 
@@ -76,7 +78,6 @@ static int AnimationList_DeleteAlert = 100;
 		UITableViewCell *cell = [self findCellFromView:sender];
 		if (cell)
 		{
-			NSLog(@"RedditPosting: %@", [cell description]);
 			NSIndexPath *indexPath = [self.tableView indexPathForCell:cell];
 			FeedItem *item = [[self fetchedResultsController] objectAtIndexPath:indexPath];
 
@@ -88,7 +89,6 @@ static int AnimationList_DeleteAlert = 100;
 		UITableViewCell *cell = [self findCellFromView:sender];
 		if (cell)
 		{
-			NSLog(@"ViewRedditPosting: %@", [cell description]);
 			NSIndexPath *indexPath = [self.tableView indexPathForCell:cell];
 			FeedItem *item = [[self fetchedResultsController] objectAtIndexPath:indexPath];
 			
@@ -144,11 +144,8 @@ static int AnimationList_DeleteAlert = 100;
 	{
 		if (buttonIndex==1)
 		{
-			if (self.itemPendingDelete.feedItemType==FeedItemType_Encoding)
-			{
-				[[GifCreationManager sharedInstance] clearEncoder:self.itemPendingDelete.encoderID];
-			}
 			[self.itemPendingDelete remove]; // This removes and saves.
+			[GifCreationManager removeEncodedImagesForEncoderID:self.itemPendingDelete.encoderID];
 			self.itemPendingDelete = nil;
 		}
 		else if (buttonIndex==2)
@@ -157,6 +154,7 @@ static int AnimationList_DeleteAlert = 100;
 			[ImgurIOS deleteImageWithHashToken:self.itemPendingDelete.imgur.deletehash deleteComplete:^(BOOL success) {
 				
 				[self.itemPendingDelete remove]; // This removes and saves.
+				[GifCreationManager removeEncodedImagesForEncoderID:self.itemPendingDelete.encoderID];
 				self.itemPendingDelete = nil;
 				[SVProgressHUD dismiss];
 			}];
@@ -201,6 +199,11 @@ static int AnimationList_DeleteAlert = 100;
 
 #pragma mark - Utilities
 
+-(void)delayedRemoveImagesForEncoderID:(NSString *)encoderID
+{
+	[GifCreationManager removeEncodedImagesForEncoderID:encoderID];
+}
+
 -(void)updateUI
 {
 	id <NSFetchedResultsSectionInfo> sectionInfo = [self.fetchedResultsController sections][0];
@@ -215,6 +218,19 @@ static int AnimationList_DeleteAlert = 100;
 		if (self.tableView.isEditing)
 		{
 			[self.tableView setEditing:NO animated:YES];
+		}
+	}
+}
+
+-(void)animateVisibleCells
+{
+	NSArray *rows = [self.tableView visibleCells];
+	for (UITableViewCell *cell in rows)
+	{
+		if ([cell isKindOfClass:[AnimatedItemCell class]])
+		{
+			CGRect translatedFrame = [self.tableView convertRect:[(AnimatedItemCell *)cell preview].frame fromView:cell];
+			[(AnimatedItemCell *)cell setIsOnscreen:CGRectContainsRect(self.tableView.bounds, translatedFrame)];
 		}
 	}
 }
@@ -246,11 +262,26 @@ static int AnimationList_DeleteAlert = 100;
     // Dispose of any resources that can be recreated.
 }
 
+-(void)viewDidDisappear:(BOOL)animated
+{
+	// Turn them all off
+	NSArray *rows = [self.tableView visibleCells];
+	for (UITableViewCell *cell in rows)
+	{
+		if ([cell isKindOfClass:[AnimatedItemCell class]])
+		{
+			[(AnimatedItemCell *)cell setIsOnscreen:NO];
+		}
+	}
+}
+
 -(void)viewWillAppear:(BOOL)animated
 {
 	[self.tableView reloadData];
+
+	[self animateVisibleCells];
+	
 	[super viewWillAppear:animated];
-//	self.title  = self.navTitle;
 }
 
 #pragma mark - Table View
@@ -350,12 +381,41 @@ static int AnimationList_DeleteAlert = 100;
 {
     if (editingStyle == UITableViewCellEditingStyleDelete)
 	{
-		self.itemPendingDelete = [self.fetchedResultsController objectAtIndexPath:indexPath];
+		FeedItem *item = [self.fetchedResultsController objectAtIndexPath:indexPath];
+		GifCreationManager *GCM = [GifCreationManager sharedInstance];
 		
-		NSString *optionDelete = (self.itemPendingDelete.feedItemType==FeedItemType_Encoding)?nil:@"Also online version";
-		UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Delete" message:@"Do you want to just remove it locally or delete from Imgur as well?" delegate:self cancelButtonTitle:@"Cancel" otherButtonTitles:@"Local only", optionDelete, nil];
-		alert.tag = AnimationList_DeleteAlert;
-		[alert show];
+		switch (item.feedItemType)
+		{
+			case FeedItemType_Encoding:
+			{
+				NSString *itemEncoderID = item.encoderID;
+				[GCM clearEncoder:itemEncoderID];
+				[item remove]; // This removes and saves.
+				[GifCreationManager removeEncodedImagesForEncoderID:itemEncoderID];
+			}
+				break;
+
+			case FeedItemType_Encoded:
+			case FeedItemType_Uploading:
+			{
+				[item remove]; // This removes and saves.
+				[GifCreationManager removeEncodedImagesForEncoderID:item.encoderID];
+			}
+				break;
+				
+			case FeedItemType_Online:
+			case FeedItemType_Reddit:
+			{
+				self.itemPendingDelete = item;
+				UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Delete" message:@"Do you want to just remove it locally or delete from Imgur as well?" delegate:self cancelButtonTitle:@"Cancel" otherButtonTitles:@"Local only", @"Also online version", nil];
+				alert.tag = AnimationList_DeleteAlert;
+				[alert show];
+			}
+				break;
+				
+			default:
+				break;
+		}
     }
 }
 
@@ -365,21 +425,22 @@ static int AnimationList_DeleteAlert = 100;
     return NO;
 }
 
-- (void)scrollViewDidScroll:(UIScrollView *)scrollView
+- (void)scrollViewDidEndDragging:(UIScrollView *)scrollView willDecelerate:(BOOL)decelerate
 {
-	if ([scrollView isKindOfClass:[UITableView class]])
+	if (scrollView==self.tableView)
 	{
-		UITableView *tbl = (UITableView *)scrollView;
-		NSArray *rows = [tbl visibleCells];
-		
-		for (UITableViewCell *cell in rows)
-		{
-			// TODO: tighten this up
-			CGRectMake(cell.frame.origin.x, cell.frame.origin.y + 40, cell.frame.size.width, cell.frame.size.height - 80);
-			[(UITableViewCell <FeedItemCell>*)cell setIsOnscreen:CGRectContainsRect(self.tableView.bounds, cell.frame)];
-		}
+		[self animateVisibleCells];
 	}
 }
+
+- (void)scrollViewDidEndDecelerating:(UIScrollView *)scrollView
+{
+	if (scrollView==self.tableView)
+	{
+		[self animateVisibleCells];
+	}
+}
+
 
 #pragma mark - Fetched results controller
 
@@ -468,7 +529,7 @@ static int AnimationList_DeleteAlert = 100;
 				}
 				else
 				{
-					[tableView reloadRowsAtIndexPaths:[NSArray arrayWithObject:indexPath] withRowAnimation:UITableViewRowAnimationFade];
+					[tableView reloadRowsAtIndexPaths:@[indexPath] withRowAnimation:UITableViewRowAnimationFade];
 				}
 			}
 		}
@@ -483,8 +544,9 @@ static int AnimationList_DeleteAlert = 100;
 
 - (void)controllerDidChangeContent:(NSFetchedResultsController *)controller
 {
-    [self.tableView endUpdates];
 	[self updateUI];
+    [self.tableView endUpdates];
+	[self animateVisibleCells];
 }
 
 /*

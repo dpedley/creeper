@@ -35,9 +35,12 @@
 
 @interface GifCreationManager : NSObject
 
++(void)removeEncodedImagesForEncoderID:(NSString *)encoderID;
 +(NSString *)storageLocationForEncoderID:(NSString *)encoderID imageIndex:(int)imageIndex;
-+(GifCreationManager *)sharedInstance;
++(UIImage *)previewFrameForEncoderID:(NSString *)encoderID imageIndex:(int)imageIndex;
+
 +(GifCreationQueue *)queueByID:(NSString *)encoderID;
++(GifCreationManager *)sharedInstance;
 -(NSString *)createEncoderWithSize:(CGSize)size;
 -(void)addFrame:(GifQueueFrame *)gifFrame toEncoder:(NSString *)encoderID;
 -(void)closeEncoder:(NSString *)encoderID;

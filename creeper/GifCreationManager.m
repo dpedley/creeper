@@ -26,8 +26,9 @@
 //
 
 #import "GifCreationManager.h"
-#import <giflib/GifEncode.h>
-#import <giflib/giflib_ios.h>
+#import <giflib-ios/GifEncode.h>
+#import <giflib-ios/GifDecode.h>
+#import <giflib-ios/giflib_ios.h>
 #import "FeedItem.h"
 #import "CreeperDataExtensions.h"
 
@@ -68,15 +69,10 @@ static GifCreationManager *_sharedInstance = nil;
 
 #pragma mark - Background processing
 
-+(NSString *)storageLocationForEncoderID:(NSString *)encoderID imageIndex:(int)imageIndex
++(NSString *)GCMdir
 {
-	if (!encoderID)
-	{
-		return nil;
-	}
-	
 	NSArray  *documentPaths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
-	NSString *documentsDir  = [documentPaths objectAtIndex:0];	
+	NSString *documentsDir  = [documentPaths objectAtIndex:0];
 	NSString *outputDir    = [documentsDir stringByAppendingPathComponent:@"GCM"];
 	
 	NSFileManager *mgr = [NSFileManager defaultManager];
@@ -85,10 +81,83 @@ static GifCreationManager *_sharedInstance = nil;
 	{
 		[mgr createDirectoryAtPath:outputDir withIntermediateDirectories:YES attributes:nil error:nil];
 	}
+	return outputDir;
+}
+
++(void)removeEncodedImagesForEncoderID:(NSString *)encoderID
+{
+	NSFileManager *mgr = [NSFileManager defaultManager];
+	int i=0;
+	NSString *theGIF = [self storageLocationForEncoderID:encoderID previewImageIndex:i];
 	
+	while ([mgr fileExistsAtPath:theGIF])
+	{
+		[mgr removeItemAtPath:theGIF error:nil];
+		i++;
+		theGIF = [GifCreationManager storageLocationForEncoderID:encoderID previewImageIndex:i];
+	}
+}
+
+
++(NSString *)storageLocationForEncoderID:(NSString *)encoderID imageIndex:(int)imageIndex
+{
+	if (!encoderID)
+	{
+		return nil;
+	}
+	
+	NSString *outputDir = [self GCMdir];
 	return [outputDir stringByAppendingPathComponent:
 					  [NSString stringWithFormat:@"%@_%d.gif", encoderID, imageIndex]];
 }
+
++(NSString *)storageLocationForEncoderID:(NSString *)encoderID previewImageIndex:(int)imageIndex
+{
+	if (!encoderID)
+	{
+		return nil;
+	}
+	
+	NSString *outputDir = [self GCMdir];
+	return [outputDir stringByAppendingPathComponent:
+			[NSString stringWithFormat:@"%@_%d_preview.png", encoderID, imageIndex]];
+}
+
++(UIImage *)previewFrameForEncoderID:(NSString *)encoderID imageIndex:(int)imageIndex
+{
+	if (!encoderID)
+	{
+		return nil;
+	}
+	
+	NSString *theGIF = [self storageLocationForEncoderID:encoderID previewImageIndex:imageIndex];
+		
+	NSFileManager *mgr = [NSFileManager defaultManager];
+	
+	UIImage *frm = nil;
+	
+	if (![mgr fileExistsAtPath:theGIF])
+	{
+		NSMutableArray *frames = [NSMutableArray array];
+		[GifDecode decodeGifFramesFromFile:[self storageLocationForEncoderID:encoderID imageIndex:imageIndex] storeFramesIn:frames storeInfo:nil separateFrameOnly:NO];
+		if (frames && [frames count]>0)
+		{
+			frm = [frames objectAtIndex:floor([frames count]/2)];
+			NSData *pngData = UIImagePNGRepresentation(frm);
+			if (pngData)
+			{
+				[pngData writeToFile:theGIF atomically:NO];
+			}
+		}
+	}
+	else
+	{
+		frm = [[UIImage alloc] initWithContentsOfFile:theGIF];
+	}
+	
+	return frm;
+}
+
 
 -(NSString *)createEncoderWithSize:(CGSize)size
 {
@@ -132,11 +201,16 @@ static GifCreationManager *_sharedInstance = nil;
 {
 	GifCreationQueue *encoderQueue = [self.encoders objectForKey:encoderID];
 	
-	if (encoderQueue.encoder)
+	if (encoderQueue)
 	{
-		[encoderQueue.encoder close];
+		[encoderQueue cancelAllOperations];
+		[encoderQueue waitUntilAllOperationsAreFinished];
+		if (encoderQueue.encoder)
+		{
+			[encoderQueue.encoder close];
+		}
+		[self.encoders removeObjectForKey:encoderID];
 	}
-	[self.encoders removeObjectForKey:encoderID];
 }
 
 
