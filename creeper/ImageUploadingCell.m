@@ -31,6 +31,8 @@
 #import "NSDate+TimeAgo.h"
 #import "ImgurIOS.h"
 #import "GifCreationManager.h"
+#import <QuartzCore/QuartzCore.h>
+#import "ImgurSubmit.h"
 
 @interface ImageUploadingCell ()
 
@@ -38,59 +40,39 @@
 @property (nonatomic, strong) IBOutlet UIButton *actionButton;
 @property (nonatomic, strong) IBOutlet UILabel *timestampLabel;
 @property (nonatomic, strong) IBOutlet UIActivityIndicatorView *activity;
+@property (nonatomic, strong) IBOutlet UIView *hud;
 
 @property (nonatomic, strong) NSString *encoderID;
-
--(IBAction)actionButtonEvent:(id)sender;
 
 @end
 
 @implementation ImageUploadingCell
 
-- (void)uploadFailed
-{
-	if (![NSThread isMainThread])
-	{
-		[self performSelectorOnMainThread:@selector(uploadFailed) withObject:nil waitUntilDone:NO];
-		return;
-	}
-	
-	UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Sorry" message:@"The upload failed, please try again." delegate:self cancelButtonTitle:@"Close" otherButtonTitles:nil];
-	[alert show];
-	FeedItem *uploadingItem = [FeedItem withEncoderID:self.encoderID];
-	uploadingItem.feedItemType = FeedItemType_Encoded;
-	[FeedItem save];
-	[self.actionButton setHidden:NO];
-	[self.activity setHidden:YES];
-	[self.infoLabel setHidden:YES];
-}
-
 - (void) prepareForReuse
 {
 	[super prepareForReuse];
 	[self.actionButton setHidden:NO];
-	[self.activity setHidden:YES];
-	[self.infoLabel setHidden:YES];
+	[self.hud setHidden:YES];
 	self.encoderID = nil;
-	self.infoLabel.text = @"";
 	self.timestampLabel.text = @"";
-}
-
--(NSString *)uniqueName
-{
-	CFUUIDRef theUUID = CFUUIDCreate(NULL);
-	CFStringRef uuidString = CFUUIDCreateString(NULL, theUUID);
-	CFRelease(theUUID);
-	return [NSString stringWithFormat:@"%@_%@", creeperPrefix, uuidString];
+	[self.actionButton setBackgroundImage:nil forState:UIControlStateNormal];
+	[self.actionButton setBackgroundImage:nil forState:UIControlStateHighlighted];
 }
 
 - (id)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier
 {
     self = [super initWithStyle:style reuseIdentifier:reuseIdentifier];
-    if (self) {
+    if (self)
+	{
         // Initialization code
     }
     return self;
+}
+
+-(void)awakeFromNib
+{
+	[super awakeFromNib];
+	self.hud.layer.cornerRadius = 10.0;
 }
 
 - (void)setSelected:(BOOL)selected animated:(BOOL)animated
@@ -100,81 +82,95 @@
     // Configure the view for the selected state
 }
 
--(void)configureWithItem:(FeedItem *)item
-{
-	[super configureWithItem:item];
-	if (!self.encoderID) // This must be our first load.
-	{
-		[self.actionButton setHidden:NO];
-		[self.activity setHidden:YES];
-		[self.infoLabel setHidden:YES];
-	}
-	self.encoderID = item.encoderID;
-	
-	// Set the timestamp
-	self.timestampLabel.text = [NSString stringWithFormat:@"Created: %@", [item.timestamp timeAgo]];
-}
-
--(void)attachFeedItemToImgur:(ImgurEntry *)imgur
-{
-	if (![NSThread isMainThread])
-	{
-		[self performSelectorOnMainThread:@selector(attachFeedItemToImgur:) withObject:imgur waitUntilDone:NO];
-		return;
-	}
-	
-	FeedItem *item = [FeedItem withEncoderID:self.encoderID];
-	[item setImgur:imgur];
-	item.feedItemType = FeedItemType_Online;
-	[FeedItem save];
-}
-
 -(void)uploadBackground
 {
-	NSString *dataPath = [GifCreationManager storageLocationForEncoderID:self.encoderID imageIndex:0];
-	NSData *gifData = [NSData dataWithContentsOfFile:dataPath];
-	if (gifData)
-	{
-		__weak ImageUploadingCell *blockSelf = self;
-		__block NSString *newName = [self uniqueName];
-		__block NSString *blockEncoderID = [[NSString alloc] initWithString:self.encoderID];
-		[ImgurIOS uploadImageData:gifData name:newName title:nil description:nil
-				   uploadComplete:^(BOOL success, ImgurEntry *imgur) {
-					   if (success)
-					   {
-						   FeedItem *item = [FeedItem withEncoderID:blockEncoderID];
-						   if (item)
-						   {
-							   [blockSelf attachFeedItemToImgur:imgur];
-						   }
-						   else
-						   {
-							   // we must have been deleted
-							   // let's assume we should remove the online version too.
-							   [ImgurIOS deleteImageWithHashToken:imgur.deletehash deleteComplete:^(BOOL success) {
-							   }];
-							   [imgur remove]; // This removes and saves.
-						   }
-					   }
-					   else
-					   {
-						   [blockSelf uploadFailed];
-					   }
-				   }];
-	}
+    // allocate a reachability object
+    Reachability* reach = [Reachability reachabilityWithHostname:@"www.google.com"];
+    
+    // set the blocks
+    reach.reachableBlock = ^(Reachability*reach)
+    {
+        NSLog(@"REACHABLE!");
+    };
+    
+    reach.unreachableBlock = ^(Reachability*reach)
+    {
+        NSLog(@"UNREACHABLE!");
+    };
+    
+    // start the notifier which will cause the reachability object to retain itself!
+    [reach startNotifier];
+    FeedItem *existingItem = [FeedItem withEncoderID:self.encoderID inContext:[NSManagedObjectContext contextForCurrentThread]];
+    if (!existingItem.imgur && existingItem.feedItemType!=FeedItemType_Online)
+    {
+        NSString *dataPath = [GifCreationManager storageLocationForEncoderID:self.encoderID imageIndex:0];
+        NSData *gifData = [NSData dataWithContentsOfFile:dataPath];
+        if (gifData)
+        {
+            __block NSString *newName = [ImgurSubmit uniqueName];
+            __block NSString *blockEncoderID = [[NSString alloc] initWithString:self.encoderID];
+            [ImgurIOS uploadImageData:gifData name:newName title:nil description:nil
+                       uploadComplete:^(BOOL success, ImgurEntry *imgur) {
+                           if (success)
+                           {
+                               FeedItem *item = [FeedItem withEncoderID:blockEncoderID inContext:[NSManagedObjectContext contextForCurrentThread]];
+                               if (item)
+                               {
+                                   [item attachToImgur:imgur];
+                               }
+                               else
+                               {
+                                   // we must have been deleted
+                                   // let's assume we should remove the online version too.
+                                   [ImgurIOS deleteImageWithHashToken:imgur.deletehash deleteComplete:^(BOOL success) {}];
+                                   [MagicalRecord saveUsingCurrentThreadContextWithBlock:^(NSManagedObjectContext *localContext) {
+                                       ImgurEntry *theImgur = [ImgurEntry findFirstByAttribute:@"imgurID" withValue:imgur.imgurID inContext:localContext];
+                                       [theImgur deleteInContext:localContext];
+                                   } completion:^(BOOL success, NSError *error) {
+                                       DLog(@"Upload success, but item was removed.");
+                                   }];
+                               }
+                           }
+                           else
+                           {
+                               // TODO: retry etc.
+                           }
+                       }];
+        }
+    }
 }
 
--(IBAction)actionButtonEvent:(id)sender
+-(void)configureWithItem:(FeedItem *)item detailLevel:(AnimatedItemCellRenderDetailLevel)level
 {
-	[self.actionButton setHidden:YES];
-	[self.activity setHidden:NO];
-	[self.infoLabel setHidden:NO];
-	[self.activity startAnimating];
-	FeedItem *uploadingItem = [FeedItem withEncoderID:self.encoderID];
-	uploadingItem.feedItemType = FeedItemType_Uploading;
-	[FeedItem save];
+	[super configureWithItem:item detailLevel:level];
+	if (!self.encoderID)
+	{
+		self.encoderID = item.encoderID;
+		
+		// Should we automatically upload?
+		BOOL shouldAutoupload = [[NSUserDefaults standardUserDefaults] boolForKey:@"kCreeperUserDefaults_Autoupload"];
+		
+		if (shouldAutoupload)
+		{
+			[self.actionButton setHidden:YES];
+			[self.hud setHidden:NO];
+			[self.activity startAnimating];
+			[self uploadBackground];
+		}
+		else
+		{
+			UIImage *buttonImage = [[UIImage imageNamed:@"button.png"] resizableImageWithCapInsets:UIEdgeInsetsMake(18, 18, 18, 18)];
+			UIImage *buttonImageHighlight = [[UIImage imageNamed:@"buttonHighlight.png"] resizableImageWithCapInsets:UIEdgeInsetsMake(18, 18, 18, 18)];
+			[self.actionButton setBackgroundImage:buttonImage forState:UIControlStateNormal];
+			[self.actionButton setBackgroundImage:buttonImageHighlight forState:UIControlStateHighlighted];
+			
+			[self.actionButton setHidden:NO];
+			[self.hud setHidden:YES];
+		}
+	}
 	
-	[self performSelectorInBackground:@selector(uploadBackground) withObject:nil];
+	// Set the timestamp
+	self.timestampLabel.text = [item.timestamp timeAgo];
 }
 
 -(BOOL)isCorrectCellForItem:(FeedItem *)item

@@ -1,5 +1,5 @@
 //
-//  DetailViewController.m
+//  RedditWebViewController.m
 //  creeper
 //
 //  Created by Douglas Pedley on 2/27/13.
@@ -25,7 +25,7 @@
 //  POSSIBILITY OF SUCH DAMAGE.
 //
 
-#import "ImgurWebViewController.h"
+#import "RedditWebViewController.h"
 #import "ImgurIOS.h"
 #import "SHK.h"
 #import "NSDate+TimeAgo.h"
@@ -34,10 +34,12 @@
 #import "FeedItem.h"
 #import "RedditPost.h"
 #import "CreeperDataExtensions.h"
+#import "ExternalServices.h"
 
 typedef enum
 {
 	ImageShareAlertOption_Cancel = 0,
+	ImageShareAlertOption_CreeperPublic,
 	ImageShareAlertOption_Browser,
 	ImageShareAlertOption_CopyLink,
 	ImageShareAlertOption_ShareLink
@@ -45,16 +47,18 @@ typedef enum
 
 static int ImgurWebView_ShareAlert = 100;
 
-@interface ImgurWebViewController ()
+@interface RedditWebViewController ()
 
 @property (nonatomic, strong) IBOutlet UIWebView *webView;
+@property (nonatomic, strong) NSURL *mobileURL;
+@property (nonatomic, strong) NSString *redditLink;
 
 -(IBAction)shareAction:(id)sender;
 
 - (void)configureView;
 @end
 
-@implementation ImgurWebViewController
+@implementation RedditWebViewController
 
 -(void)shareItem:(SHKItem *)item
 {
@@ -81,22 +85,35 @@ static int ImgurWebView_ShareAlert = 100;
 			}
 				break;
 				
+			case ImageShareAlertOption_CreeperPublic:
+			{
+				RedditPost *post = [RedditPost findFirstByAttribute:@"redditURL" withValue:self.redditLink];
+				
+				if (post)
+				{
+					[[iOSRedditAPI shared] addPostValidation:post parentVC:self complete:^(BOOL success) {
+						DLog(@"done, the link hash: %@", [ExternalServices createVerificationHash:post.imgurLink]);
+					}];
+				}
+			}
+				break;
+				
 			case ImageShareAlertOption_Browser:
 			{
-				[[UIApplication sharedApplication] openURL:self.item.reddit.mobileURL];
+				[[UIApplication sharedApplication] openURL:self.mobileURL];
 			}
 				break;
 				
 			case ImageShareAlertOption_CopyLink:
 			{
 				UIPasteboard *pasteboard = [UIPasteboard generalPasteboard];
-				pasteboard.string = self.item.reddit.redditURL;
+				pasteboard.string = self.redditLink;
 			}
 				break;
 				
 			case ImageShareAlertOption_ShareLink:
 			{
-				NSURL *url = [NSURL URLWithString: self.item.reddit.redditURL];
+				NSURL *url = [NSURL URLWithString: self.redditLink];
 				SHKItem *item = [SHKItem URL:url title:@"Creeper animation" contentType:SHKURLContentTypeWebpage];
 				[self shareItem:item];
 			}
@@ -116,7 +133,7 @@ static int ImgurWebView_ShareAlert = 100;
 												   delegate:self
 										  cancelButtonTitle:@"Cancel"
 										  otherButtonTitles:
-			@"Open Browser", @"Copy Link", @"Share Link", nil];
+			@"Add to the Public Creeper List", @"Open Browser", @"Copy Link", @"Share Link", nil];
 	alert.tag = ImgurWebView_ShareAlert;
 	[alert show];
 }
@@ -131,7 +148,13 @@ static int ImgurWebView_ShareAlert = 100;
     // Update the user interface for the detail item.
 
 	[SVProgressHUD showWithStatus:@"Loading Post"];
-	[self.webView loadRequest:[NSURLRequest requestWithURL:self.item.reddit.mobileURL]];
+	[self.webView loadRequest:[NSURLRequest requestWithURL:self.mobileURL]];
+}
+
+-(void)configureWithReddit:(RedditPost *)rp
+{
+	self.mobileURL = rp.mobileURL;
+	self.redditLink = rp.redditURL;
 }
 
 - (void)viewDidLoad

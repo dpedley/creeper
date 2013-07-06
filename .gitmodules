@@ -9,7 +9,16 @@
 	url = https://github.com/AFNetworking/AFNetworking.git
 [submodule "externals/giflib-ios"]
 	path = externals/giflib-ios
-	url = https://github.com/soleilpqd/giflib-ios.git
+	url = https://github.com/dpedley/giflib-ios.git
 [submodule "externals/ShareKit"]
 	path = externals/ShareKit
 	url = https://github.com/ShareKit/ShareKit.git
+[submodule "externals/MagicalRecord"]
+	path = externals/MagicalRecord
+	url = https://github.com/magicalpanda/MagicalRecord.git
+[submodule "externals/MMDrawerController"]
+	path = externals/MMDrawerController
+	url = https://github.com/mutualmobile/MMDrawerController.git
+[submodule "externals/Reachability"]
+	path = externals/Reachability
+	url = https://github.com/tonymillion/Reachability.git

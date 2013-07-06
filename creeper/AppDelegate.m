@@ -28,6 +28,8 @@
 #import "AppDelegate.h"
 #import "AnimationListController.h"
 #import "FeedItem.h"
+#import "RedditPost.h"
+#import "ImgurEntry.h"
 #import "CreeperSHKConfigurator.h"
 #import "SHK.h"
 #import "SHKConfiguration.h"
@@ -46,15 +48,36 @@ NSString *creeperPrefix = @"ccf8837e-83d0-11e2-b939-f23c91aec05e"; // Note this 
 	
 	[ExternalServices appServiceStartup];
 	
-	// Init mochi
-	[Mochi settingsFromDictionary:@{ @"database" : @"creeper", @"model" : @"creeper" }];
-	controller.managedObjectContext = [[Mochi mochiForClass:[FeedItem class]] managedObjectContext];
+	// Init MagicalRecord
+	[MagicalRecord setupCoreDataStackWithAutoMigratingSqliteStoreNamed:@"creeper"];
+	NSManagedObjectContext *defaultContext = [NSManagedObjectContext contextForCurrentThread];
+	controller.managedObjectContext = defaultContext;
 	
 	CreeperSHKConfigurator *configurator = [[CreeperSHKConfigurator alloc] init];
 	[SHKConfiguration sharedInstanceWithConfigurator:configurator];
 	
 	self.currentOrientationMask = UIInterfaceOrientationMaskAllButUpsideDown;
 
+	// TODO: remove this after the items are properly linked.
+//	NSArray *allRedditPosts = [RedditPost allObjects];
+//	BOOL needSave = NO;
+//	for (RedditPost *post in allRedditPosts)
+//	{
+//		if (!post.feedItem)
+//		{
+//			ImgurEntry *imgur = [ImgurEntry withAttributeNamed:@"link" matchingValue:post.imgurLink];
+//			if (imgur && imgur.feedItem)
+//			{
+//				post.feedItem = imgur.feedItem;
+//				needSave = YES;
+//			}
+//		}
+//	}
+//	if (needSave)
+//	{
+//		[RedditPost save];
+//	}
+	
     return YES;
 }
 							

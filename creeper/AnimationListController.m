@@ -26,20 +26,31 @@
 //
 
 #import "AnimationListController.h"
-#import "ImgurWebViewController.h"
+#import "RedditWebViewController.h"
 #import "GifProcessingCell.h"
 #import "ImgurEntry.h"
 #import "FeedItem.h"
 #import "CreeperDataExtensions.h"
 #import "ImgurIOS.h"
 #import "iOSRedditAPI.h"
-#import "ImageInfo.h"
+#import "RedditPostSubmit.h"
+#import "ImgurSubmit.h"
 #import "GifCreationManager.h"
 #import "AnimatedItemCell.h"
+#import "RedditPostCell.h"
+#import "ExternalServices.h"
 
 static int AnimationList_DeleteAlert = 100;
+static double AnimationListVelocityFast = 900.0f;
+
+typedef enum
+{
+	AnimationListFilter_CreeperApp = 0,
+	AnimationListFilter_LocalStorage = 1
+} AnimationListFilter;
 
 @interface AnimationListController ()
+@property (nonatomic, strong) IBOutlet UISegmentedControl *tableFilter;
 @property (nonatomic, strong) IBOutlet UIBarButtonItem *cameraButton;
 @property (nonatomic, strong) IBOutlet UIView *helpView;
 @property (nonatomic, strong) IBOutlet UIWebView *wikiInfoView;
@@ -47,8 +58,12 @@ static int AnimationList_DeleteAlert = 100;
 @property (nonatomic, strong) NSString *navTitle;
 @property (nonatomic, strong) FeedItem *itemPendingDelete;
 @property (nonatomic, assign) BOOL beganDragging;
+@property (nonatomic, readonly) AnimationListFilter currentFilter;
+@property (strong, nonatomic) NSFetchedResultsController *fetchedResultsController;
+@property (strong, nonatomic) NSFetchedResultsController *redditResultsController;
 
 -(IBAction)informationAction:(id)sender;
+-(IBAction)tableFilterAction:(id)sender;
 
 - (void)configureCell:(UITableViewCell *)theCell atIndexPath:(NSIndexPath *)indexPath;
 
@@ -79,9 +94,10 @@ static int AnimationList_DeleteAlert = 100;
 		if (cell)
 		{
 			NSIndexPath *indexPath = [self.tableView indexPathForCell:cell];
+			
 			FeedItem *item = [[self fetchedResultsController] objectAtIndexPath:indexPath];
 
-			[(ImageInfo *)[segue destinationViewController] setItem:item];
+			[(RedditPostSubmit *)[segue destinationViewController] setItem:item];
 		}
     }
     else if ([[segue identifier] isEqualToString:@"ViewRedditPost"])
@@ -90,9 +106,28 @@ static int AnimationList_DeleteAlert = 100;
 		if (cell)
 		{
 			NSIndexPath *indexPath = [self.tableView indexPathForCell:cell];
+			if (self.currentFilter==AnimationListFilter_LocalStorage)
+			{
+				FeedItem *item = [[self fetchedResultsController] objectAtIndexPath:indexPath];
+				[(RedditWebViewController *)[segue destinationViewController] configureWithReddit:item.reddit];
+			}
+			else if (self.currentFilter==AnimationListFilter_CreeperApp)
+			{
+				RedditPost *rp = [[self redditResultsController] objectAtIndexPath:indexPath];
+				[(RedditWebViewController *)[segue destinationViewController] configureWithReddit:rp];
+			}
+			
+		}
+    }
+	if ([[segue identifier] isEqualToString:@"ImgurUpload"])
+	{
+		UITableViewCell *cell = [self findCellFromView:sender];
+		if (cell)
+		{
+			NSIndexPath *indexPath = [self.tableView indexPathForCell:cell];
 			FeedItem *item = [[self fetchedResultsController] objectAtIndexPath:indexPath];
 			
-			[(ImgurWebViewController *)[segue destinationViewController] setItem:item];
+			[(ImgurSubmit *)[segue destinationViewController] setItem:item];
 		}
     }
     else if ([[segue identifier] isEqualToString:@"CameraSegue"])
@@ -101,6 +136,28 @@ static int AnimationList_DeleteAlert = 100;
 }
 
 #pragma mark - Actions
+
+-(IBAction)tableFilterAction:(id)sender
+{
+	if (self.currentFilter==AnimationListFilter_CreeperApp)
+	{
+		self.navigationItem.leftBarButtonItem = nil;
+		UIRefreshControl *refreshControl = [[UIRefreshControl alloc] init];
+		refreshControl.tintColor = [UIColor grayColor];
+		[refreshControl addTarget:self action:@selector(refreshControlValueChanged) forControlEvents:UIControlEventValueChanged];
+		self.refreshControl = refreshControl;
+	}
+	else
+	{
+		self.navigationItem.leftBarButtonItem = self.editButtonItem;
+		self.refreshControl = nil;
+	}
+	
+	[self.tableView reloadData];
+	[self animateVisibleCells];
+	[[NSUserDefaults standardUserDefaults] setInteger:self.tableFilter.selectedSegmentIndex forKey:@"CreeperDefaults_FeedTableFilter"];
+	[[NSUserDefaults standardUserDefaults] synchronize];
+}
 
 -(IBAction)informationAction:(id)sender
 {
@@ -144,26 +201,58 @@ static int AnimationList_DeleteAlert = 100;
 	{
 		if (buttonIndex==1)
 		{
-			[self.itemPendingDelete remove]; // This removes and saves.
-			[GifCreationManager removeEncodedImagesForEncoderID:self.itemPendingDelete.encoderID];
-			self.itemPendingDelete = nil;
+			NSString *theEncoderID = self.itemPendingDelete.encoderID;
+			[[GifCreationManager sharedInstance] clearEncoder:theEncoderID];
+			[MagicalRecord saveUsingCurrentThreadContextWithBlock:^(NSManagedObjectContext *localContext) {
+				[self.itemPendingDelete deleteInContext:localContext];
+			} completion:^(BOOL success, NSError *error) {
+				[GifCreationManager removeEncodedImagesForEncoderID:theEncoderID];
+				self.itemPendingDelete = nil;
+			}];
 		}
 		else if (buttonIndex==2)
 		{
 			[SVProgressHUD showWithStatus:@"Deleting..." maskType:SVProgressHUDMaskTypeGradient];
-			[ImgurIOS deleteImageWithHashToken:self.itemPendingDelete.imgur.deletehash deleteComplete:^(BOOL success) {
-				
-				[self.itemPendingDelete remove]; // This removes and saves.
-				[GifCreationManager removeEncodedImagesForEncoderID:self.itemPendingDelete.encoderID];
-				self.itemPendingDelete = nil;
-				[SVProgressHUD dismiss];
-			}];
+			
+			__block int removeCompletions = 0;
+			__weak AnimationListController *blockSelf = self;
+			__block NSString *theEncoderID = [NSString stringWithString:self.itemPendingDelete.encoderID];
+			void (^deleteBothOnlineCompletion)(BOOL) = ^(BOOL success) {
+				removeCompletions++;
+				if (removeCompletions==2)
+				{
+					[MagicalRecord saveUsingCurrentThreadContextWithBlock:^(NSManagedObjectContext *localContext) {
+						[blockSelf.itemPendingDelete deleteInContext:localContext];
+					} completion:^(BOOL success, NSError *error) {
+						[GifCreationManager removeEncodedImagesForEncoderID:theEncoderID];
+						blockSelf.itemPendingDelete = nil;
+						[SVProgressHUD dismiss];
+					}];
+				}
+			};
+			
+			if (self.itemPendingDelete.reddit)
+			{
+				[[iOSRedditAPI shared] deleteByName:self.itemPendingDelete.reddit.redditName parentVC:self deleted:deleteBothOnlineCompletion];
+			}
+			else
+			{
+				removeCompletions = 1;
+			}
+			[ImgurIOS deleteImageWithHashToken:self.itemPendingDelete.imgur.deletehash deleteComplete:deleteBothOnlineCompletion];
 		}
 		else
 		{
 			self.itemPendingDelete = nil;
 		}
 	}
+}
+
+#pragma mark - Properties
+
+-(AnimationListFilter)currentFilter
+{
+	return (AnimationListFilter)self.tableFilter.selectedSegmentIndex;
 }
 
 #pragma mark - Help Wiki
@@ -222,6 +311,18 @@ static int AnimationList_DeleteAlert = 100;
 	}
 }
 
+-(CGRect)translatedCell:(AnimatedItemCell *)cell
+{
+    static CGRect basePreviewFrame;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        CGRect origFrm = [cell preview].frame;
+        CGFloat frmBorder = origFrm.size.width * 0.2f;
+        basePreviewFrame = CGRectMake(origFrm.origin.x + frmBorder, origFrm.origin.y + frmBorder, origFrm.size.width - (2 * frmBorder), origFrm.size.height - (2 * frmBorder));
+    });
+    return [self.tableView convertRect:basePreviewFrame fromView:cell];
+}
+
 -(void)animateVisibleCells
 {
 	NSArray *rows = [self.tableView visibleCells];
@@ -229,8 +330,26 @@ static int AnimationList_DeleteAlert = 100;
 	{
 		if ([cell isKindOfClass:[AnimatedItemCell class]])
 		{
-			CGRect translatedFrame = [self.tableView convertRect:[(AnimatedItemCell *)cell preview].frame fromView:cell];
-			[(AnimatedItemCell *)cell setIsOnscreen:CGRectContainsRect(self.tableView.bounds, translatedFrame)];
+			CGRect translatedRect = [self translatedCell:(AnimatedItemCell *)cell];
+			BOOL cellIsVisible = CGRectIntersectsRect(self.tableView.bounds, translatedRect);
+			
+            
+			if (!cellIsVisible)
+			{
+				cellIsVisible = CGRectContainsRect(self.tableView.bounds, translatedRect);
+			}
+            
+//            NSLog(@"cell: %@ %@ %@ %@", [(RedditPostCell *)cell reddit].redditTitle, cellIsVisible?@"on":@"off", NSStringFromCGRect(translatedRect), NSStringFromCGRect(self.tableView.bounds));
+            if (cellIsVisible)
+            {
+                NSIndexPath *indexPath = [self.tableView indexPathForCell:cell];
+                if (![(AnimatedItemCell *)cell animationLoaded])
+                {
+                    [self configureCell:cell atIndexPath:indexPath];
+                }
+            }
+            
+			[(AnimatedItemCell *)cell setIsOnscreen:cellIsVisible];
 		}
 	}
 }
@@ -247,13 +366,36 @@ static int AnimationList_DeleteAlert = 100;
     [super viewDidLoad];
 	
 	self.navTitle = self.title;
-	self.navigationItem.leftBarButtonItem = self.editButtonItem;
 	[self.view addSubview:self.wikiInfoView];
 	self.wikiInfoView.hidden = YES;
 	
 	self.informationButton.hidden = YES;
 	[self performSelectorInBackground:@selector(backgroundLoadHelpWiki) withObject:nil];
 	[self updateUI];
+	
+	int tFilter = [[NSUserDefaults standardUserDefaults] integerForKey:@"CreeperDefaults_FeedTableFilter"];
+	if ( (tFilter>0) || (tFilter<[self.tableFilter numberOfSegments]) )
+	{
+		[self.tableFilter setSelectedSegmentIndex:tFilter];
+	}
+	
+	if (self.currentFilter==AnimationListFilter_CreeperApp)
+	{
+		self.navigationItem.leftBarButtonItem = nil;
+		
+		UIRefreshControl *refreshControl = [[UIRefreshControl alloc] init];
+		refreshControl.tintColor = [UIColor grayColor];
+		[refreshControl addTarget:self action:@selector(refreshControlValueChanged) forControlEvents:UIControlEventValueChanged];
+		self.refreshControl = refreshControl;
+	}
+	else
+	{
+		self.navigationItem.leftBarButtonItem = self.editButtonItem;
+		self.refreshControl = nil;
+	}
+
+	// load the latest posts
+	[[iOSRedditAPI shared] loadSubreddit:@"creeperapp" completion:^(NSArray *postArray) {}];
 }
 
 - (void)didReceiveMemoryWarning
@@ -277,53 +419,92 @@ static int AnimationList_DeleteAlert = 100;
 
 -(void)viewWillAppear:(BOOL)animated
 {
-	[self.tableView reloadData];
-
-	[self animateVisibleCells];
-	
 	[super viewWillAppear:animated];
+    static BOOL firstViewWillAppear = YES;
+    if (!firstViewWillAppear)
+    {
+        [self.tableView reloadData];
+    }
+    firstViewWillAppear = NO;
+}
+
+-(void)viewDidAppear:(BOOL)animated
+{
+    [super viewDidAppear:animated];
+    [self animateVisibleCells];
 }
 
 #pragma mark - Table View
 
+-(void)refreshControlValueChanged
+{
+	__weak AnimationListController *blockSelf = self;
+	[[iOSRedditAPI shared] loadSubreddit:@"creeperapp" completion:^(NSArray *postArray) {
+        [blockSelf.refreshControl endRefreshing];
+	}];
+}
+
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
 {
-	return [[self.fetchedResultsController sections] count];
+	if (self.currentFilter==AnimationListFilter_LocalStorage)
+	{
+		return [[self.fetchedResultsController sections] count];
+	}
+	else if (self.currentFilter==AnimationListFilter_CreeperApp)
+	{
+		return [[self.redditResultsController sections] count];
+	}
+	
+	return 1;
 }
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
 {
-	id <NSFetchedResultsSectionInfo> sectionInfo = [self.fetchedResultsController sections][section];
-	int vidCount = [sectionInfo numberOfObjects];
-	return vidCount;
+	if (self.currentFilter==AnimationListFilter_LocalStorage)
+	{
+		id <NSFetchedResultsSectionInfo> sectionInfo = [self.fetchedResultsController sections][section];
+		int vidCount = [sectionInfo numberOfObjects];
+		return vidCount;
+	}
+	else if (self.currentFilter==AnimationListFilter_CreeperApp)
+	{
+		id <NSFetchedResultsSectionInfo> sectionInfo = [self.redditResultsController sections][section];
+		int vidCount = [sectionInfo numberOfObjects];
+		return vidCount;
+	}
+	
+	return 0;
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
 {
 	NSString *cellID = @"RedditPostCell";
 	
-	FeedItem *entry = [self.fetchedResultsController objectAtIndexPath:indexPath];
-	switch (entry.feedItemType)
+	if (self.currentFilter==AnimationListFilter_LocalStorage)
 	{
-		case FeedItemType_Encoding:
-			cellID = @"GifProcessingCell";
-			break;
-			
-		case FeedItemType_Encoded:
-		case FeedItemType_Uploading:
-			cellID = @"ImageUploadingCell";
-			break;
-			
-		case FeedItemType_Online:
-			cellID = @"ImageOnlineCell";
-			break;
-			
-		case FeedItemType_Reddit:
-			cellID = @"RedditPostCell";
-			break;
-			
-		default:
-			break;
+		FeedItem *entry = [self.fetchedResultsController objectAtIndexPath:indexPath];
+		switch (entry.feedItemType)
+		{
+			case FeedItemType_Encoding:
+				cellID = @"GifProcessingCell";
+				break;
+				
+			case FeedItemType_Encoded:
+			case FeedItemType_Uploading:
+				cellID = @"ImageUploadingCell";
+				break;
+				
+			case FeedItemType_Online:
+				cellID = @"ImageOnlineCell";
+				break;
+				
+			case FeedItemType_Reddit:
+				cellID = @"RedditPostCell";
+				break;
+				
+			default:
+				break;
+		}
 	}
 	
 	UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:cellID forIndexPath:indexPath];
@@ -333,22 +514,16 @@ static int AnimationList_DeleteAlert = 100;
 
 -(CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
 {
-	FeedItem *entry = [self.fetchedResultsController objectAtIndexPath:indexPath];
-
-	switch (entry.feedItemType)
-	{
-		case FeedItemType_Encoding:
-			return 80.0;
-			break;
-			
-		default:
-			break;
-	}
-	return 321.0;
+	return 340.0;
 }
 
 -(UIView *)tableView:(UITableView *)tableView viewForHeaderInSection:(NSInteger)section
 {
+	if (self.currentFilter==AnimationListFilter_CreeperApp)
+	{
+		return nil;
+	}
+	
 	id <NSFetchedResultsSectionInfo> sectionInfo = [self.fetchedResultsController sections][section];
 	int vidCount = [sectionInfo numberOfObjects];
 	if (vidCount!=0)
@@ -361,6 +536,11 @@ static int AnimationList_DeleteAlert = 100;
 
 -(CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section
 {
+	if (self.currentFilter==AnimationListFilter_CreeperApp)
+	{
+		return 0;
+	}
+	
 	id <NSFetchedResultsSectionInfo> sectionInfo = [self.fetchedResultsController sections][section];
 	int vidCount = [sectionInfo numberOfObjects];
 	if (vidCount!=0)
@@ -373,8 +553,7 @@ static int AnimationList_DeleteAlert = 100;
 
 - (BOOL)tableView:(UITableView *)tableView canEditRowAtIndexPath:(NSIndexPath *)indexPath
 {
-    // Return NO if you do not want the specified item to be editable.
-    return YES;
+	return (self.currentFilter==AnimationListFilter_LocalStorage);
 }
 
 - (void)tableView:(UITableView *)tableView commitEditingStyle:(UITableViewCellEditingStyle)editingStyle forRowAtIndexPath:(NSIndexPath *)indexPath
@@ -390,16 +569,25 @@ static int AnimationList_DeleteAlert = 100;
 			{
 				NSString *itemEncoderID = item.encoderID;
 				[GCM clearEncoder:itemEncoderID];
-				[item remove]; // This removes and saves.
-				[GifCreationManager removeEncodedImagesForEncoderID:itemEncoderID];
+				[MagicalRecord saveWithBlock:^(NSManagedObjectContext *localContext) {
+					FeedItem *localItem = [FeedItem withEncoderID:itemEncoderID inContext:localContext];
+					[localItem deleteInContext:localContext];
+				} completion:^(BOOL success, NSError *error) {
+					[GifCreationManager removeEncodedImagesForEncoderID:itemEncoderID];
+				}];
 			}
 				break;
 
 			case FeedItemType_Encoded:
 			case FeedItemType_Uploading:
 			{
-				[item remove]; // This removes and saves.
-				[GifCreationManager removeEncodedImagesForEncoderID:item.encoderID];
+				NSString *itemEncoderID = item.encoderID;
+				[MagicalRecord saveWithBlock:^(NSManagedObjectContext *localContext) {
+					FeedItem *localItem = [FeedItem withEncoderID:itemEncoderID inContext:localContext];
+					[localItem deleteInContext:localContext];
+				} completion:^(BOOL success, NSError *error) {
+					[GifCreationManager removeEncodedImagesForEncoderID:itemEncoderID];
+				}];
 			}
 				break;
 				
@@ -425,9 +613,30 @@ static int AnimationList_DeleteAlert = 100;
     return NO;
 }
 
-- (void)scrollViewDidEndDragging:(UIScrollView *)scrollView willDecelerate:(BOOL)decelerate
+-(void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
+}
+
+// This method just used for velocity.
+-(void)scrollViewDidScroll:(UIScrollView *)scrollView
 {
 	if (scrollView==self.tableView)
+	{
+		//Simple velocity calculation
+		NSTimeInterval curCallTime = [NSDate timeIntervalSinceReferenceDate];
+		NSTimeInterval timeDelta = curCallTime - prevCallTime;
+		double curCallOffset = self.tableView.contentOffset.y;
+		double offsetDelta = curCallOffset - prevCallOffset;
+		velocity = fabs(offsetDelta / timeDelta);
+//		DLog(@"Velocity: %f", velocity);
+		prevCallTime = curCallTime;
+		prevCallOffset = curCallOffset;
+	}
+}
+
+- (void)scrollViewDidEndDragging:(UIScrollView *)scrollView willDecelerate:(BOOL)decelerate
+{
+	if (scrollView==self.tableView && velocity<AnimationListVelocityFast)
 	{
 		[self animateVisibleCells];
 	}
@@ -437,6 +646,7 @@ static int AnimationList_DeleteAlert = 100;
 {
 	if (scrollView==self.tableView)
 	{
+        velocity = 0;
 		[self animateVisibleCells];
 	}
 }
@@ -457,6 +667,10 @@ static int AnimationList_DeleteAlert = 100;
     
     // Set the batch size to a suitable number.
     [fetchRequest setFetchBatchSize:20];
+	
+	// A lil predicate to limit the feed item typed
+	NSPredicate *mustBeSaved = [NSPredicate predicateWithFormat:@"itemType != %d", (int)FeedItemType_Unsaved];
+	[fetchRequest setPredicate:mustBeSaved];
     
     // Edit the sort key as appropriate.
     NSSortDescriptor *sortDescriptor = [[NSSortDescriptor alloc] initWithKey:@"timestamp" ascending:NO];
@@ -466,7 +680,7 @@ static int AnimationList_DeleteAlert = 100;
     
     // Edit the section name key path and cache name if appropriate.
     // nil for section name key path means "no sections".
-    NSFetchedResultsController *aFetchedResultsController = [[NSFetchedResultsController alloc] initWithFetchRequest:fetchRequest managedObjectContext:self.managedObjectContext sectionNameKeyPath:nil cacheName:@"Master"];
+    NSFetchedResultsController *aFetchedResultsController = [[NSFetchedResultsController alloc] initWithFetchRequest:fetchRequest managedObjectContext:self.managedObjectContext sectionNameKeyPath:nil cacheName:@"FeedItemCache"];
     aFetchedResultsController.delegate = self;
     self.fetchedResultsController = aFetchedResultsController;
     
@@ -482,90 +696,166 @@ static int AnimationList_DeleteAlert = 100;
     return _fetchedResultsController;
 }    
 
+- (NSFetchedResultsController *)redditResultsController
+{
+    if (_redditResultsController != nil) {
+        return _redditResultsController;
+    }
+	
+#warning remove cache deletion
+	[NSFetchedResultsController deleteCacheWithName:@"RedditPostCache"];
+    NSFetchRequest *fetchRequest = [[NSFetchRequest alloc] init];
+    // Edit the entity name as appropriate.
+    NSEntityDescription *entity = [NSEntityDescription entityForName:@"RedditPost" inManagedObjectContext:self.managedObjectContext];
+    [fetchRequest setEntity:entity];
+    
+    // Set the batch size to a suitable number.
+    [fetchRequest setFetchBatchSize:20];
+    
+	NSPredicate *orderPredicate = [NSPredicate predicateWithFormat:@"hotOrder >= %d", 0];
+	NSPredicate *validationPredicate = [NSPredicate predicateWithFormat:@"validationString != NULL"];
+	NSPredicate *andPredicate = [NSCompoundPredicate andPredicateWithSubpredicates:[NSArray arrayWithObjects:orderPredicate, validationPredicate, nil]];
+	[fetchRequest setPredicate:andPredicate];
+	
+    // Edit the sort key as appropriate.
+    NSSortDescriptor *createdDescriptor = [[NSSortDescriptor alloc] initWithKey:@"hotOrder" ascending:YES];
+    NSArray *sortDescriptors = @[createdDescriptor];
+    [fetchRequest setSortDescriptors:sortDescriptors];
+    
+    // Edit the section name key path and cache name if appropriate.
+    // nil for section name key path means "no sections".
+    NSFetchedResultsController *aFetchedResultsController = [[NSFetchedResultsController alloc] initWithFetchRequest:fetchRequest managedObjectContext:self.managedObjectContext sectionNameKeyPath:nil cacheName:@"RedditPostCache"];
+    aFetchedResultsController.delegate = self;
+    self.redditResultsController = aFetchedResultsController;
+    
+	NSError *error = nil;
+	if (![self.redditResultsController performFetch:&error])
+	{
+		// Replace this implementation with code to handle the error appropriately.
+		// abort() causes the application to generate a crash log and terminate. You should not use this function in a shipping application, although it may be useful during development.
+	    NSLog(@"Unresolved error %@, %@", error, [error userInfo]);
+	    abort();
+	}
+    
+    return _redditResultsController;
+}
+
 - (void)controllerWillChangeContent:(NSFetchedResultsController *)controller
 {
-    [self.tableView beginUpdates];
+	if (((self.currentFilter==AnimationListFilter_CreeperApp) && (controller==self.redditResultsController)) ||
+		((self.currentFilter==AnimationListFilter_LocalStorage) && (controller==self.fetchedResultsController)))
+	{
+		[self.tableView beginUpdates];
+	}
 }
 
 - (void)controller:(NSFetchedResultsController *)controller didChangeSection:(id <NSFetchedResultsSectionInfo>)sectionInfo
            atIndex:(NSUInteger)sectionIndex forChangeType:(NSFetchedResultsChangeType)type
 {
-    switch(type) {
-        case NSFetchedResultsChangeInsert:
-            [self.tableView insertSections:[NSIndexSet indexSetWithIndex:sectionIndex] withRowAnimation:UITableViewRowAnimationFade];
-            break;
-            
-        case NSFetchedResultsChangeDelete:
-            [self.tableView deleteSections:[NSIndexSet indexSetWithIndex:sectionIndex] withRowAnimation:UITableViewRowAnimationFade];
-            break;
-    }
+	if (((self.currentFilter==AnimationListFilter_CreeperApp) && (controller==self.redditResultsController)) ||
+		((self.currentFilter==AnimationListFilter_LocalStorage) && (controller==self.fetchedResultsController)))
+	{
+		switch(type) {
+			case NSFetchedResultsChangeInsert:
+				[self.tableView insertSections:[NSIndexSet indexSetWithIndex:sectionIndex] withRowAnimation:UITableViewRowAnimationFade];
+				break;
+				
+			case NSFetchedResultsChangeDelete:
+				[self.tableView deleteSections:[NSIndexSet indexSetWithIndex:sectionIndex] withRowAnimation:UITableViewRowAnimationFade];
+				break;
+		}
+	}
 }
 
 - (void)controller:(NSFetchedResultsController *)controller didChangeObject:(id)anObject
        atIndexPath:(NSIndexPath *)indexPath forChangeType:(NSFetchedResultsChangeType)type
       newIndexPath:(NSIndexPath *)newIndexPath
 {
-    UITableView *tableView = self.tableView;
-    
-    switch(type) {
-        case NSFetchedResultsChangeInsert:
-            [tableView insertRowsAtIndexPaths:@[newIndexPath] withRowAnimation:UITableViewRowAnimationFade];
-            break;
-            
-        case NSFetchedResultsChangeDelete:
-            [tableView deleteRowsAtIndexPaths:@[indexPath] withRowAnimation:UITableViewRowAnimationFade];
-            break;
-            
-        case NSFetchedResultsChangeUpdate:
-		{
-			FeedItem *item = [self.fetchedResultsController objectAtIndexPath:indexPath];
-			UITableViewCell *cell = [tableView cellForRowAtIndexPath:indexPath];
-			
-			if ([cell conformsToProtocol:@protocol(FeedItemCell)])
+	if (((self.currentFilter==AnimationListFilter_CreeperApp) && (controller==self.redditResultsController)) ||
+		((self.currentFilter==AnimationListFilter_LocalStorage) && (controller==self.fetchedResultsController)))
+	{
+		UITableView *tableView = self.tableView;
+		
+		switch(type) {
+			case NSFetchedResultsChangeInsert:
+				[tableView insertRowsAtIndexPaths:@[newIndexPath] withRowAnimation:UITableViewRowAnimationFade];
+				break;
+				
+			case NSFetchedResultsChangeDelete:
+				[tableView deleteRowsAtIndexPaths:@[indexPath] withRowAnimation:UITableViewRowAnimationFade];
+				break;
+				
+			case NSFetchedResultsChangeUpdate:
 			{
-				if ([(NSObject <FeedItemCell> *)cell isCorrectCellForItem:item])
+				if (self.currentFilter==AnimationListFilter_LocalStorage)
 				{
-					[self configureCell:cell atIndexPath:indexPath];
+					FeedItem *item = [self.fetchedResultsController objectAtIndexPath:indexPath];
+					UITableViewCell *cell = [tableView cellForRowAtIndexPath:indexPath];
+					
+					if ([cell conformsToProtocol:@protocol(FeedItemCell)])
+					{
+						if ([(NSObject <FeedItemCell> *)cell isCorrectCellForItem:item])
+						{
+							[self configureCell:cell atIndexPath:indexPath];
+						}
+						else
+						{
+							[tableView reloadRowsAtIndexPaths:@[indexPath] withRowAnimation:UITableViewRowAnimationFade];
+						}
+					}
 				}
-				else
+				else if (self.currentFilter==AnimationListFilter_CreeperApp)
 				{
-					[tableView reloadRowsAtIndexPaths:@[indexPath] withRowAnimation:UITableViewRowAnimationFade];
+					UITableViewCell *cell = [tableView cellForRowAtIndexPath:indexPath];
+					
+					if ([cell isKindOfClass:[RedditPostCell class]])
+					{
+						[self configureCell:cell atIndexPath:indexPath];
+					}
+					else
+					{
+						[tableView reloadRowsAtIndexPaths:@[indexPath] withRowAnimation:UITableViewRowAnimationFade];
+					}
 				}
+
 			}
+				break;
+				
+			case NSFetchedResultsChangeMove:
+				[tableView deleteRowsAtIndexPaths:@[indexPath] withRowAnimation:UITableViewRowAnimationFade];
+				[tableView insertRowsAtIndexPaths:@[newIndexPath] withRowAnimation:UITableViewRowAnimationFade];
+				break;
 		}
-            break;
-            
-        case NSFetchedResultsChangeMove:
-            [tableView deleteRowsAtIndexPaths:@[indexPath] withRowAnimation:UITableViewRowAnimationFade];
-            [tableView insertRowsAtIndexPaths:@[newIndexPath] withRowAnimation:UITableViewRowAnimationFade];
-            break;
-    }
+	}
 }
 
 - (void)controllerDidChangeContent:(NSFetchedResultsController *)controller
 {
-	[self updateUI];
-    [self.tableView endUpdates];
-	[self animateVisibleCells];
+	if (((self.currentFilter==AnimationListFilter_CreeperApp) && (controller==self.redditResultsController)) ||
+		((self.currentFilter==AnimationListFilter_LocalStorage) && (controller==self.fetchedResultsController)))
+	{
+		[self updateUI];
+		[self.tableView endUpdates];
+		[self animateVisibleCells];
+	}
 }
-
-/*
-// Implementing the above methods to update the table view in response to individual changes may have performance implications if a large number of changes are made simultaneously. If this proves to be an issue, you can instead just implement controllerDidChangeContent: which notifies the delegate that all section and object changes have been processed. 
- 
- - (void)controllerDidChangeContent:(NSFetchedResultsController *)controller
-{
-    // In the simplest, most efficient, case, reload the table view.
-    [self.tableView reloadData];
-}
- */
 
 - (void)configureCell:(UITableViewCell *)theCell atIndexPath:(NSIndexPath *)indexPath
 {
-	FeedItem *entry = [self.fetchedResultsController objectAtIndexPath:indexPath];
-
-	if ([theCell conformsToProtocol:@protocol(FeedItemCell)])
+	AnimatedItemCellRenderDetailLevel lvl = (velocity < AnimationListVelocityFast) ? AnimatedItemCellRenderDetailLevel_Full : AnimatedItemCellRenderDetailLevel_Minimal;
+	if (self.currentFilter==AnimationListFilter_LocalStorage)
 	{
-		[(UITableViewCell <FeedItemCell>*)theCell configureWithItem:entry];
+		FeedItem *entry = [self.fetchedResultsController objectAtIndexPath:indexPath];
+
+		if ([theCell conformsToProtocol:@protocol(FeedItemCell)])
+		{
+			[(UITableViewCell <FeedItemCell>*)theCell configureWithItem:entry detailLevel:lvl];
+		}
+	}
+	else if (self.currentFilter==AnimationListFilter_CreeperApp)
+	{
+		RedditPost *entry = [self.redditResultsController objectAtIndexPath:indexPath];
+		[(RedditPostCell *)theCell configureWithReddit:entry detailLevel:lvl];
 	}
 }
 

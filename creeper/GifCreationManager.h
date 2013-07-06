@@ -33,16 +33,25 @@
 @class GifCreationQueue;
 @class GifQueueFrame;
 
+@interface NSData (GifDataPadding)
+
+-(NSData *)dataPaddingGIF;
+
+@end
+
 @interface GifCreationManager : NSObject
 
 +(void)removeEncodedImagesForEncoderID:(NSString *)encoderID;
 +(NSString *)storageLocationForEncoderID:(NSString *)encoderID imageIndex:(int)imageIndex;
++(NSString *)storageLocationForEncoderID:(NSString *)encoderID previewImageIndex:(int)imageIndex;
 +(UIImage *)previewFrameForEncoderID:(NSString *)encoderID imageIndex:(int)imageIndex;
++(NSData *)dataPaddingForEncoderID:(NSString *)encoderID imageIndex:(int)imageIndex;
 
 +(GifCreationQueue *)queueByID:(NSString *)encoderID;
 +(GifCreationManager *)sharedInstance;
 -(NSString *)createEncoderWithSize:(CGSize)size;
 -(void)addFrame:(GifQueueFrame *)gifFrame toEncoder:(NSString *)encoderID;
+-(void)addAudioData:(NSData *)data toEncoder:(NSString *)encoderID;
 -(void)closeEncoder:(NSString *)encoderID;
 -(void)clearEncoder:(NSString *)encoderID;
 
@@ -63,8 +72,11 @@
 @property (nonatomic, strong) GifQueueFrame *lastOperation;
 @property (nonatomic, readonly) NSUInteger storageSize;
 @property (nonatomic, readonly) NSUInteger approxStorageFrameSize;
+@property (nonatomic, strong) NSMutableData *audioData;
 
 -(void)addGifFrame:(GifQueueFrame *)frm;
+-(void)addAudioData:(NSData *)data;
+-(void)storageAppendAudioData;
 
 @end
 

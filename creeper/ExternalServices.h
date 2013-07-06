@@ -39,5 +39,6 @@
 
 +(void)appServiceStartup;
 +(void)addBasicAuthorization:(NSMutableURLRequest *)request;
++(NSString*)createVerificationHash:(NSString*)inputURL;
 
 @end

@@ -28,7 +28,9 @@
 #import <UIKit/UIKit.h>
 #import <AVFoundation/AVFoundation.h>
 
-@interface SceneCapture : UIViewController <AVCaptureVideoDataOutputSampleBufferDelegate>
+extern NSTimeInterval SceneCaptureFrameInterval;
+
+@interface SceneCapture : UIViewController <AVCaptureVideoDataOutputSampleBufferDelegate, AVCaptureAudioDataOutputSampleBufferDelegate>
 
 @property (nonatomic, assign) int frameCount;
 

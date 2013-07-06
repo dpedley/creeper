@@ -29,14 +29,14 @@
 #import "FeedItem.h"
 #import "CreeperDataExtensions.h"
 #import "GifCreationManager.h"
+#import "iOSRedditAPI.h"
+#import "SceneCapture.h"
 
 @interface AnimatedItemCell ()
 
-@property (nonatomic, assign) BOOL animationLoaded;
+@property (nonatomic, assign) NSTimeInterval animationLoadingTimestamp;
 @property (nonatomic, assign) BOOL shouldStartAnimatingAfterLoad;
-
--(void)startPreviewAnimation;
--(void)stopPreviewAnimation;
+@property (nonatomic, strong) AVAudioPlayer *audioPlayer;
 
 @end
 
@@ -51,6 +51,11 @@
     return self;
 }
 
+-(void)awakeFromNib
+{
+	// not currently used.
+}
+
 - (void)setSelected:(BOOL)selected animated:(BOOL)animated
 {
     [super setSelected:selected animated:animated];
@@ -60,13 +65,14 @@
 
 -(void) prepareForReuse
 {
+	self.animationLoadingTimestamp = 0;
 	self.preview.image = nil;
 	self.animationLoaded = NO;
 	self.shouldStartAnimatingAfterLoad = NO;
+	self.audioPlayer = nil;
 	[self.preview stopAnimating];
 	[self.preview setAnimationImages:nil];
 }
-
 
 -(void)startPreviewAnimation
 {
@@ -76,6 +82,7 @@
 	}
 	else
 	{
+		[self.audioPlayer play];
 		[self.preview startAnimating];
 	}
 }
@@ -84,26 +91,203 @@
 {
 	self.shouldStartAnimatingAfterLoad = NO;
 	[self.preview stopAnimating];
+	[self.audioPlayer stop];
 }
 
--(void)loadAnimationInBackground:(FeedItem *)item
+-(void)loadFullAnimationInBackground:(NSString *)itemEncoderID
 {
-	self.animationLoaded = NO;
-	if ([NSThread isMainThread])
+	if (self.animationLoaded)
 	{
-		[self performSelectorInBackground:@selector(loadAnimationInBackground:) withObject:item];
 		return;
 	}
 	
-	NSArray *frames = [item buildAnimationFrames];
-	[self.preview setAnimationImages:frames];
-	[self.preview setAnimationDuration:[frames count]*0.125];
-	if (self.shouldStartAnimatingAfterLoad)
+	if ([NSThread isMainThread])
 	{
-		self.shouldStartAnimatingAfterLoad = NO;
-		[self.preview performSelectorOnMainThread:@selector(startAnimating) withObject:nil waitUntilDone:NO];
+		NSAssert(NO, @"loadAnimationInBackground should be called on the background thread.");
+		return;
 	}
-	self.animationLoaded = YES;
+	
+#pragma message "Here is a spot to reenable the audio"
+	/*
+	NSString *theGIF = [GifCreationManager storageLocationForEncoderID:itemEncoderID imageIndex:0];
+	
+	NSString *audioURL = [theGIF stringByAppendingString:@"rawaudio"];
+	NSFileManager *mgr = [NSFileManager defaultManager];
+
+	if ([mgr fileExistsAtPath:audioURL])
+	{
+		NSError *error = nil;
+		AVAudioPlayer *mplayer = [[AVAudioPlayer alloc] initWithContentsOfURL:[NSURL fileURLWithPath:audioURL] error:&error];
+		
+		if (error)
+		{
+			DLog(@"audio error: %@", error);
+		}
+		else
+		{
+			mplayer.delegate = self;
+			[mplayer prepareToPlay];
+			self.audioPlayer = mplayer;
+		}
+	}
+	else
+	{
+		self.audioPlayer = nil;
+	}
+	 */
+	
+	NSTimeInterval nti = [NSDate timeIntervalSinceReferenceDate];
+	self.animationLoadingTimestamp = nti;
+	
+	FeedItem *item = [FeedItem withEncoderID:itemEncoderID inContext:[NSManagedObjectContext contextForCurrentThread]];
+	NSArray *frames = [item buildAnimationFrames];
+	
+	if (frames && self.animationLoadingTimestamp==nti)
+	{
+		[self.preview setAnimationImages:frames];
+		[self.preview setAnimationDuration:[frames count] * SceneCaptureFrameInterval];
+		if (self.shouldStartAnimatingAfterLoad)
+		{
+			self.shouldStartAnimatingAfterLoad = NO;
+			[self.audioPlayer performSelectorOnMainThread:@selector(play) withObject:nil waitUntilDone:NO];
+			[self.preview performSelectorOnMainThread:@selector(startAnimating) withObject:nil waitUntilDone:NO];
+		}
+		self.animationLoaded = YES;
+	}	
+}
+
+// TODO: this is curently not optimized for minimal usage. (might not be needed)
+-(void)loadMinimalAnimationInBackground:(NSString *)itemEncoderID
+{
+	if (self.animationLoaded)
+	{
+		return;
+	}
+	
+	if ([NSThread isMainThread])
+	{
+		NSAssert(NO, @"loadAnimationInBackground should be called on the background thread.");
+		return;
+	}
+	
+	NSTimeInterval nti = [NSDate timeIntervalSinceReferenceDate];
+	self.animationLoadingTimestamp = nti;
+	
+	FeedItem *item = [FeedItem withEncoderID:itemEncoderID inContext:[NSManagedObjectContext contextForCurrentThread]];
+	NSArray *frames = [item buildAnimationFrames];
+	
+	if (frames && self.animationLoadingTimestamp==nti)
+	{
+		[self.preview setAnimationImages:frames];
+		[self.preview setAnimationDuration:[frames count] * SceneCaptureFrameInterval];
+		if (self.shouldStartAnimatingAfterLoad)
+		{
+			self.shouldStartAnimatingAfterLoad = NO;
+			[self.audioPlayer performSelectorOnMainThread:@selector(play) withObject:nil waitUntilDone:NO];
+			[self.preview performSelectorOnMainThread:@selector(startAnimating) withObject:nil waitUntilDone:NO];
+		}
+		self.animationLoaded = YES;
+	}	
+}
+
+-(void)loadFullEntryInBackground:(NSString *)redditID
+{
+	if (self.animationLoaded)
+	{
+		return;
+	}
+	
+	if ([NSThread isMainThread])
+	{
+		[self performSelectorInBackground:@selector(loadFullEntryInBackground:) withObject:redditID];
+		return;
+	}
+	
+	RedditPost *post = [RedditPost findFirstByAttribute:@"redditID" withValue:redditID inContext:[NSManagedObjectContext contextForCurrentThread]];
+	
+	// We keep checking that the nti hasn't changed, when the cell is reused it changes.
+	NSTimeInterval nti = [NSDate timeIntervalSinceReferenceDate];
+	self.animationLoadingTimestamp = nti;
+	
+	UIImage *previewFrame = post.previewFrame;
+	
+	if (previewFrame && self.animationLoadingTimestamp==nti)
+	{
+		[self.preview performSelectorOnMainThread:@selector(setImage:) withObject:previewFrame waitUntilDone:NO];
+		
+		NSArray *frames = [post buildAnimationFrames];
+		if (!frames)
+		{
+			// If we get here the animation was cached.
+			if (self.animationLoadingTimestamp==nti)
+			{
+				frames = post.animationFrames;
+			}
+		}
+		
+		if (frames && self.animationLoadingTimestamp==nti)
+		{
+			[self.preview setAnimationImages:frames];
+			[self.preview setAnimationDuration:[frames count] * SceneCaptureFrameInterval];
+			if (self.shouldStartAnimatingAfterLoad)
+			{
+				self.shouldStartAnimatingAfterLoad = NO;
+				[self.preview performSelectorOnMainThread:@selector(startAnimating) withObject:nil waitUntilDone:NO];
+			}
+			self.animationLoaded = YES;
+		}
+	}
+}
+
+-(void)loadMinimalEntryInBackground:(NSString *)redditID
+{
+	if (self.animationLoaded)
+	{
+		return;
+	}
+	
+	if ([NSThread isMainThread])
+	{
+		[self performSelectorInBackground:@selector(loadMinimalEntryInBackground:) withObject:redditID];
+		return;
+	}
+	
+	RedditPost *post = [RedditPost findFirstByAttribute:@"redditID" withValue:redditID inContext:[NSManagedObjectContext contextForCurrentThread]];
+	
+	// We keep checking that the nti hasn't changed, when the cell is reused it changes.
+	NSTimeInterval nti = [NSDate timeIntervalSinceReferenceDate];
+	self.animationLoadingTimestamp = nti;
+	
+	UIImage *previewFrame = [post cachedPreviewFrame];
+	
+	if (previewFrame && self.animationLoadingTimestamp==nti)
+	{
+		[self.preview performSelectorOnMainThread:@selector(setImage:) withObject:previewFrame waitUntilDone:NO];
+	}
+}
+
+-(void)configureWithItem:(FeedItem *)item detailLevel:(AnimatedItemCellRenderDetailLevel)level
+{
+	if (level==AnimatedItemCellRenderDetailLevel_Full)
+	{
+		[self performSelectorInBackground:@selector(loadFullAnimationInBackground:) withObject:item.encoderID];
+	}
+	else
+	{
+		[self performSelectorInBackground:@selector(loadMinimalAnimationInBackground:) withObject:item.encoderID];
+	}
+}
+
+-(void)configureWithReddit:(RedditPost *)reddit detailLevel:(AnimatedItemCellRenderDetailLevel)level
+{
+	if (level==AnimatedItemCellRenderDetailLevel_Full)
+	{
+		[self loadFullEntryInBackground:reddit.redditID];
+	}
+	else
+	{
+		[self loadMinimalEntryInBackground:reddit.redditID];
+	}
 }
 
 -(void)setIsOnscreen:(BOOL)visible
@@ -117,12 +301,6 @@
 	{
 		[self stopPreviewAnimation];
 	}
-}
-
--(void)configureWithItem:(FeedItem *)item
-{
-	[self loadAnimationInBackground:item];
-	[self.preview setImage:[GifCreationManager previewFrameForEncoderID:item.encoderID imageIndex:0]];
 }
 
 -(BOOL)isCorrectCellForItem:(FeedItem *)item

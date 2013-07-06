@@ -29,14 +29,19 @@
 #import <AVFoundation/AVFoundation.h>
 #import <QuartzCore/CALayer.h>
 #import "GifCreationManager.h"
-#import "ImageInfo.h"
+#import "RedditPostSubmit.h"
 #import <objc/message.h>
 #import "FeedItem.h"
 #import "CreeperDataExtensions.h"
 #import "AppDelegate.h"
 
+// Yes this is less than 2 megabytes, we leave a bit of space to insure we don't go over.
+// The actual amount 2,097,152 leave a few frames worth of unused space (audio data to be added later.)
 static NSUInteger TWOMEGS = 2000000;
-static NSTimeInterval frmDelay = 0.125;
+
+#define FRAMES_PER_SECOND 8
+NSTimeInterval SceneCaptureFrameInterval = (1.0f / FRAMES_PER_SECOND);
+static CGFloat SceneCapture_maxImageDimension = 280.0f;
 
 #define RGB(r,g,b) [UIColor colorWithRed: ((double)r / 255.0) green: ((double)g / 255.0) blue: ((double)b / 255.0) alpha:1.0]
 static int SceneCapture_ClearAlert = 404;
@@ -74,6 +79,8 @@ static int SceneCapture_RotationAlert = 104;
 -(void)addGifFrame:(UIImage *)img;
 
 @end
+
+#pragma mark -
 
 @implementation SceneCapture
 
@@ -156,7 +163,8 @@ static int SceneCapture_RotationAlert = 104;
         // Create the session
         self.session = [[AVCaptureSession alloc] init];
 
-		self.session.sessionPreset = AVCaptureSessionPresetLow;
+		self.session.sessionPreset = AVCaptureSessionPresetMedium;
+//		self.session.sessionPreset = AVCaptureSessionPresetLow;
         
         // Find a suitable AVCaptureDevice
         AVCaptureDevice *device = [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeVideo];
@@ -184,17 +192,6 @@ static int SceneCapture_RotationAlert = 104;
                 return;
             }
             
-            // Add Audio Input
-    //		DLog(@"Adding audio input");
-    //		AVCaptureDevice *audioCaptureDevice = [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeAudio];
-    //		NSError *error = nil;
-    //		AVCaptureDeviceInput *audioInput = [AVCaptureDeviceInput deviceInputWithDevice:audioCaptureDevice error:&error];
-    //		if (audioInput)
-    //		{
-    //			[CaptureSession addInput:audioInput];
-    //		}
-            
-            
             // Create a VideoDataOutput and add it to the session
             AVCaptureVideoDataOutput *output = [[AVCaptureVideoDataOutput alloc] init];
             [self.session addOutput:output];
@@ -211,9 +208,9 @@ static int SceneCapture_RotationAlert = 104;
             AVCaptureConnection *conn = [output connectionWithMediaType:AVMediaTypeVideo];
             
             if (conn.isVideoMinFrameDurationSupported)
-                conn.videoMinFrameDuration = CMTimeMake(1, 8);
+                conn.videoMinFrameDuration = CMTimeMake(1, FRAMES_PER_SECOND);
             if (conn.isVideoMaxFrameDurationSupported)
-                conn.videoMaxFrameDuration = CMTimeMake(1, 8);
+                conn.videoMaxFrameDuration = CMTimeMake(1, FRAMES_PER_SECOND);
             
             switch (self.interfaceOrientation)
             {
@@ -234,13 +231,28 @@ static int SceneCapture_RotationAlert = 104;
                     break;
             }
             
+/*			// Add Audio Input
+			AVCaptureDevice *audioCaptureDevice = [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeAudio];
+			
+			AVCaptureDeviceInput *audioInput = [AVCaptureDeviceInput deviceInputWithDevice:audioCaptureDevice error:&error];
+			if (audioInput)
+			{
+				[self.session addInput:audioInput];
+			}
+            
+            // Create a AudioDataOutput and add it to the session
+            AVCaptureAudioDataOutput *audioOutput = [[AVCaptureAudioDataOutput alloc] init];
+            [self.session addOutput:audioOutput];
+			
+			dispatch_queue_t audioQueue= dispatch_queue_create("audioQueue", NULL);
+			[audioOutput setSampleBufferDelegate:self queue:audioQueue];
+*/	
             // Start the session running to start the flow of data
             [self.session startRunning];
             
             // create a preview layer to show the output from the camera
             UIView *ss = self.orientScreenShotView;
             CGRect frm = ss.bounds;
-            ss.frame = frm;
             self.previewLayer = [AVCaptureVideoPreviewLayer layerWithSession:self.session];
             [self.previewLayer setVideoGravity:AVLayerVideoGravityResizeAspectFill];
             self.previewLayer.frame = CGRectMake(0, 0, frm.size.width, frm.size.height);
@@ -288,34 +300,71 @@ static int SceneCapture_RotationAlert = 104;
     CGContextRelease(context);
     CGColorSpaceRelease(colorSpace);
 	
+	// Crop the image
+	
+	CGFloat cropX;
+	CGFloat cropY;
+	CGFloat cropWidth;
+	CGFloat cropHeight;
+
+	if (width>height)
+	{
+		// Landscape
+		cropY = 0;
+		cropHeight = height;
+		cropWidth = cropHeight;
+		cropX = (width / 2) - (height / 2);
+	}
+	else
+	{
+		// Landscape
+		cropX = 0;
+		cropWidth = width;
+		cropHeight = cropWidth;
+		cropY = (height / 2) - (width / 2);
+	}
+	
+	CGRect cropRect = CGRectMake(cropX, cropY, cropWidth, cropHeight);
+	CGImageRef cropImage = CGImageCreateWithImageInRect(quartzImage, cropRect);
+	
     // Create an image object from the Quartz image
-    UIImage *image = [UIImage imageWithCGImage:quartzImage];
+    UIImage *image = [UIImage imageWithCGImage:cropImage];
 	
     // Release the Quartz image
     CGImageRelease(quartzImage);
+    CGImageRelease(cropImage);
+
+	CGSize imgSize = image.size;
 	
-    return (image);
+	UIImage *newImage = image;
+	if (imgSize.width>SceneCapture_maxImageDimension)
+	{
+		UIGraphicsBeginImageContext(CGSizeMake(SceneCapture_maxImageDimension ,SceneCapture_maxImageDimension));
+		[image drawInRect:CGRectMake(0, 0, SceneCapture_maxImageDimension, SceneCapture_maxImageDimension)];
+		newImage = UIGraphicsGetImageFromCurrentImageContext();
+		UIGraphicsEndImageContext();
+	}
+	
+    return (newImage);
 }
 
 -(void)createInitialFeedItem
 {
-	if (![NSThread mainThread])
-	{
-		[self performSelectorOnMainThread:@selector(createInitialFeedItem) withObject:nil waitUntilDone:YES];
-		return;
-	}
-	FeedItem *newItem = [FeedItem addNew];
-	newItem.timestamp = [NSDate date];
-	newItem.encoderID = self.encoderID;
-	newItem.feedItemType = FeedItemType_Encoding;
-	[FeedItem save];
+	[MagicalRecord saveUsingCurrentThreadContextWithBlock:^(NSManagedObjectContext *localContext) {
+		FeedItem *newItem = [FeedItem createInContext:localContext];
+		newItem.timestamp = [NSDate date];
+		newItem.encoderID = self.encoderID;
+		newItem.feedItemType = FeedItemType_Unsaved;
+	} completion:^(BOOL success, NSError *error) {
+		DLog(@"created feed item for capture.");
+	}];
 }
 
 -(void)addGifFrame:(UIImage *)img
 {
 	GifCreationManager *gcm = [GifCreationManager sharedInstance];
 	if (!self.encoderID)
-	{		
+	{
 		self.encoderID = [gcm createEncoderWithSize:img.size];
 		if (!self.encoderID)
 		{
@@ -325,7 +374,7 @@ static int SceneCapture_RotationAlert = 104;
 		[self createInitialFeedItem];
 	}
 
-	[gcm addFrame:[GifQueueFrame withImage:img andDelay:frmDelay] toEncoder:self.encoderID];
+	[gcm addFrame:[GifQueueFrame withImage:img andDelay:SceneCaptureFrameInterval] toEncoder:self.encoderID];
 }
 
 #pragma mark - Actions
@@ -408,29 +457,18 @@ static int SceneCapture_RotationAlert = 104;
 
 -(IBAction)doneAction:(id)sender
 {
-	[[GifCreationManager sharedInstance] closeEncoder:self.encoderID];
-	[AppDelegate unlockOrientation];
-	[self.navigationController popViewControllerAnimated:YES];
+	[MagicalRecord saveUsingCurrentThreadContextWithBlock:^(NSManagedObjectContext *localContext) {
+		FeedItem *item = [FeedItem withEncoderID:self.encoderID inContext:localContext];
+		item.feedItemType = FeedItemType_Encoding;
+	} completion:^(BOOL success, NSError *error) {
+		DLog(@"Saved item.");
+		[AppDelegate unlockOrientation];
+		[[GifCreationManager sharedInstance] closeEncoder:self.encoderID];
+		[self.navigationController popViewControllerAnimated:YES];
+	}];
 }
 
 #pragma mark - Object lifecycle
-
-/*
--(void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation
-{
-	if (self.encoder || self.frameCount>0)
-	{
-		UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Camera Rotated" message:@"Do you want to clear your current recording and start with new orientation?" delegate:self cancelButtonTitle:@"No" otherButtonTitles:@"Yes", nil];
-		alert.tag = SceneCapture_RotationAlert;
-		[alert show];
-	}
-	else
-	{
-		[SVProgressHUD showWithStatus:@"Rotating video" maskType:SVProgressHUDMaskTypeGradient];
-		[self performSelectorInBackground:@selector(setupCaptureSession) withObject:nil];
-	}
-}
-*/
 
 -(void)dealloc
 {
@@ -444,6 +482,31 @@ static int SceneCapture_RotationAlert = 104;
         // Custom initialization
     }
     return self;
+}
+
+- (void)didMoveToParentViewController:(UIViewController *)parent
+{
+	if (!self.encoderID)
+	{
+		return;
+	}
+		
+	GifCreationQueue *queue = [GifCreationManager queueByID:self.encoderID];
+	if (!queue.closed)
+	{
+		// They pressed back without saving, let's assume they don't want the video.
+		__block NSString *blockEncoderID = [NSString stringWithString:self.encoderID];
+		[MagicalRecord saveUsingCurrentThreadContextWithBlock:^(NSManagedObjectContext *localContext) {
+			FeedItem *item = [FeedItem withEncoderID:blockEncoderID inContext:localContext];
+			[item deleteInContext:localContext];
+		} completion:^(BOOL success, NSError *error) {
+			DLog(@"Removed item.");
+			[AppDelegate unlockOrientation];
+			[[GifCreationManager sharedInstance] clearEncoder:blockEncoderID];
+			[GifCreationManager removeEncodedImagesForEncoderID:blockEncoderID];
+		}];
+		return;
+	}
 }
 
 - (void)viewDidLoad
@@ -520,30 +583,56 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
 {
 	self.previewFrameCount++;
 
-	if (self.animationActive)
+	if (self.animationActive && (sampleBuffer!=NULL) )
 	{
 		GifCreationQueue *queue = [GifCreationManager queueByID:self.encoderID];
 		NSUInteger projectedStorageSize = queue.approxStorageFrameSize * (self.frameCount + 1);
 		
 		if ( projectedStorageSize < TWOMEGS )
 		{
-			if (self.frameCount==0)
+			// Video Frame
+			if ([captureOutput isKindOfClass:[AVCaptureVideoDataOutput class]])
 			{
-				[AppDelegate lockOrientation];
-			}
-			self.frameCount++;
+				if (self.frameCount==0)
+				{
+					[AppDelegate lockOrientation];
+				}
+				self.frameCount++;
 
-			// Create a UIImage from the sample buffer data
-			UIImage *image = [self imageFromSampleBuffer:sampleBuffer];
-			
-			[self addGifFrame:image];
-			
-			[self updateFrameDisplay:[NSNumber numberWithInt:projectedStorageSize]];
-			[self updateProgress:[NSNumber numberWithInt:projectedStorageSize]];
-			if ( (self.orientLongPress.state!=UIGestureRecognizerStateBegan) &&
-				  (self.orientLongPress.state!=UIGestureRecognizerStateChanged) )
+				// Create a UIImage from the sample buffer data
+				UIImage *image = [self imageFromSampleBuffer:sampleBuffer];
+				
+				[self addGifFrame:image];
+				
+				[self updateFrameDisplay:[NSNumber numberWithInt:projectedStorageSize]];
+				[self updateProgress:[NSNumber numberWithInt:projectedStorageSize]];
+				if ( (self.orientLongPress.state!=UIGestureRecognizerStateBegan) &&
+					  (self.orientLongPress.state!=UIGestureRecognizerStateChanged) )
+				{
+					self.animationActive = NO;
+				}
+			}
+			else if ([captureOutput isKindOfClass:[AVCaptureAudioDataOutput class]])
 			{
-				self.animationActive = NO;
+
+				GifCreationQueue *queue = [GifCreationManager queueByID:self.encoderID];
+
+				AudioBufferList audioBufferList;
+				NSMutableData *data = [NSMutableData data];
+				CMBlockBufferRef blockBuffer;
+				CMSampleBufferGetAudioBufferListWithRetainedBlockBuffer(sampleBuffer, NULL, &audioBufferList, sizeof(audioBufferList), NULL, NULL, 0, &blockBuffer);
+				// NSLog(@"%@",blockBuffer);
+				
+				for( int y=0; y<audioBufferList.mNumberBuffers; y++ )
+				{
+					AudioBuffer audioBuffer = audioBufferList.mBuffers[y];
+					Float32 *frame = (Float32*)audioBuffer.mData;
+					[data appendBytes:frame length:audioBuffer.mDataByteSize];
+				}
+				
+				
+				CFRelease(blockBuffer);
+				[queue addAudioData:data];
 			}
 		}
 	}
@@ -602,11 +691,17 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
 -(IBAction)frameAdvanceAction:(id)sender      { [self.sceneCapture frameAdvanceAction:sender]; }
 -(IBAction)doneAction:(id)sender
 {
-	[AppDelegate unlockOrientation];
-	self.sceneCapture.isShowingLandscapeView = NO;
-	[[GifCreationManager sharedInstance] closeEncoder:self.sceneCapture.encoderID];
-	[self dismissViewControllerAnimated:YES completion:^{
+	[MagicalRecord saveUsingCurrentThreadContextWithBlock:^(NSManagedObjectContext *localContext) {
+		FeedItem *item = [FeedItem withEncoderID:self.sceneCapture.encoderID inContext:localContext];
+		item.feedItemType = FeedItemType_Encoding;
+	} completion:^(BOOL success, NSError *error) {
+		DLog(@"Saved item.");
+		[AppDelegate unlockOrientation];
+		self.sceneCapture.isShowingLandscapeView = NO;
+		[[GifCreationManager sharedInstance] closeEncoder:self.sceneCapture.encoderID];
+		[self dismissViewControllerAnimated:YES completion:^{
 			[self.sceneCapture.navigationController popViewControllerAnimated:YES];
+		}];
 	}];
 }
 

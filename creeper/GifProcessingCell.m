@@ -28,12 +28,15 @@
 #import "GifProcessingCell.h"
 #import "NSDate+TimeAgo.h"
 #import "CreeperDataExtensions.h"
+#import "AnimatedItemCell.h"
+#import <QuartzCore/QuartzCore.h>
 
 @interface GifProcessingCell ()
 
 @property (nonatomic, strong) IBOutlet UIImageView *lastProcessedFrame;
 
-@property (nonatomic, strong) IBOutlet UILabel *infoLabel;
+@property (nonatomic, strong) IBOutlet UIView *hud;
+@property (nonatomic, strong) IBOutlet UILabel *frameProgress;
 @property (nonatomic, strong) IBOutlet UILabel *timestampLabel;
 
 @end
@@ -42,16 +45,16 @@
 
 - (void) prepareForReuse
 {
-	self.infoLabel.text = @"";
-	self.timestampLabel.text = @"";
+	self.frameProgress.text = @"";
 	self.imageView.image = nil;
+	self.timestampLabel.text = @"";
 }
 
 - (id)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier
 {
     self = [super initWithStyle:style reuseIdentifier:reuseIdentifier];
-    if (self) {
-        // Initialization code
+    if (self)
+	{
     }
     return self;
 }
@@ -63,11 +66,21 @@
     // Configure the view for the selected state
 }
 
--(void)configureWithItem:(FeedItem *)item
+-(void)awakeFromNib
 {
-	self.infoLabel.text = [NSString stringWithFormat:@"%@ of %@ frames encoded", item.frameEncodingCount, item.frameCount];
-	self.timestampLabel.text = [NSString stringWithFormat:@"Created: %@", [item.timestamp timeAgo]];
-	self.lastProcessedFrame.image = item.currentImage;
+	self.hud.layer.cornerRadius = 10.0;
+}
+
+-(void)configureWithItem:(FeedItem *)item detailLevel:(AnimatedItemCellRenderDetailLevel)level
+{
+	if (level==AnimatedItemCellRenderDetailLevel_Full)
+	{
+		self.frameProgress.text = [NSString stringWithFormat:@"Processing %@ of %@", item.frameEncodingCount, item.frameCount];
+		self.lastProcessedFrame.image = item.currentImage;
+		
+		// Set the timestamp
+		self.timestampLabel.text = [item.timestamp timeAgo];
+	}
 }
 
 -(BOOL)isCorrectCellForItem:(FeedItem *)item

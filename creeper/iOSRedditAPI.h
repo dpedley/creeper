@@ -29,7 +29,10 @@
 
 @class RedditPost;
 
+typedef void (^iOSRedditGenericCompletion)(BOOL success);
 typedef void (^iOSRedditPostCompletion)(BOOL success, RedditPost *post);
+typedef void (^iOSRedditLoadPostData)(NSDictionary *postDictionary, BOOL cached);
+typedef void (^iOSRedditSubredditPosts)(NSArray *postArray);
 
 @interface iOSRedditAPI : NSObject
 
@@ -38,6 +41,15 @@ typedef void (^iOSRedditPostCompletion)(BOOL success, RedditPost *post);
 -(BOOL)hasModHash;
 -(void)submitLink:(NSString *)link toSubreddit:(NSString *)sr withTitle:(NSString *)title captchaVC:(UIViewController *)vc submitted:(iOSRedditPostCompletion)completionBlock;
 -(void)login:(NSString *)user passwd:(NSString *)passwd success:(void (^)(BOOL success))completionBlock;
+-(void)loadCurrentDataForRedditPostID:(NSString *)id completion:(iOSRedditLoadPostData)completion;
+-(void)loadSubreddit:(NSString *)subreddit completion:(iOSRedditSubredditPosts)completion;
+-(void)deleteByName:(NSString *)theRedditName parentVC:(UIViewController *)vc deleted:(iOSRedditGenericCompletion)completionBlock;
+-(void)addCommentTo:(NSString *)theRedditName comment:(NSString *)comment parentVC:(UIViewController *)vc complete:(iOSRedditGenericCompletion)completionBlock;
+-(void)addPostValidation:(RedditPost *)post parentVC:(UIViewController *)vc complete:(iOSRedditGenericCompletion)completionBlock;
+
++(NSString *)storageLocationForAnimationFrames:(RedditPost *)entry;
++(NSString *)storageLocation:(RedditPost *)entry;
++(NSString *)storageLocationForPreview:(RedditPost *)entry;
++(NSString *)storageLocationForOnlinePreview:(RedditPost *)entry;
 
 @end
-

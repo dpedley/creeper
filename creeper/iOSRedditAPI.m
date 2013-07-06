@@ -30,6 +30,12 @@
 #import "iOSRedditCaptcha.h"
 #import "iOSRedditLogin.h"
 #import "RedditPost.h"
+#import "CreeperDataExtensions.h"
+#import <giflib-ios/GifEncode.h>
+#import <giflib-ios/GifDecode.h>
+#import <giflib-ios/giflib_ios.h>
+
+#define REDDIT_POST_TTL 90
 
 typedef void (^iOSRedditWebEngineDataBlock)(NSData *data, NSError *error);
 typedef void (^iOSRedditDismissedBlock)();
@@ -45,6 +51,7 @@ typedef void (^iOSRedditDismissedBlock)();
 
 @interface iOSRedditAPI ()
 
+@property (nonatomic, strong) NSMutableDictionary *cachedRedditPosts;
 @property (nonatomic, strong) iOSRedditWebEngine *engine;
 @property (nonatomic, strong) NSString *modHash;
 @property (nonatomic, strong) NSString *loginCookie;
@@ -56,6 +63,109 @@ typedef void (^iOSRedditDismissedBlock)();
 
 @end
 @implementation iOSRedditAPI
+
+#pragma mark - utilities
+
++(BOOL)wasCurrentUserPost:(RedditPost *)entry
+{
+	if ([[self shared].user isEqualToString:entry.author])
+	{
+		return YES;
+	}
+	return NO;
+}
+
++(NSString *)iOSRedditAPIdir
+{
+	NSArray  *documentPaths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+	NSString *documentsDir  = [documentPaths objectAtIndex:0];
+	NSString *outputDir    = [documentsDir stringByAppendingPathComponent:@"reddit"];
+	
+	NSFileManager *mgr = [NSFileManager defaultManager];
+	
+	if (![mgr fileExistsAtPath:outputDir])
+	{
+		[mgr createDirectoryAtPath:outputDir withIntermediateDirectories:YES attributes:nil error:nil];
+	}
+	return outputDir;
+}
+
++(NSString *)iOSRedditAPIcachedir
+{
+	NSString *outputDir = [[self iOSRedditAPIdir] stringByAppendingPathComponent:@"cache"];
+	
+	NSFileManager *mgr = [NSFileManager defaultManager];
+	
+	if (![mgr fileExistsAtPath:outputDir])
+	{
+		[mgr createDirectoryAtPath:outputDir withIntermediateDirectories:YES attributes:nil error:nil];
+	}
+	return outputDir;
+}
+
++(NSString *)storageLocationExpirableCacheAnimationFrames:(RedditPost *)entry
+{
+	NSString *outputDir = [self iOSRedditAPIcachedir];
+	return [outputDir stringByAppendingPathComponent:
+			[NSString stringWithFormat:@"%@.plist", entry.redditID]];
+}
+
++(NSString *)storageLocationExpirableCache:(RedditPost *)entry
+{
+	NSString *outputDir = [self iOSRedditAPIcachedir];
+	return [outputDir stringByAppendingPathComponent:
+			[NSString stringWithFormat:@"%@.gif", entry.redditID]];
+}
+
++(NSString *)storageLocationExpirableCachePreview:(RedditPost *)entry
+{
+	NSString *outputDir = [self iOSRedditAPIcachedir];
+	return [outputDir stringByAppendingPathComponent:
+			[NSString stringWithFormat:@"%@_preview.gif", entry.redditID]];
+}
+
++(NSString *)storageLocationForAnimationFrames:(RedditPost *)entry
+{
+	if ([self wasCurrentUserPost:entry])
+	{
+		NSString *outputDir = [self iOSRedditAPIdir];
+		return [outputDir stringByAppendingPathComponent:
+				[NSString stringWithFormat:@"%@.plist", entry.redditID]];
+	}
+	
+	return [self storageLocationExpirableCacheAnimationFrames:entry];
+}
+
++(NSString *)storageLocation:(RedditPost *)entry
+{
+	if ([self wasCurrentUserPost:entry])
+	{
+		NSString *outputDir = [self iOSRedditAPIdir];
+		return [outputDir stringByAppendingPathComponent:
+				[NSString stringWithFormat:@"%@.gif", entry.redditID]];
+	}
+	
+	return [self storageLocationExpirableCache:entry];
+}
+
++(NSString *)storageLocationForPreview:(RedditPost *)entry
+{
+	if ([self wasCurrentUserPost:entry])
+	{
+		NSString *outputDir = [self iOSRedditAPIdir];
+		return [outputDir stringByAppendingPathComponent:
+				[NSString stringWithFormat:@"%@_preview.png", entry.redditID]];
+	}
+	
+	return [self storageLocationExpirableCachePreview:entry];
+}
+
++(NSString *)storageLocationForOnlinePreview:(RedditPost *)entry
+{
+	NSString *outputDir = [self iOSRedditAPIdir];
+	return [outputDir stringByAppendingPathComponent:
+			[NSString stringWithFormat:@"%@_online_preview.png", entry.redditID]];
+}
 
 -(BOOL)hasModHash
 {
@@ -155,6 +265,7 @@ typedef void (^iOSRedditDismissedBlock)();
     self = [super init];
     if (self)
 	{
+		self.cachedRedditPosts = [NSMutableDictionary dictionary];
 	}
     return self;
 }
@@ -264,7 +375,7 @@ typedef void (^iOSRedditDismissedBlock)();
 
 -(void)submitLink:(NSString *)link captchaGuess:(NSString *)guess iden:(NSString *)iden subreddit:(NSString *)sr title:(NSString *)title captchaVC:(UIViewController *)vc submitted:(iOSRedditPostCompletion)completionBlock
 {
-	NSURL *submit = [NSURL URLWithString:@"https://ssl.reddit.com/api/submit"];	
+	NSURL *submit = [NSURL URLWithString:@"https://ssl.reddit.com/api/submit"];
 	/*
 	 captcha	the user's response to the CAPTCHA challenge
 	 extension	extension used for redirects
@@ -290,7 +401,7 @@ typedef void (^iOSRedditDismissedBlock)();
 	NSURLRequest *request = [self requestWithURL:submit andPost:postBody];
 	
 	self.engine = [iOSRedditWebEngine engineWithDataBlock:^(NSData *data, NSError *error) {
-		NSDictionary *submitData = [self dataDictionaryFromResponse:data];
+		__block NSDictionary *submitData = [self dataDictionaryFromResponse:data];
 		if (submitData)
 		{
 			/*
@@ -300,36 +411,63 @@ typedef void (^iOSRedditDismissedBlock)();
 			 url = "https://ssl.reddit.com/r/creeperapp/comments/1aechj/wood_stove_diy/";
 			 }
 			 */
-			NSLog(@"submitData: %@", submitData);
+			DLog(@"submitData: %@", submitData);
 			
-			RedditPost *newPost = [RedditPost addNew];
-			newPost.redditID = [submitData objectForKey:@"id"];
-			newPost.redditURL = [submitData objectForKey:@"url"];
-			newPost.postName = [submitData objectForKey:@"name"];
-			[RedditPost save];
-			
-			completionBlock(YES, newPost);
-			return;
-		}
-		NSDictionary *errorDictionary = [self errorFromResponse:data];
-		
-		if (errorDictionary)
-		{
-			if ([errorDictionary[@"type"] isEqualToString:@"BAD_CAPTCHA"])
-			{
-				// {"json": {"captcha": "9eAaxlWxOlOP3eKNHgsR46nknuseTEsR", "errors": [["BAD_CAPTCHA", "care to try these again?", "captcha"]]}}
-				NSDictionary *payload = [self payloadFromResponse:data];
-				NSString *newIden = [payload objectForKey:@"captcha"];
+			// In addition load this into our reddit cache
+			[[iOSRedditAPI shared] loadCurrentDataForRedditPostID:[submitData objectForKey:@"id"] completion:^(NSDictionary *postDictionary, BOOL cached) {
+				DLog(@"the post: %@", postDictionary);
 				
-				if (newIden)
+				if (!cached)
 				{
-					[self submitLink:link toSubreddit:sr withTitle:title iden:newIden captchaVC:vc submitted:completionBlock];
-					return;
+					[MagicalRecord saveUsingCurrentThreadContextWithBlock:^(NSManagedObjectContext *localContext) {
+						RedditPost *newPost = nil;
+						if (postDictionary)
+						{
+							newPost = [RedditPost withDictionary:postDictionary inContext:localContext];
+						}
+						else
+						{
+							NSMutableDictionary *wAuth = [NSMutableDictionary dictionaryWithDictionary:submitData];
+							[wAuth setObject:self.user forKey:@"author"];
+							newPost = [RedditPost withDictionary:wAuth inContext:localContext];
+						}
+						newPost.validationString = [ExternalServices createVerificationHash:newPost.imgurLink];
+					} completion:^(BOOL success, NSError *error) {
+						RedditPost *savedPost = [RedditPost findFirstByAttribute:@"redditID" withValue:[submitData objectForKey:@"id"]];
+						completionBlock(YES, savedPost);
+					}];
+				}
+				else
+				{
+					RedditPost *savedPost = [RedditPost findFirstByAttribute:@"redditID" withValue:[submitData objectForKey:@"id"]];
+					completionBlock(YES, savedPost);
+				}
+				return;
+			}];
+
+		}
+		else
+		{
+			NSDictionary *errorDictionary = [self errorFromResponse:data];
+			
+			if (errorDictionary)
+			{
+				if ([errorDictionary[@"type"] isEqualToString:@"BAD_CAPTCHA"])
+				{
+					// {"json": {"captcha": "9eAaxlWxOlOP3eKNHgsR46nknuseTEsR", "errors": [["BAD_CAPTCHA", "care to try these again?", "captcha"]]}}
+					NSDictionary *payload = [self payloadFromResponse:data];
+					NSString *newIden = [payload objectForKey:@"captcha"];
+					
+					if (newIden)
+					{
+						[self submitLink:link toSubreddit:sr withTitle:title iden:newIden captchaVC:vc submitted:completionBlock];
+						return;
+					}
 				}
 			}
+			
+			completionBlock(NO, nil);
 		}
-		
-		completionBlock(NO, nil);
 	}];
 	NSURLConnection *conn = [[NSURLConnection alloc] initWithRequest:request delegate:self.engine startImmediately:YES];
 	if (!conn)
@@ -342,7 +480,6 @@ typedef void (^iOSRedditDismissedBlock)();
 {
 	iOSRedditCaptcha *captcha = [iOSRedditCaptcha captchaWithIden:iden responseBlock:^(NSString *guess) {
 		
-		NSLog(@"captcha: %@", guess);
 		[self establishConnection:^(BOOL connectionEstablished) {
 			[vc dismissViewControllerAnimated:YES completion:^{
 				if (connectionEstablished)
@@ -434,6 +571,194 @@ typedef void (^iOSRedditDismissedBlock)();
 	}
 }
 
+-(void)internalDeleteByName:(NSString *)theRedditName parentVC:(UIViewController *)vc deleted:(iOSRedditGenericCompletion)completionBlock
+{
+	NSURL *del = [NSURL URLWithString:@"https://ssl.reddit.com/api/del"];
+	/*
+	 id fullname of a thing created by the user
+	 uh	a valid modhash
+	 */
+	NSString *postBody = @"api_type=json"; //&=%@&=%@&=%@&url=%@"
+	postBody = [self addParamForKey:@"uh" withValue:self.modHash toString:postBody];
+	postBody = [self addParamForKey:@"id" withValue:theRedditName toString:postBody];
+	
+	NSURLRequest *request = [self requestWithURL:del andPost:postBody];
+	
+	self.engine = [iOSRedditWebEngine engineWithDataBlock:^(NSData *data, NSError *error) {
+		if (!error)
+		{
+			completionBlock(YES);
+		}
+		else
+		{
+			completionBlock(NO);
+		}
+	}];
+	NSURLConnection *conn = [[NSURLConnection alloc] initWithRequest:request delegate:self.engine startImmediately:YES];
+	if (!conn)
+	{
+		NSLog(@"Couldn't make connection: %@", request.URL);
+		completionBlock(NO);
+	}
+}
+
+-(void)deleteByName:(NSString *)theRedditName parentVC:(UIViewController *)vc deleted:(iOSRedditGenericCompletion)completionBlock
+{
+	__block iOSRedditLogin *loginVC = [iOSRedditLogin withResponseBlock:^(BOOL success) {
+		iOSRedditDismissedBlock dismissedBlock = ^{
+			if (success)
+			{
+				[self internalDeleteByName:theRedditName parentVC:vc deleted:completionBlock];
+				return;
+			}
+			else
+			{
+				completionBlock(NO);
+			}
+		};
+		if (loginVC)
+		{
+			[vc dismissViewControllerAnimated:YES completion:dismissedBlock];
+		}
+		else
+		{
+			dismissedBlock();
+		}
+	}];
+	
+	if (loginVC)
+	{
+		[vc presentViewController:loginVC animated:YES completion:^{
+			if (self.user)
+			{
+				loginVC.user.text = self.user;
+			}
+			
+			if (self.passwd)
+			{
+				loginVC.passwd.text = self.passwd;
+			}
+		}];
+	}
+}
+
+-(void)internalAddCommentTo:(NSString *)theRedditName comment:(NSString *)comment parentVC:(UIViewController *)vc complete:(iOSRedditGenericCompletion)completionBlock
+{
+	NSURL *commURL = [NSURL URLWithString:@"https://ssl.reddit.com/api/comment"];
+	/*
+	 api_type - the string json
+	 text - raw markdown text
+	 thing_id - fullname of parent thing
+	 uh - a valid modhash
+	 */
+	NSString *postBody = @"api_type=json"; //&=%@&=%@&=%@&url=%@"
+	postBody = [self addParamForKey:@"uh" withValue:self.modHash toString:postBody];
+	postBody = [self addParamForKey:@"thing_id" withValue:theRedditName toString:postBody];
+	postBody = [self addParamForKey:@"text" withValue:comment toString:postBody];
+	
+	NSURLRequest *request = [self requestWithURL:commURL andPost:postBody];
+	
+	self.engine = [iOSRedditWebEngine engineWithDataBlock:^(NSData *data, NSError *error) {
+		if (!error)
+		{
+			completionBlock(YES);
+		}
+		else
+		{
+			completionBlock(NO);
+		}
+	}];
+	NSURLConnection *conn = [[NSURLConnection alloc] initWithRequest:request delegate:self.engine startImmediately:YES];
+	if (!conn)
+	{
+		NSLog(@"Couldn't make connection: %@", request.URL);
+		completionBlock(NO);
+	}
+}
+
+-(void)addCommentTo:(NSString *)theRedditName comment:(NSString *)comment parentVC:(UIViewController *)vc complete:(iOSRedditGenericCompletion)completionBlock
+{
+	__block iOSRedditLogin *loginVC = [iOSRedditLogin withResponseBlock:^(BOOL success) {
+		iOSRedditDismissedBlock dismissedBlock = ^{
+			if (success)
+			{
+				[self internalAddCommentTo:theRedditName comment:comment parentVC:vc complete:completionBlock];
+				return;
+			}
+			else
+			{
+				completionBlock(NO);
+			}
+		};
+		if (loginVC)
+		{
+			[vc dismissViewControllerAnimated:YES completion:dismissedBlock];
+		}
+		else
+		{
+			dismissedBlock();
+		}
+	}];
+	
+	if (loginVC)
+	{
+		[vc presentViewController:loginVC animated:YES completion:^{
+			if (self.user)
+			{
+				loginVC.user.text = self.user;
+			}
+			
+			if (self.passwd)
+			{
+				loginVC.passwd.text = self.passwd;
+			}
+		}];
+	}
+}
+
+-(NSString *)createValidateComment:(RedditPost *)post
+{
+	// This animation was created using [CREEPER](http://itunes.apple.com/us/app/creeper/id615185807 "29394831c5cc8d4b5e6aa31c8a8d8b86499a1f79")
+
+	return [NSString stringWithFormat:@"This animation was created using [CREEPER](http://itunes.apple.com/us/app/creeper/id615185807 \"%@\")", [ExternalServices createVerificationHash:post.imgurLink]];
+}
+
+-(NSString *)parseValidateComment:(NSString *)commentBody
+{
+	if (!commentBody)
+	{
+		return nil;
+	}
+	
+	// This animation was created using [CREEPER](http://itunes.apple.com/us/app/creeper/id615185807 "29394831c5cc8d4b5e6aa31c8a8d8b86499a1f79")
+	
+	NSString *beforeValidation = @"This animation was created using [CREEPER](http://itunes.apple.com/us/app/creeper/id615185807 \"";
+	NSString *afterValidation = @"\")";
+
+	NSRange startRange = [commentBody rangeOfString:beforeValidation];
+	
+	if (startRange.location==NSNotFound)
+	{
+		return nil;
+	}
+	
+	NSRange endRange = [commentBody rangeOfString:afterValidation options:NSBackwardsSearch];
+	
+	if (endRange.location==NSNotFound)
+	{
+		return nil;
+	}
+	
+	return [commentBody substringWithRange:NSMakeRange(startRange.location + startRange.length, endRange.location - (startRange.location + startRange.length))];
+}
+
+
+-(void)addPostValidation:(RedditPost *)post parentVC:(UIViewController *)vc complete:(iOSRedditGenericCompletion)completionBlock
+{
+	[self addCommentTo:post.redditName comment:[self createValidateComment:post] parentVC:vc complete:completionBlock];
+}
+
+
 -(void)establishConnection:(void (^)(BOOL connectionEstablished))connectionBlock
 {
 	if (!self.modHash)
@@ -467,7 +792,221 @@ typedef void (^iOSRedditDismissedBlock)();
 	}
 }
 
+#pragma mark - loading reddit posts
+
+-(void)loadCurrentDataForRedditPostID:(NSString *)id completion:(iOSRedditLoadPostData)completion
+{
+	NSString *urlKey = [NSString stringWithFormat:@"http://api.reddit.com/%@", id];
+	
+	NSDictionary *cachedPostDictionary = [self.cachedRedditPosts objectForKey:urlKey];
+	
+	if (cachedPostDictionary)
+	{
+		NSDate *originalDate = [cachedPostDictionary objectForKey:@"timestamp"];
+		
+		if (originalDate && [originalDate isKindOfClass:[NSDictionary class]] && [[NSDate date] timeIntervalSinceDate:originalDate] < REDDIT_POST_TTL)
+		{
+			DLog(@"Returning cached post.");
+			completion(cachedPostDictionary, YES);
+			return;
+		}
+		[self.cachedRedditPosts removeObjectForKey:urlKey];
+	}
+	
+	dispatch_queue_t urlQueue = dispatch_queue_create("iOSRedditAPI_loadCurrentDataForRedditPostID", 0);
+	dispatch_async(urlQueue, ^{
+		NSURL *redditURL = [NSURL URLWithString:urlKey];
+		NSData *jsonData = [NSData dataWithContentsOfURL:redditURL];
+		
+		if (jsonData)
+		{
+			NSArray *items = [NSJSONSerialization JSONObjectWithData:jsonData options:0 error:nil];
+			
+			if ([items isKindOfClass:[NSArray class]] && [items count]>0)
+			{
+				NSDictionary *tlItem = [items objectAtIndex:0];
+				if ([tlItem isKindOfClass:[NSDictionary class]])
+				{
+					NSDictionary *tlData = [tlItem objectForKey:@"data"];
+					if ([tlData isKindOfClass:[NSDictionary class]])
+					{
+						NSArray *slChildren = [tlData objectForKey:@"children"];
+						
+						if ([slChildren isKindOfClass:[NSArray class]] && [slChildren count]>0)
+						{
+							NSDictionary *innerItem = [slChildren objectAtIndex:0];
+							if ([innerItem isKindOfClass:[NSDictionary class]])
+							{
+								NSDictionary *postDict = [innerItem objectForKey:@"data"];
+								
+								if (postDict && [postDict isKindOfClass:[NSDictionary class]])
+								{
+									NSMutableDictionary *postCache = [postDict mutableCopy];
+									[postCache setObject:[NSDate date] forKey:@"timestamp"];
+									[self.cachedRedditPosts setObject:postCache forKey:urlKey];
+									completion(postCache, NO);
+									return;
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		completion(nil, NO);
+	});
+}
+
+-(void)validatePost:(RedditPost *)aPost
+{
+	dispatch_queue_t urlQueue = dispatch_queue_create("iOSRedditAPI_validatePost", 0);
+	dispatch_async(urlQueue, ^{
+		NSURL *redditURL = [NSURL URLWithString:[NSString stringWithFormat:@"http://api.reddit.com/comments/%@.json", aPost.redditID]];
+		NSData *jsonData = [NSData dataWithContentsOfURL:redditURL];
+		
+		if (jsonData)
+		{
+			NSDictionary *postArray = [NSJSONSerialization JSONObjectWithData:jsonData options:0 error:nil];
+			if ([postArray isKindOfClass:[NSArray class]])
+			{
+				for (NSDictionary *srDictionary in postArray)
+				{
+					NSDictionary *tlData = [srDictionary objectForKey:@"data"];
+					if ([tlData isKindOfClass:[NSDictionary class]])
+					{
+						NSArray *slChildren = [tlData objectForKey:@"children"];
+						
+						if ([slChildren isKindOfClass:[NSArray class]] && [slChildren count]>0)
+						{
+							for (int i=0; i<[slChildren count]; i++)
+							{
+								NSDictionary *innerItem = [slChildren objectAtIndex:i];
+								if ([innerItem isKindOfClass:[NSDictionary class]])
+								{
+									NSString *redditKind = [innerItem objectForKey:@"kind"];
+									
+									if (redditKind && [redditKind isEqualToString:@"t1"])
+									{
+										NSDictionary *postDict = [innerItem objectForKey:@"data"];
+										if ([postDict isKindOfClass:[NSDictionary class]])
+										{
+											NSString *bodyMarkDown = [postDict objectForKey:@"body"];
+											NSString *validationString = [self parseValidateComment:bodyMarkDown];
+											
+											if (validationString && [validationString isEqualToString:[ExternalServices createVerificationHash:aPost.imgurLink]])
+											{
+												[MagicalRecord saveUsingCurrentThreadContextWithBlock:^(NSManagedObjectContext *localContext) {
+													RedditPost *localPost = [RedditPost findFirstByAttribute:@"redditID" withValue:aPost.redditID inContext:localContext];
+													localPost.validationString = validationString;
+												} completion:^(BOOL success, NSError *error) {
+													
+												}];
+												return;
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	});
+}
+
+-(void)loadSubreddit:(NSString *)subreddit completion:(iOSRedditSubredditPosts)completion
+{
+	dispatch_queue_t urlQueue = dispatch_queue_create("iOSRedditAPI_loadSubreddit", 0);
+	dispatch_async(urlQueue, ^{
+		NSURL *redditURL = [NSURL URLWithString:[NSString stringWithFormat:@"http://api.reddit.com/r/%@", subreddit]];
+		NSData *jsonData = [NSData dataWithContentsOfURL:redditURL];
+		
+		if (jsonData)
+		{
+			NSDictionary *srDictionary = [NSJSONSerialization JSONObjectWithData:jsonData options:0 error:nil];
+			
+			if ([srDictionary isKindOfClass:[NSDictionary class]])
+			{
+				NSDictionary *tlData = [srDictionary objectForKey:@"data"];
+				if ([tlData isKindOfClass:[NSDictionary class]])
+				{
+					NSArray *slChildren = [tlData objectForKey:@"children"];
+					
+					if ([slChildren isKindOfClass:[NSArray class]] && [slChildren count]>0)
+					{
+						__block NSMutableArray *retPosts = [NSMutableArray array];
+						[MagicalRecord saveUsingCurrentThreadContextWithBlock:^(NSManagedObjectContext *localContext) {
+							
+							NSPredicate *possiblyDelete = [NSPredicate predicateWithFormat:@"self.hotOrder >= %d", 0];
+							
+							NSArray *previousPosts = [RedditPost MR_findAllWithPredicate:possiblyDelete inContext:localContext];
+							
+							NSMutableDictionary *postsByID = [NSMutableDictionary dictionary];
+							
+							for (RedditPost *post in previousPosts)
+							{
+								post.hotOrder = [NSNumber numberWithInt:-1];
+								[postsByID setObject:post forKey:post.redditID];
+							}
+							
+							previousPosts = nil;
+							
+							for (int i=0; i<[slChildren count]; i++)
+							{
+								NSDictionary *innerItem = [slChildren objectAtIndex:i];
+								if ([innerItem isKindOfClass:[NSDictionary class]])
+								{
+									NSString *redditKind = [innerItem objectForKey:@"kind"];
+									
+									if (redditKind && [redditKind isEqualToString:@"t3"])
+									{
+										NSDictionary *postDict = [innerItem objectForKey:@"data"];
+										if ([postDict isKindOfClass:[NSDictionary class]])
+										{
+											RedditPost *redditPost = [RedditPost withDictionary:postDict inContext:localContext];
+											[postsByID removeObjectForKey:redditPost.redditID];
+											redditPost.hotOrder = [NSNumber numberWithInt:i];
+											if ([redditPost.domain isEqualToString:@"i.imgur.com"] && !redditPost.nsfw)
+											{
+												[retPosts addObject:redditPost];
+											}
+										}
+									}
+								}
+							}
+							
+							NSArray *allUnclaimedPosts = [postsByID allValues];
+							
+							for (RedditPost *post in allUnclaimedPosts)
+							{
+								[post deleteInContext:localContext];
+							}
+							
+							// Next we validate any posts that aren't already validated.
+							for (RedditPost *aPost in retPosts)
+							{
+								if (!aPost.validationString || ![aPost.validationString isEqualToString:[ExternalServices createVerificationHash:aPost.imgurLink]])
+								{
+									[self validatePost:aPost];
+								}
+							}
+							
+						} completion:^(BOOL success, NSError *error) {
+							completion(retPosts);
+						}];						
+						return;
+					}
+				}
+			}
+		}
+		completion(nil);
+	});
+}
+
 @end
+
+#pragma mark -
 
 @implementation iOSRedditWebEngine
 
@@ -514,7 +1053,7 @@ typedef void (^iOSRedditDismissedBlock)();
 
 - (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response
 {
-//	NSLog(@"conn-response: \n%@\n\n%@\n", [(NSHTTPURLResponse *)response allHeaderFields], [[NSString alloc] initWithData:self.pageData encoding:NSUTF8StringEncoding]);
+	NSLog(@"conn-response: \n%@\n\n%@\n", [(NSHTTPURLResponse *)response allHeaderFields], [[NSString alloc] initWithData:self.pageData encoding:NSUTF8StringEncoding]);
 }
 
 - (void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)data
@@ -524,7 +1063,7 @@ typedef void (^iOSRedditDismissedBlock)();
 
 - (void)connectionDidFinishLoading:(NSURLConnection *)connection
 {
-	NSLog(@"We're done, close and complete.");
+//	NSLog(@"We're done, close and complete.");
 	
 	if (self.dataBlock)
 	{
@@ -533,3 +1072,4 @@ typedef void (^iOSRedditDismissedBlock)();
 }
 
 @end
+

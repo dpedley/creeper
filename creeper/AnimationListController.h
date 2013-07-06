@@ -26,21 +26,29 @@
 //
 
 #import <UIKit/UIKit.h>
-
 #import <CoreData/CoreData.h>
 
 @class FeedItem;
 
+typedef enum
+{
+	AnimatedItemCellRenderDetailLevel_Full,
+	AnimatedItemCellRenderDetailLevel_Minimal
+} AnimatedItemCellRenderDetailLevel;
+
 @protocol FeedItemCell <NSObject>
 
--(void)configureWithItem:(FeedItem *)item;
+-(void)configureWithItem:(FeedItem *)item detailLevel:(AnimatedItemCellRenderDetailLevel)level;
 -(BOOL)isCorrectCellForItem:(FeedItem *)item;
 
 @end
 
 @interface AnimationListController : UITableViewController <NSFetchedResultsControllerDelegate>
-
-@property (strong, nonatomic) NSFetchedResultsController *fetchedResultsController;
+{
+	NSTimeInterval prevCallTime;
+	double prevCallOffset;
+	double velocity;
+}
 @property (strong, nonatomic) NSManagedObjectContext *managedObjectContext;
 
 @end

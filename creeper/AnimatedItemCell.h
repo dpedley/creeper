@@ -27,11 +27,19 @@
 
 #import <UIKit/UIKit.h>
 #import "AnimationListController.h"
+#import <AVFoundation/AVFoundation.h>
 
-@interface AnimatedItemCell : UITableViewCell <FeedItemCell>
+@class RedditPost;
 
+@interface AnimatedItemCell : UITableViewCell <FeedItemCell, AVAudioPlayerDelegate>
+
+@property (nonatomic, assign) BOOL animationLoaded;
 @property (nonatomic, strong) IBOutlet UIImageView *preview;
 
 -(void)setIsOnscreen:(BOOL)visible;
+-(void)configureWithReddit:(RedditPost *)reddit detailLevel:(AnimatedItemCellRenderDetailLevel)level;
+
+-(void)startPreviewAnimation;
+-(void)stopPreviewAnimation;
 
 @end

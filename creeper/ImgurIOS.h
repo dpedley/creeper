@@ -27,6 +27,7 @@
 
 #import <Foundation/Foundation.h>
 #import "ImgurEntry.h"
+#import "Reachability.h"
 
 @interface ImgurIOS : NSObject
 

@@ -27,11 +27,42 @@
 
 #import "ExternalServices.h"
 #import "iOSRedditAPI.h"
+#import <CommonCrypto/CommonDigest.h>
+#import <CommonCrypto/CommonHMAC.h>
 #ifdef CRASHLYTICS_API_KEY
 #import <Crashlytics/Crashlytics.h>
 #endif
 
 @implementation ExternalServices
+
+static NSData *_cryptoKey = nil;
+
++(NSData *)cryptoKey
+{
+	if (!_cryptoKey)
+	{
+		NSMutableData *theData = [NSMutableData dataWithLength:256];
+		
+		_cryptoKey = [[NSData alloc] initWithData:theData];
+	}
+	
+	return _cryptoKey;
+}
+
++(NSString*)createVerificationHash:(NSString*)inputURL
+{
+	NSData *data = [inputURL dataUsingEncoding:NSUTF8StringEncoding];
+	NSData *key = [self cryptoKey];
+	uint8_t digest[CC_SHA1_DIGEST_LENGTH];
+    CCHmac(kCCHmacAlgSHA1, [key bytes], [key length], [data bytes], [data length], &(digest[0]));
+	NSMutableString* output = [NSMutableString stringWithCapacity:CC_SHA1_DIGEST_LENGTH * 2];
+	for (int i=0; i < CC_SHA1_DIGEST_LENGTH; i++)
+	{
+		[output appendFormat:@"%02x", digest[i]];
+	}
+	
+	return output;
+}
 
 +(void)appServiceStartup
 {

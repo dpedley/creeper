@@ -1,8 +1,8 @@
 //
-//  DetailViewController.h
+//  RedditPostSubmit.h
 //  creeper
 //
-//  Created by Douglas Pedley on 2/27/13.
+//  Created by Douglas Pedley on 3/1/13.
 //
 //  Copyright (c) 2013 Doug Pedley. All rights reserved.
 //
@@ -26,9 +26,11 @@
 //
 
 #import <UIKit/UIKit.h>
-#import "ImgurEntry.h"
+#import "FeedItem.h"
 
-@interface ImgurWebViewController : UIViewController
+@class SceneCapture;
+
+@interface RedditPostSubmit : UIViewController <UITextFieldDelegate>
 
 @property (nonatomic, strong) FeedItem *item;
 

@@ -20,17 +20,14 @@
 		CD08A4B816DEBFC300E0D420 /* MainStoryboard.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = CD08A4B616DEBFC300E0D420 /* MainStoryboard.storyboard */; };
 		CD08A4BB16DEBFC300E0D420 /* creeper.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = CD08A4B916DEBFC300E0D420 /* creeper.xcdatamodeld */; };
 		CD08A4BE16DEBFC300E0D420 /* AnimationListController.m in Sources */ = {isa = PBXBuildFile; fileRef = CD08A4BD16DEBFC300E0D420 /* AnimationListController.m */; };
-		CD08A4C116DEBFC300E0D420 /* ImgurWebViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = CD08A4C016DEBFC300E0D420 /* ImgurWebViewController.m */; };
-		CD08A4F516DECBC300E0D420 /* cameraoverlay.png in Resources */ = {isa = PBXBuildFile; fileRef = CD08A4F416DECBC300E0D420 /* cameraoverlay.png */; };
-		CD08A4F816DEF4AB00E0D420 /* camerabg.png in Resources */ = {isa = PBXBuildFile; fileRef = CD08A4F716DEF4AB00E0D420 /* camerabg.png */; };
+		CD08A4C116DEBFC300E0D420 /* RedditWebViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = CD08A4C016DEBFC300E0D420 /* RedditWebViewController.m */; };
 		CD0EA19D16F2491100B0A350 /* ExternalServices.m in Sources */ = {isa = PBXBuildFile; fileRef = CD0EA19C16F2491100B0A350 /* ExternalServices.m */; };
 		CD0EA1A016F24F7200B0A350 /* iOSRedditAPI.m in Sources */ = {isa = PBXBuildFile; fileRef = CD0EA19F16F24F7200B0A350 /* iOSRedditAPI.m */; };
 		CD231A6216F38E4400EE6290 /* iOSRedditCaptcha.m in Sources */ = {isa = PBXBuildFile; fileRef = CD231A6016F38E4300EE6290 /* iOSRedditCaptcha.m */; };
 		CD231A6316F38E4400EE6290 /* iOSRedditCaptcha.xib in Resources */ = {isa = PBXBuildFile; fileRef = CD231A6116F38E4300EE6290 /* iOSRedditCaptcha.xib */; };
-		CD3F746116E190C600447E93 /* ImageInfo.m in Sources */ = {isa = PBXBuildFile; fileRef = CD3F746016E190C600447E93 /* ImageInfo.m */; };
+		CD3F746116E190C600447E93 /* RedditPostSubmit.m in Sources */ = {isa = PBXBuildFile; fileRef = CD3F746016E190C600447E93 /* RedditPostSubmit.m */; };
 		CD3F746416E1953100447E93 /* ImgurIOS.m in Sources */ = {isa = PBXBuildFile; fileRef = CD3F746316E1953100447E93 /* ImgurIOS.m */; };
 		CD3F749A16E362CC00447E93 /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CD3F749916E362CC00447E93 /* QuartzCore.framework */; };
-		CD3F74B516E3FA5500447E93 /* Mochi.m in Sources */ = {isa = PBXBuildFile; fileRef = CD3F74B416E3FA5500447E93 /* Mochi.m */; };
 		CD3F74D916E3FAD800447E93 /* LICENSE.txt in Resources */ = {isa = PBXBuildFile; fileRef = CD3F74C916E3FAD800447E93 /* LICENSE.txt */; };
 		CD3F74DB16E3FAD800447E93 /* SVProgressHUD.bundle in Resources */ = {isa = PBXBuildFile; fileRef = CD3F74CC16E3FAD800447E93 /* SVProgressHUD.bundle */; };
 		CD3F74DC16E3FAD800447E93 /* SVProgressHUD.m in Sources */ = {isa = PBXBuildFile; fileRef = CD3F74CE16E3FAD800447E93 /* SVProgressHUD.m */; };
@@ -65,7 +62,6 @@
 		CD4E884616E56C53006333CB /* libsqlite3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = CD4E884516E56C53006333CB /* libsqlite3.dylib */; settings = {ATTRIBUTES = (Weak, ); }; };
 		CD4E884816E56C66006333CB /* Social.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CD4E884716E56C66006333CB /* Social.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
 		CD4E884D16E578CC006333CB /* CreeperSHKConfigurator.m in Sources */ = {isa = PBXBuildFile; fileRef = CD4E884C16E578CC006333CB /* CreeperSHKConfigurator.m */; };
-		CD4E885316E5CE2F006333CB /* ImgurViewTemplate.html in Resources */ = {isa = PBXBuildFile; fileRef = CD4E885216E5CE2F006333CB /* ImgurViewTemplate.html */; };
 		CD4E886216E6765A006333CB /* Icon.png in Resources */ = {isa = PBXBuildFile; fileRef = CD4E886016E6765A006333CB /* Icon.png */; };
 		CD4E886316E6765A006333CB /* Icon@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = CD4E886116E6765A006333CB /* Icon@2x.png */; };
 		CD69A22816DF3EAA0045BD19 /* SceneCapture.m in Sources */ = {isa = PBXBuildFile; fileRef = CD69A22716DF3EAA0045BD19 /* SceneCapture.m */; };
@@ -73,14 +69,49 @@
 		CD8105E21706DD2D00471389 /* GifProcessingCell.m in Sources */ = {isa = PBXBuildFile; fileRef = CD8105E11706DD2D00471389 /* GifProcessingCell.m */; };
 		CD8105EC1707615400471389 /* CreeperDataExtensions.m in Sources */ = {isa = PBXBuildFile; fileRef = CD8105EB1707615400471389 /* CreeperDataExtensions.m */; };
 		CD8915A2170B98D400244C0A /* ImageUploadingCell.m in Sources */ = {isa = PBXBuildFile; fileRef = CD8915A1170B98D400244C0A /* ImageUploadingCell.m */; };
+		CD9B3C76171BC5E80067AAD5 /* button.png in Resources */ = {isa = PBXBuildFile; fileRef = CD9B3C72171BC5E80067AAD5 /* button.png */; };
+		CD9B3C77171BC5E80067AAD5 /* button@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = CD9B3C73171BC5E80067AAD5 /* button@2x.png */; };
+		CD9B3C78171BC5E80067AAD5 /* buttonHighlight.png in Resources */ = {isa = PBXBuildFile; fileRef = CD9B3C74171BC5E80067AAD5 /* buttonHighlight.png */; };
+		CD9B3C79171BC5E80067AAD5 /* buttonHighlight@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = CD9B3C75171BC5E80067AAD5 /* buttonHighlight@2x.png */; };
+		CD9B3C7E171BD6060067AAD5 /* Settings.bundle in Resources */ = {isa = PBXBuildFile; fileRef = CD9B3C7D171BD6060067AAD5 /* Settings.bundle */; };
+		CD9B3C80171BDEA00067AAD5 /* reddit_alien.png in Resources */ = {isa = PBXBuildFile; fileRef = CD9B3C7F171BDEA00067AAD5 /* reddit_alien.png */; };
+		CD9B3C82171BEF0F0067AAD5 /* imgur.png in Resources */ = {isa = PBXBuildFile; fileRef = CD9B3C81171BEF0F0067AAD5 /* imgur.png */; };
+		CD9B3C84171BEFEB0067AAD5 /* imgur@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = CD9B3C83171BEFEB0067AAD5 /* imgur@2x.png */; };
 		CDA5DE65170CA225001278D3 /* ImageOnlineCell.m in Sources */ = {isa = PBXBuildFile; fileRef = CDA5DE64170CA225001278D3 /* ImageOnlineCell.m */; };
-		CDA5DEB3170E2C15001278D3 /* RedditPost.m in Sources */ = {isa = PBXBuildFile; fileRef = CDA5DEB2170E2C15001278D3 /* RedditPost.m */; };
 		CDA5DEB6170E2C15001278D3 /* FeedItem.m in Sources */ = {isa = PBXBuildFile; fileRef = CDA5DEB5170E2C15001278D3 /* FeedItem.m */; };
 		CDA5DEB9170E2C15001278D3 /* ImgurEntry.m in Sources */ = {isa = PBXBuildFile; fileRef = CDA5DEB8170E2C15001278D3 /* ImgurEntry.m */; };
 		CDA5DEBC170E30EB001278D3 /* RedditPostCell.m in Sources */ = {isa = PBXBuildFile; fileRef = CDA5DEBB170E30EB001278D3 /* RedditPostCell.m */; };
 		CDA5DF1817152477001278D3 /* AnimatedItemCell.m in Sources */ = {isa = PBXBuildFile; fileRef = CDA5DF1717152476001278D3 /* AnimatedItemCell.m */; };
+		CDA5DF891715EBB3001278D3 /* ImgurSubmit.m in Sources */ = {isa = PBXBuildFile; fileRef = CDA5DF881715EBB3001278D3 /* ImgurSubmit.m */; };
 		CDD961B316F4DB5B00D178B5 /* iOSRedditLogin.m in Sources */ = {isa = PBXBuildFile; fileRef = CDD961B116F4DB5B00D178B5 /* iOSRedditLogin.m */; };
 		CDD961B416F4DB5B00D178B5 /* iOSRedditLogin.xib in Resources */ = {isa = PBXBuildFile; fileRef = CDD961B216F4DB5B00D178B5 /* iOSRedditLogin.xib */; };
+		CDDEED61174BECB500ACE95C /* MagicalImportFunctions.m in Sources */ = {isa = PBXBuildFile; fileRef = CDDEEC52174BECB500ACE95C /* MagicalImportFunctions.m */; };
+		CDDEED62174BECB500ACE95C /* NSAttributeDescription+MagicalDataImport.m in Sources */ = {isa = PBXBuildFile; fileRef = CDDEEC54174BECB500ACE95C /* NSAttributeDescription+MagicalDataImport.m */; };
+		CDDEED63174BECB500ACE95C /* NSEntityDescription+MagicalDataImport.m in Sources */ = {isa = PBXBuildFile; fileRef = CDDEEC56174BECB500ACE95C /* NSEntityDescription+MagicalDataImport.m */; };
+		CDDEED64174BECB500ACE95C /* NSNumber+MagicalDataImport.m in Sources */ = {isa = PBXBuildFile; fileRef = CDDEEC58174BECB500ACE95C /* NSNumber+MagicalDataImport.m */; };
+		CDDEED65174BECB500ACE95C /* NSObject+MagicalDataImport.m in Sources */ = {isa = PBXBuildFile; fileRef = CDDEEC5A174BECB500ACE95C /* NSObject+MagicalDataImport.m */; };
+		CDDEED66174BECB500ACE95C /* NSRelationshipDescription+MagicalDataImport.m in Sources */ = {isa = PBXBuildFile; fileRef = CDDEEC5C174BECB500ACE95C /* NSRelationshipDescription+MagicalDataImport.m */; };
+		CDDEED67174BECB500ACE95C /* NSString+MagicalDataImport.m in Sources */ = {isa = PBXBuildFile; fileRef = CDDEEC5E174BECB500ACE95C /* NSString+MagicalDataImport.m */; };
+		CDDEED68174BECB500ACE95C /* NSManagedObject+MagicalAggregation.m in Sources */ = {isa = PBXBuildFile; fileRef = CDDEEC61174BECB500ACE95C /* NSManagedObject+MagicalAggregation.m */; };
+		CDDEED69174BECB500ACE95C /* NSManagedObject+MagicalDataImport.m in Sources */ = {isa = PBXBuildFile; fileRef = CDDEEC63174BECB500ACE95C /* NSManagedObject+MagicalDataImport.m */; };
+		CDDEED6A174BECB500ACE95C /* NSManagedObject+MagicalFinders.m in Sources */ = {isa = PBXBuildFile; fileRef = CDDEEC65174BECB500ACE95C /* NSManagedObject+MagicalFinders.m */; };
+		CDDEED6B174BECB500ACE95C /* NSManagedObject+MagicalRecord.m in Sources */ = {isa = PBXBuildFile; fileRef = CDDEEC67174BECB500ACE95C /* NSManagedObject+MagicalRecord.m */; };
+		CDDEED6C174BECB500ACE95C /* NSManagedObject+MagicalRequests.m in Sources */ = {isa = PBXBuildFile; fileRef = CDDEEC69174BECB500ACE95C /* NSManagedObject+MagicalRequests.m */; };
+		CDDEED6D174BECB500ACE95C /* NSManagedObjectContext+MagicalObserving.m in Sources */ = {isa = PBXBuildFile; fileRef = CDDEEC6C174BECB500ACE95C /* NSManagedObjectContext+MagicalObserving.m */; };
+		CDDEED6E174BECB500ACE95C /* NSManagedObjectContext+MagicalRecord.m in Sources */ = {isa = PBXBuildFile; fileRef = CDDEEC6E174BECB500ACE95C /* NSManagedObjectContext+MagicalRecord.m */; };
+		CDDEED6F174BECB500ACE95C /* NSManagedObjectContext+MagicalSaves.m in Sources */ = {isa = PBXBuildFile; fileRef = CDDEEC70174BECB500ACE95C /* NSManagedObjectContext+MagicalSaves.m */; };
+		CDDEED70174BECB500ACE95C /* NSManagedObjectContext+MagicalThreading.m in Sources */ = {isa = PBXBuildFile; fileRef = CDDEEC72174BECB500ACE95C /* NSManagedObjectContext+MagicalThreading.m */; };
+		CDDEED71174BECB500ACE95C /* NSManagedObjectModel+MagicalRecord.m in Sources */ = {isa = PBXBuildFile; fileRef = CDDEEC74174BECB500ACE95C /* NSManagedObjectModel+MagicalRecord.m */; };
+		CDDEED72174BECB500ACE95C /* NSPersistentStore+MagicalRecord.m in Sources */ = {isa = PBXBuildFile; fileRef = CDDEEC76174BECB500ACE95C /* NSPersistentStore+MagicalRecord.m */; };
+		CDDEED73174BECB500ACE95C /* NSPersistentStoreCoordinator+MagicalRecord.m in Sources */ = {isa = PBXBuildFile; fileRef = CDDEEC78174BECB500ACE95C /* NSPersistentStoreCoordinator+MagicalRecord.m */; };
+		CDDEED74174BECB500ACE95C /* MagicalRecord+Actions.m in Sources */ = {isa = PBXBuildFile; fileRef = CDDEEC7B174BECB500ACE95C /* MagicalRecord+Actions.m */; };
+		CDDEED75174BECB500ACE95C /* MagicalRecord+ErrorHandling.m in Sources */ = {isa = PBXBuildFile; fileRef = CDDEEC7D174BECB500ACE95C /* MagicalRecord+ErrorHandling.m */; };
+		CDDEED76174BECB500ACE95C /* MagicalRecord+iCloud.m in Sources */ = {isa = PBXBuildFile; fileRef = CDDEEC7F174BECB500ACE95C /* MagicalRecord+iCloud.m */; };
+		CDDEED77174BECB500ACE95C /* MagicalRecord+Options.m in Sources */ = {isa = PBXBuildFile; fileRef = CDDEEC81174BECB500ACE95C /* MagicalRecord+Options.m */; };
+		CDDEED78174BECB500ACE95C /* MagicalRecord+Setup.m in Sources */ = {isa = PBXBuildFile; fileRef = CDDEEC83174BECB500ACE95C /* MagicalRecord+Setup.m */; };
+		CDDEED79174BECB500ACE95C /* MagicalRecord+ShorthandSupport.m in Sources */ = {isa = PBXBuildFile; fileRef = CDDEEC85174BECB500ACE95C /* MagicalRecord+ShorthandSupport.m */; };
+		CDDEED7A174BECB500ACE95C /* MagicalRecord.m in Sources */ = {isa = PBXBuildFile; fileRef = CDDEEC87174BECB500ACE95C /* MagicalRecord.m */; };
+		CDE0A3361756C89C00A540D2 /* RedditPost.m in Sources */ = {isa = PBXBuildFile; fileRef = CDE0A3351756C89C00A540D2 /* RedditPost.m */; };
 		CDE9DD8D16E719A300F4B213 /* Crashlytics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CDE9DD8C16E719A300F4B213 /* Crashlytics.framework */; };
 		CDEE01C916DF41920096DA0E /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CDEE01C816DF41920096DA0E /* AVFoundation.framework */; };
 		CDEE01CB16DF475A0096DA0E /* CoreVideo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CDEE01CA16DF475A0096DA0E /* CoreVideo.framework */; };
@@ -382,10 +413,8 @@
 		CD08A4BA16DEBFC300E0D420 /* creeper.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = creeper.xcdatamodel; sourceTree = "<group>"; };
 		CD08A4BC16DEBFC300E0D420 /* AnimationListController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AnimationListController.h; sourceTree = "<group>"; };
 		CD08A4BD16DEBFC300E0D420 /* AnimationListController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AnimationListController.m; sourceTree = "<group>"; };
-		CD08A4BF16DEBFC300E0D420 /* ImgurWebViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ImgurWebViewController.h; sourceTree = "<group>"; };
-		CD08A4C016DEBFC300E0D420 /* ImgurWebViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ImgurWebViewController.m; sourceTree = "<group>"; };
-		CD08A4F416DECBC300E0D420 /* cameraoverlay.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = cameraoverlay.png; sourceTree = "<group>"; };
-		CD08A4F716DEF4AB00E0D420 /* camerabg.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = camerabg.png; sourceTree = "<group>"; };
+		CD08A4BF16DEBFC300E0D420 /* RedditWebViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RedditWebViewController.h; sourceTree = "<group>"; };
+		CD08A4C016DEBFC300E0D420 /* RedditWebViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = RedditWebViewController.m; sourceTree = "<group>"; };
 		CD0EA19B16F2491100B0A350 /* ExternalServices.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ExternalServices.h; sourceTree = "<group>"; };
 		CD0EA19C16F2491100B0A350 /* ExternalServices.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ExternalServices.m; sourceTree = "<group>"; };
 		CD0EA19E16F24F7200B0A350 /* iOSRedditAPI.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = iOSRedditAPI.h; sourceTree = "<group>"; };
@@ -393,13 +422,11 @@
 		CD231A5F16F38E4300EE6290 /* iOSRedditCaptcha.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = iOSRedditCaptcha.h; sourceTree = "<group>"; };
 		CD231A6016F38E4300EE6290 /* iOSRedditCaptcha.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = iOSRedditCaptcha.m; sourceTree = "<group>"; };
 		CD231A6116F38E4300EE6290 /* iOSRedditCaptcha.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = iOSRedditCaptcha.xib; sourceTree = "<group>"; };
-		CD3F745F16E190C600447E93 /* ImageInfo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ImageInfo.h; sourceTree = "<group>"; };
-		CD3F746016E190C600447E93 /* ImageInfo.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ImageInfo.m; sourceTree = "<group>"; };
+		CD3F745F16E190C600447E93 /* RedditPostSubmit.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RedditPostSubmit.h; sourceTree = "<group>"; };
+		CD3F746016E190C600447E93 /* RedditPostSubmit.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RedditPostSubmit.m; sourceTree = "<group>"; };
 		CD3F746216E1953100447E93 /* ImgurIOS.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ImgurIOS.h; sourceTree = "<group>"; };
 		CD3F746316E1953100447E93 /* ImgurIOS.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ImgurIOS.m; sourceTree = "<group>"; };
 		CD3F749916E362CC00447E93 /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
-		CD3F74B316E3FA5500447E93 /* Mochi.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Mochi.h; sourceTree = "<group>"; };
-		CD3F74B416E3FA5500447E93 /* Mochi.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Mochi.m; sourceTree = "<group>"; };
 		CD3F74C916E3FAD800447E93 /* LICENSE.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = LICENSE.txt; sourceTree = "<group>"; };
 		CD3F74CA16E3FAD800447E93 /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = README.md; sourceTree = "<group>"; };
 		CD3F74CC16E3FAD800447E93 /* SVProgressHUD.bundle */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.plug-in"; path = SVProgressHUD.bundle; sourceTree = "<group>"; };
@@ -462,7 +489,6 @@
 		CD4E884B16E578CC006333CB /* CreeperSHKConfigurator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CreeperSHKConfigurator.h; sourceTree = "<group>"; };
 		CD4E884C16E578CC006333CB /* CreeperSHKConfigurator.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CreeperSHKConfigurator.m; sourceTree = "<group>"; };
 		CD4E884F16E5B1A1006333CB /* CreeperSHKConfigurator.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CreeperSHKConfigurator.m; sourceTree = "<group>"; };
-		CD4E885216E5CE2F006333CB /* ImgurViewTemplate.html */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.html; path = ImgurViewTemplate.html; sourceTree = "<group>"; };
 		CD4E886016E6765A006333CB /* Icon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = Icon.png; sourceTree = "<group>"; };
 		CD4E886116E6765A006333CB /* Icon@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Icon@2x.png"; sourceTree = "<group>"; };
 		CD69A22616DF3EAA0045BD19 /* SceneCapture.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SceneCapture.h; sourceTree = "<group>"; };
@@ -475,10 +501,16 @@
 		CD8105EB1707615400471389 /* CreeperDataExtensions.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CreeperDataExtensions.m; sourceTree = "<group>"; };
 		CD8915A0170B98D400244C0A /* ImageUploadingCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ImageUploadingCell.h; sourceTree = "<group>"; };
 		CD8915A1170B98D400244C0A /* ImageUploadingCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ImageUploadingCell.m; sourceTree = "<group>"; };
+		CD9B3C72171BC5E80067AAD5 /* button.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = button.png; sourceTree = "<group>"; };
+		CD9B3C73171BC5E80067AAD5 /* button@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "button@2x.png"; sourceTree = "<group>"; };
+		CD9B3C74171BC5E80067AAD5 /* buttonHighlight.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = buttonHighlight.png; sourceTree = "<group>"; };
+		CD9B3C75171BC5E80067AAD5 /* buttonHighlight@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "buttonHighlight@2x.png"; sourceTree = "<group>"; };
+		CD9B3C7D171BD6060067AAD5 /* Settings.bundle */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.plug-in"; path = Settings.bundle; sourceTree = "<group>"; };
+		CD9B3C7F171BDEA00067AAD5 /* reddit_alien.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = reddit_alien.png; sourceTree = "<group>"; };
+		CD9B3C81171BEF0F0067AAD5 /* imgur.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = imgur.png; sourceTree = "<group>"; };
+		CD9B3C83171BEFEB0067AAD5 /* imgur@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "imgur@2x.png"; sourceTree = "<group>"; };
 		CDA5DE63170CA225001278D3 /* ImageOnlineCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ImageOnlineCell.h; sourceTree = "<group>"; };
 		CDA5DE64170CA225001278D3 /* ImageOnlineCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ImageOnlineCell.m; sourceTree = "<group>"; };
-		CDA5DEB1170E2C15001278D3 /* RedditPost.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RedditPost.h; sourceTree = "<group>"; };
-		CDA5DEB2170E2C15001278D3 /* RedditPost.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RedditPost.m; sourceTree = "<group>"; };
 		CDA5DEB4170E2C15001278D3 /* FeedItem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FeedItem.h; sourceTree = "<group>"; };
 		CDA5DEB5170E2C15001278D3 /* FeedItem.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FeedItem.m; sourceTree = "<group>"; };
 		CDA5DEB7170E2C15001278D3 /* ImgurEntry.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ImgurEntry.h; sourceTree = "<group>"; };
@@ -487,11 +519,72 @@
 		CDA5DEBB170E30EB001278D3 /* RedditPostCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RedditPostCell.m; sourceTree = "<group>"; };
 		CDA5DF1617152476001278D3 /* AnimatedItemCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AnimatedItemCell.h; sourceTree = "<group>"; };
 		CDA5DF1717152476001278D3 /* AnimatedItemCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AnimatedItemCell.m; sourceTree = "<group>"; };
+		CDA5DF871715EBB3001278D3 /* ImgurSubmit.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ImgurSubmit.h; sourceTree = "<group>"; };
+		CDA5DF881715EBB3001278D3 /* ImgurSubmit.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ImgurSubmit.m; sourceTree = "<group>"; };
+		CDCC0B701780B6C10015F10C /* Reachability.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Reachability.h; sourceTree = "<group>"; };
+		CDCC0B711780B6C10015F10C /* Reachability.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Reachability.m; sourceTree = "<group>"; };
 		CDD9618616F4277700D178B5 /* creeper v1.0.1.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = "creeper v1.0.1.xcdatamodel"; sourceTree = "<group>"; };
 		CDD961A916F4574900D178B5 /* ExternalServices.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ExternalServices.h; sourceTree = "<group>"; };
 		CDD961B016F4DB5B00D178B5 /* iOSRedditLogin.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = iOSRedditLogin.h; sourceTree = "<group>"; };
 		CDD961B116F4DB5B00D178B5 /* iOSRedditLogin.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = iOSRedditLogin.m; sourceTree = "<group>"; };
 		CDD961B216F4DB5B00D178B5 /* iOSRedditLogin.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = iOSRedditLogin.xib; sourceTree = "<group>"; };
+		CDDEEC51174BECB500ACE95C /* MagicalImportFunctions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MagicalImportFunctions.h; sourceTree = "<group>"; };
+		CDDEEC52174BECB500ACE95C /* MagicalImportFunctions.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MagicalImportFunctions.m; sourceTree = "<group>"; };
+		CDDEEC53174BECB500ACE95C /* NSAttributeDescription+MagicalDataImport.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSAttributeDescription+MagicalDataImport.h"; sourceTree = "<group>"; };
+		CDDEEC54174BECB500ACE95C /* NSAttributeDescription+MagicalDataImport.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSAttributeDescription+MagicalDataImport.m"; sourceTree = "<group>"; };
+		CDDEEC55174BECB500ACE95C /* NSEntityDescription+MagicalDataImport.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSEntityDescription+MagicalDataImport.h"; sourceTree = "<group>"; };
+		CDDEEC56174BECB500ACE95C /* NSEntityDescription+MagicalDataImport.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSEntityDescription+MagicalDataImport.m"; sourceTree = "<group>"; };
+		CDDEEC57174BECB500ACE95C /* NSNumber+MagicalDataImport.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSNumber+MagicalDataImport.h"; sourceTree = "<group>"; };
+		CDDEEC58174BECB500ACE95C /* NSNumber+MagicalDataImport.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSNumber+MagicalDataImport.m"; sourceTree = "<group>"; };
+		CDDEEC59174BECB500ACE95C /* NSObject+MagicalDataImport.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSObject+MagicalDataImport.h"; sourceTree = "<group>"; };
+		CDDEEC5A174BECB500ACE95C /* NSObject+MagicalDataImport.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSObject+MagicalDataImport.m"; sourceTree = "<group>"; };
+		CDDEEC5B174BECB500ACE95C /* NSRelationshipDescription+MagicalDataImport.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSRelationshipDescription+MagicalDataImport.h"; sourceTree = "<group>"; };
+		CDDEEC5C174BECB500ACE95C /* NSRelationshipDescription+MagicalDataImport.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSRelationshipDescription+MagicalDataImport.m"; sourceTree = "<group>"; };
+		CDDEEC5D174BECB500ACE95C /* NSString+MagicalDataImport.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSString+MagicalDataImport.h"; sourceTree = "<group>"; };
+		CDDEEC5E174BECB500ACE95C /* NSString+MagicalDataImport.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSString+MagicalDataImport.m"; sourceTree = "<group>"; };
+		CDDEEC60174BECB500ACE95C /* NSManagedObject+MagicalAggregation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSManagedObject+MagicalAggregation.h"; sourceTree = "<group>"; };
+		CDDEEC61174BECB500ACE95C /* NSManagedObject+MagicalAggregation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSManagedObject+MagicalAggregation.m"; sourceTree = "<group>"; };
+		CDDEEC62174BECB500ACE95C /* NSManagedObject+MagicalDataImport.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSManagedObject+MagicalDataImport.h"; sourceTree = "<group>"; };
+		CDDEEC63174BECB500ACE95C /* NSManagedObject+MagicalDataImport.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSManagedObject+MagicalDataImport.m"; sourceTree = "<group>"; };
+		CDDEEC64174BECB500ACE95C /* NSManagedObject+MagicalFinders.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSManagedObject+MagicalFinders.h"; sourceTree = "<group>"; };
+		CDDEEC65174BECB500ACE95C /* NSManagedObject+MagicalFinders.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSManagedObject+MagicalFinders.m"; sourceTree = "<group>"; };
+		CDDEEC66174BECB500ACE95C /* NSManagedObject+MagicalRecord.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSManagedObject+MagicalRecord.h"; sourceTree = "<group>"; };
+		CDDEEC67174BECB500ACE95C /* NSManagedObject+MagicalRecord.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSManagedObject+MagicalRecord.m"; sourceTree = "<group>"; };
+		CDDEEC68174BECB500ACE95C /* NSManagedObject+MagicalRequests.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSManagedObject+MagicalRequests.h"; sourceTree = "<group>"; };
+		CDDEEC69174BECB500ACE95C /* NSManagedObject+MagicalRequests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSManagedObject+MagicalRequests.m"; sourceTree = "<group>"; };
+		CDDEEC6B174BECB500ACE95C /* NSManagedObjectContext+MagicalObserving.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSManagedObjectContext+MagicalObserving.h"; sourceTree = "<group>"; };
+		CDDEEC6C174BECB500ACE95C /* NSManagedObjectContext+MagicalObserving.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSManagedObjectContext+MagicalObserving.m"; sourceTree = "<group>"; };
+		CDDEEC6D174BECB500ACE95C /* NSManagedObjectContext+MagicalRecord.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSManagedObjectContext+MagicalRecord.h"; sourceTree = "<group>"; };
+		CDDEEC6E174BECB500ACE95C /* NSManagedObjectContext+MagicalRecord.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSManagedObjectContext+MagicalRecord.m"; sourceTree = "<group>"; };
+		CDDEEC6F174BECB500ACE95C /* NSManagedObjectContext+MagicalSaves.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSManagedObjectContext+MagicalSaves.h"; sourceTree = "<group>"; };
+		CDDEEC70174BECB500ACE95C /* NSManagedObjectContext+MagicalSaves.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSManagedObjectContext+MagicalSaves.m"; sourceTree = "<group>"; };
+		CDDEEC71174BECB500ACE95C /* NSManagedObjectContext+MagicalThreading.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSManagedObjectContext+MagicalThreading.h"; sourceTree = "<group>"; };
+		CDDEEC72174BECB500ACE95C /* NSManagedObjectContext+MagicalThreading.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSManagedObjectContext+MagicalThreading.m"; sourceTree = "<group>"; };
+		CDDEEC73174BECB500ACE95C /* NSManagedObjectModel+MagicalRecord.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSManagedObjectModel+MagicalRecord.h"; sourceTree = "<group>"; };
+		CDDEEC74174BECB500ACE95C /* NSManagedObjectModel+MagicalRecord.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSManagedObjectModel+MagicalRecord.m"; sourceTree = "<group>"; };
+		CDDEEC75174BECB500ACE95C /* NSPersistentStore+MagicalRecord.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSPersistentStore+MagicalRecord.h"; sourceTree = "<group>"; };
+		CDDEEC76174BECB500ACE95C /* NSPersistentStore+MagicalRecord.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSPersistentStore+MagicalRecord.m"; sourceTree = "<group>"; };
+		CDDEEC77174BECB500ACE95C /* NSPersistentStoreCoordinator+MagicalRecord.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSPersistentStoreCoordinator+MagicalRecord.h"; sourceTree = "<group>"; };
+		CDDEEC78174BECB500ACE95C /* NSPersistentStoreCoordinator+MagicalRecord.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSPersistentStoreCoordinator+MagicalRecord.m"; sourceTree = "<group>"; };
+		CDDEEC7A174BECB500ACE95C /* MagicalRecord+Actions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "MagicalRecord+Actions.h"; sourceTree = "<group>"; };
+		CDDEEC7B174BECB500ACE95C /* MagicalRecord+Actions.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "MagicalRecord+Actions.m"; sourceTree = "<group>"; };
+		CDDEEC7C174BECB500ACE95C /* MagicalRecord+ErrorHandling.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "MagicalRecord+ErrorHandling.h"; sourceTree = "<group>"; };
+		CDDEEC7D174BECB500ACE95C /* MagicalRecord+ErrorHandling.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "MagicalRecord+ErrorHandling.m"; sourceTree = "<group>"; };
+		CDDEEC7E174BECB500ACE95C /* MagicalRecord+iCloud.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "MagicalRecord+iCloud.h"; sourceTree = "<group>"; };
+		CDDEEC7F174BECB500ACE95C /* MagicalRecord+iCloud.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "MagicalRecord+iCloud.m"; sourceTree = "<group>"; };
+		CDDEEC80174BECB500ACE95C /* MagicalRecord+Options.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "MagicalRecord+Options.h"; sourceTree = "<group>"; };
+		CDDEEC81174BECB500ACE95C /* MagicalRecord+Options.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "MagicalRecord+Options.m"; sourceTree = "<group>"; };
+		CDDEEC82174BECB500ACE95C /* MagicalRecord+Setup.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "MagicalRecord+Setup.h"; sourceTree = "<group>"; };
+		CDDEEC83174BECB500ACE95C /* MagicalRecord+Setup.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "MagicalRecord+Setup.m"; sourceTree = "<group>"; };
+		CDDEEC84174BECB500ACE95C /* MagicalRecord+ShorthandSupport.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "MagicalRecord+ShorthandSupport.h"; sourceTree = "<group>"; };
+		CDDEEC85174BECB500ACE95C /* MagicalRecord+ShorthandSupport.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "MagicalRecord+ShorthandSupport.m"; sourceTree = "<group>"; };
+		CDDEEC86174BECB500ACE95C /* MagicalRecord.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MagicalRecord.h; sourceTree = "<group>"; };
+		CDDEEC87174BECB500ACE95C /* MagicalRecord.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MagicalRecord.m; sourceTree = "<group>"; };
+		CDDEEC88174BECB500ACE95C /* MagicalRecordShorthand.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MagicalRecordShorthand.h; sourceTree = "<group>"; };
+		CDDEEC89174BECB500ACE95C /* CoreData+MagicalRecord.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "CoreData+MagicalRecord.h"; sourceTree = "<group>"; };
+		CDDEED5C174BECB500ACE95C /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = README.md; sourceTree = "<group>"; };
+		CDE0A3341756C89C00A540D2 /* RedditPost.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RedditPost.h; sourceTree = "<group>"; };
+		CDE0A3351756C89C00A540D2 /* RedditPost.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RedditPost.m; sourceTree = "<group>"; };
 		CDE9DD8C16E719A300F4B213 /* Crashlytics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = Crashlytics.framework; sourceTree = "<group>"; };
 		CDEE01C816DF41920096DA0E /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
 		CDEE01CA16DF475A0096DA0E /* CoreVideo.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreVideo.framework; path = System/Library/Frameworks/CoreVideo.framework; sourceTree = SDKROOT; };
@@ -584,41 +677,23 @@
 			children = (
 				CD08A4A516DEBFC300E0D420 /* Supporting Files */,
 				CD08A4F316DECBC300E0D420 /* images */,
-				CD3F756B16E3FDA200447E93 /* Imgur */,
-				CD08A4B616DEBFC300E0D420 /* MainStoryboard.storyboard */,
 				CD8105E9170760FB00471389 /* CoreData */,
+				CD08A4B616DEBFC300E0D420 /* MainStoryboard.storyboard */,
 				CD08A4AD16DEBFC300E0D420 /* AppDelegate.h */,
 				CD08A4AE16DEBFC300E0D420 /* AppDelegate.m */,
 				CD0EA19B16F2491100B0A350 /* ExternalServices.h */,
 				CD0EA19C16F2491100B0A350 /* ExternalServices.m */,
 				CD08A4BC16DEBFC300E0D420 /* AnimationListController.h */,
 				CD08A4BD16DEBFC300E0D420 /* AnimationListController.m */,
-				CD69A22616DF3EAA0045BD19 /* SceneCapture.h */,
-				CD69A22716DF3EAA0045BD19 /* SceneCapture.m */,
-				CD3F745F16E190C600447E93 /* ImageInfo.h */,
-				CD3F746016E190C600447E93 /* ImageInfo.m */,
-				CD4E884B16E578CC006333CB /* CreeperSHKConfigurator.h */,
-				CD4E884C16E578CC006333CB /* CreeperSHKConfigurator.m */,
-				CD0EA19E16F24F7200B0A350 /* iOSRedditAPI.h */,
-				CD0EA19F16F24F7200B0A350 /* iOSRedditAPI.m */,
-				CD231A5F16F38E4300EE6290 /* iOSRedditCaptcha.h */,
-				CD231A6016F38E4300EE6290 /* iOSRedditCaptcha.m */,
-				CD231A6116F38E4300EE6290 /* iOSRedditCaptcha.xib */,
-				CDD961B016F4DB5B00D178B5 /* iOSRedditLogin.h */,
-				CDD961B116F4DB5B00D178B5 /* iOSRedditLogin.m */,
-				CDD961B216F4DB5B00D178B5 /* iOSRedditLogin.xib */,
 				CD8105951704BE6400471389 /* GifCreationManager.h */,
 				CD8105961704BE6400471389 /* GifCreationManager.m */,
-				CD8105E01706DD2D00471389 /* GifProcessingCell.h */,
-				CD8105E11706DD2D00471389 /* GifProcessingCell.m */,
-				CD8915A0170B98D400244C0A /* ImageUploadingCell.h */,
-				CD8915A1170B98D400244C0A /* ImageUploadingCell.m */,
-				CDA5DE63170CA225001278D3 /* ImageOnlineCell.h */,
-				CDA5DE64170CA225001278D3 /* ImageOnlineCell.m */,
-				CDA5DEBA170E30EB001278D3 /* RedditPostCell.h */,
-				CDA5DEBB170E30EB001278D3 /* RedditPostCell.m */,
-				CDA5DF1617152476001278D3 /* AnimatedItemCell.h */,
-				CDA5DF1717152476001278D3 /* AnimatedItemCell.m */,
+				CD69A22616DF3EAA0045BD19 /* SceneCapture.h */,
+				CD69A22716DF3EAA0045BD19 /* SceneCapture.m */,
+				CD4E884B16E578CC006333CB /* CreeperSHKConfigurator.h */,
+				CD4E884C16E578CC006333CB /* CreeperSHKConfigurator.m */,
+				CD3F756B16E3FDA200447E93 /* Imgur */,
+				CDA5DF62171543A9001278D3 /* Reddit */,
+				CDA5DF4017154383001278D3 /* Feed Table Cells */,
 			);
 			path = creeper;
 			sourceTree = "<group>";
@@ -635,6 +710,7 @@
 				CD08A4B016DEBFC300E0D420 /* Default.png */,
 				CD08A4B216DEBFC300E0D420 /* Default@2x.png */,
 				CD08A4B416DEBFC300E0D420 /* Default-568h@2x.png */,
+				CD9B3C7D171BD6060067AAD5 /* Settings.bundle */,
 			);
 			name = "Supporting Files";
 			sourceTree = "<group>";
@@ -642,8 +718,13 @@
 		CD08A4F316DECBC300E0D420 /* images */ = {
 			isa = PBXGroup;
 			children = (
-				CD08A4F716DEF4AB00E0D420 /* camerabg.png */,
-				CD08A4F416DECBC300E0D420 /* cameraoverlay.png */,
+				CD9B3C83171BEFEB0067AAD5 /* imgur@2x.png */,
+				CD9B3C81171BEF0F0067AAD5 /* imgur.png */,
+				CD9B3C7F171BDEA00067AAD5 /* reddit_alien.png */,
+				CD9B3C72171BC5E80067AAD5 /* button.png */,
+				CD9B3C73171BC5E80067AAD5 /* button@2x.png */,
+				CD9B3C74171BC5E80067AAD5 /* buttonHighlight.png */,
+				CD9B3C75171BC5E80067AAD5 /* buttonHighlight@2x.png */,
 			);
 			path = images;
 			sourceTree = "<group>";
@@ -651,6 +732,8 @@
 		CD3F74B216E3FA5500447E93 /* externals */ = {
 			isa = PBXGroup;
 			children = (
+				CDCC0B4D1780B6C10015F10C /* Reachability */,
+				CDDEEC49174BECB500ACE95C /* MagicalRecord */,
 				CD4E864616E5696E006333CB /* ShareKit */,
 				CD3F756C16E3FF0800447E93 /* giflib-ios */,
 				CD3F750116E3FD2000447E93 /* AFNetworking */,
@@ -658,8 +741,6 @@
 				CD3F74B616E3FAD800447E93 /* SVProgressHUD */,
 				CD3F74FB16E3FCC300447E93 /* NSData+Base64.h */,
 				CD3F74FC16E3FCC300447E93 /* NSData+Base64.m */,
-				CD3F74B316E3FA5500447E93 /* Mochi.h */,
-				CD3F74B416E3FA5500447E93 /* Mochi.m */,
 			);
 			path = externals;
 			sourceTree = "<group>";
@@ -745,9 +826,8 @@
 			children = (
 				CD3F746216E1953100447E93 /* ImgurIOS.h */,
 				CD3F746316E1953100447E93 /* ImgurIOS.m */,
-				CD08A4BF16DEBFC300E0D420 /* ImgurWebViewController.h */,
-				CD08A4C016DEBFC300E0D420 /* ImgurWebViewController.m */,
-				CD4E885216E5CE2F006333CB /* ImgurViewTemplate.html */,
+				CDA5DF871715EBB3001278D3 /* ImgurSubmit.h */,
+				CDA5DF881715EBB3001278D3 /* ImgurSubmit.m */,
 			);
 			name = Imgur;
 			sourceTree = "<group>";
@@ -841,16 +921,171 @@
 			isa = PBXGroup;
 			children = (
 				CD08A4B916DEBFC300E0D420 /* creeper.xcdatamodeld */,
+				CDE0A3341756C89C00A540D2 /* RedditPost.h */,
+				CDE0A3351756C89C00A540D2 /* RedditPost.m */,
 				CDA5DEB7170E2C15001278D3 /* ImgurEntry.h */,
 				CDA5DEB8170E2C15001278D3 /* ImgurEntry.m */,
 				CDA5DEB4170E2C15001278D3 /* FeedItem.h */,
 				CDA5DEB5170E2C15001278D3 /* FeedItem.m */,
-				CDA5DEB1170E2C15001278D3 /* RedditPost.h */,
-				CDA5DEB2170E2C15001278D3 /* RedditPost.m */,
 				CD8105EA1707615400471389 /* CreeperDataExtensions.h */,
 				CD8105EB1707615400471389 /* CreeperDataExtensions.m */,
 			);
 			name = CoreData;
+			sourceTree = "<group>";
+		};
+		CDA5DF4017154383001278D3 /* Feed Table Cells */ = {
+			isa = PBXGroup;
+			children = (
+				CD8105E01706DD2D00471389 /* GifProcessingCell.h */,
+				CD8105E11706DD2D00471389 /* GifProcessingCell.m */,
+				CD8915A0170B98D400244C0A /* ImageUploadingCell.h */,
+				CD8915A1170B98D400244C0A /* ImageUploadingCell.m */,
+				CDA5DE63170CA225001278D3 /* ImageOnlineCell.h */,
+				CDA5DE64170CA225001278D3 /* ImageOnlineCell.m */,
+				CDA5DEBA170E30EB001278D3 /* RedditPostCell.h */,
+				CDA5DEBB170E30EB001278D3 /* RedditPostCell.m */,
+				CDA5DF1617152476001278D3 /* AnimatedItemCell.h */,
+				CDA5DF1717152476001278D3 /* AnimatedItemCell.m */,
+			);
+			name = "Feed Table Cells";
+			sourceTree = "<group>";
+		};
+		CDA5DF62171543A9001278D3 /* Reddit */ = {
+			isa = PBXGroup;
+			children = (
+				CD08A4BF16DEBFC300E0D420 /* RedditWebViewController.h */,
+				CD08A4C016DEBFC300E0D420 /* RedditWebViewController.m */,
+				CD3F745F16E190C600447E93 /* RedditPostSubmit.h */,
+				CD3F746016E190C600447E93 /* RedditPostSubmit.m */,
+				CD0EA19E16F24F7200B0A350 /* iOSRedditAPI.h */,
+				CD0EA19F16F24F7200B0A350 /* iOSRedditAPI.m */,
+				CD231A5F16F38E4300EE6290 /* iOSRedditCaptcha.h */,
+				CD231A6016F38E4300EE6290 /* iOSRedditCaptcha.m */,
+				CD231A6116F38E4300EE6290 /* iOSRedditCaptcha.xib */,
+				CDD961B016F4DB5B00D178B5 /* iOSRedditLogin.h */,
+				CDD961B116F4DB5B00D178B5 /* iOSRedditLogin.m */,
+				CDD961B216F4DB5B00D178B5 /* iOSRedditLogin.xib */,
+			);
+			name = Reddit;
+			sourceTree = "<group>";
+		};
+		CDCC0B4D1780B6C10015F10C /* Reachability */ = {
+			isa = PBXGroup;
+			children = (
+				CDCC0B701780B6C10015F10C /* Reachability.h */,
+				CDCC0B711780B6C10015F10C /* Reachability.m */,
+			);
+			path = Reachability;
+			sourceTree = "<group>";
+		};
+		CDDEEC49174BECB500ACE95C /* MagicalRecord */ = {
+			isa = PBXGroup;
+			children = (
+				CDDEEC4E174BECB500ACE95C /* MagicalRecord */,
+				CDDEED5C174BECB500ACE95C /* README.md */,
+			);
+			path = MagicalRecord;
+			sourceTree = "<group>";
+		};
+		CDDEEC4E174BECB500ACE95C /* MagicalRecord */ = {
+			isa = PBXGroup;
+			children = (
+				CDDEEC4F174BECB500ACE95C /* Categories */,
+				CDDEEC79174BECB500ACE95C /* Core */,
+				CDDEEC89174BECB500ACE95C /* CoreData+MagicalRecord.h */,
+			);
+			path = MagicalRecord;
+			sourceTree = "<group>";
+		};
+		CDDEEC4F174BECB500ACE95C /* Categories */ = {
+			isa = PBXGroup;
+			children = (
+				CDDEEC50174BECB500ACE95C /* DataImport */,
+				CDDEEC5F174BECB500ACE95C /* NSManagedObject */,
+				CDDEEC6A174BECB500ACE95C /* NSManagedObjectContext */,
+				CDDEEC73174BECB500ACE95C /* NSManagedObjectModel+MagicalRecord.h */,
+				CDDEEC74174BECB500ACE95C /* NSManagedObjectModel+MagicalRecord.m */,
+				CDDEEC75174BECB500ACE95C /* NSPersistentStore+MagicalRecord.h */,
+				CDDEEC76174BECB500ACE95C /* NSPersistentStore+MagicalRecord.m */,
+				CDDEEC77174BECB500ACE95C /* NSPersistentStoreCoordinator+MagicalRecord.h */,
+				CDDEEC78174BECB500ACE95C /* NSPersistentStoreCoordinator+MagicalRecord.m */,
+			);
+			path = Categories;
+			sourceTree = "<group>";
+		};
+		CDDEEC50174BECB500ACE95C /* DataImport */ = {
+			isa = PBXGroup;
+			children = (
+				CDDEEC51174BECB500ACE95C /* MagicalImportFunctions.h */,
+				CDDEEC52174BECB500ACE95C /* MagicalImportFunctions.m */,
+				CDDEEC53174BECB500ACE95C /* NSAttributeDescription+MagicalDataImport.h */,
+				CDDEEC54174BECB500ACE95C /* NSAttributeDescription+MagicalDataImport.m */,
+				CDDEEC55174BECB500ACE95C /* NSEntityDescription+MagicalDataImport.h */,
+				CDDEEC56174BECB500ACE95C /* NSEntityDescription+MagicalDataImport.m */,
+				CDDEEC57174BECB500ACE95C /* NSNumber+MagicalDataImport.h */,
+				CDDEEC58174BECB500ACE95C /* NSNumber+MagicalDataImport.m */,
+				CDDEEC59174BECB500ACE95C /* NSObject+MagicalDataImport.h */,
+				CDDEEC5A174BECB500ACE95C /* NSObject+MagicalDataImport.m */,
+				CDDEEC5B174BECB500ACE95C /* NSRelationshipDescription+MagicalDataImport.h */,
+				CDDEEC5C174BECB500ACE95C /* NSRelationshipDescription+MagicalDataImport.m */,
+				CDDEEC5D174BECB500ACE95C /* NSString+MagicalDataImport.h */,
+				CDDEEC5E174BECB500ACE95C /* NSString+MagicalDataImport.m */,
+			);
+			path = DataImport;
+			sourceTree = "<group>";
+		};
+		CDDEEC5F174BECB500ACE95C /* NSManagedObject */ = {
+			isa = PBXGroup;
+			children = (
+				CDDEEC60174BECB500ACE95C /* NSManagedObject+MagicalAggregation.h */,
+				CDDEEC61174BECB500ACE95C /* NSManagedObject+MagicalAggregation.m */,
+				CDDEEC62174BECB500ACE95C /* NSManagedObject+MagicalDataImport.h */,
+				CDDEEC63174BECB500ACE95C /* NSManagedObject+MagicalDataImport.m */,
+				CDDEEC64174BECB500ACE95C /* NSManagedObject+MagicalFinders.h */,
+				CDDEEC65174BECB500ACE95C /* NSManagedObject+MagicalFinders.m */,
+				CDDEEC66174BECB500ACE95C /* NSManagedObject+MagicalRecord.h */,
+				CDDEEC67174BECB500ACE95C /* NSManagedObject+MagicalRecord.m */,
+				CDDEEC68174BECB500ACE95C /* NSManagedObject+MagicalRequests.h */,
+				CDDEEC69174BECB500ACE95C /* NSManagedObject+MagicalRequests.m */,
+			);
+			path = NSManagedObject;
+			sourceTree = "<group>";
+		};
+		CDDEEC6A174BECB500ACE95C /* NSManagedObjectContext */ = {
+			isa = PBXGroup;
+			children = (
+				CDDEEC6B174BECB500ACE95C /* NSManagedObjectContext+MagicalObserving.h */,
+				CDDEEC6C174BECB500ACE95C /* NSManagedObjectContext+MagicalObserving.m */,
+				CDDEEC6D174BECB500ACE95C /* NSManagedObjectContext+MagicalRecord.h */,
+				CDDEEC6E174BECB500ACE95C /* NSManagedObjectContext+MagicalRecord.m */,
+				CDDEEC6F174BECB500ACE95C /* NSManagedObjectContext+MagicalSaves.h */,
+				CDDEEC70174BECB500ACE95C /* NSManagedObjectContext+MagicalSaves.m */,
+				CDDEEC71174BECB500ACE95C /* NSManagedObjectContext+MagicalThreading.h */,
+				CDDEEC72174BECB500ACE95C /* NSManagedObjectContext+MagicalThreading.m */,
+			);
+			path = NSManagedObjectContext;
+			sourceTree = "<group>";
+		};
+		CDDEEC79174BECB500ACE95C /* Core */ = {
+			isa = PBXGroup;
+			children = (
+				CDDEEC7A174BECB500ACE95C /* MagicalRecord+Actions.h */,
+				CDDEEC7B174BECB500ACE95C /* MagicalRecord+Actions.m */,
+				CDDEEC7C174BECB500ACE95C /* MagicalRecord+ErrorHandling.h */,
+				CDDEEC7D174BECB500ACE95C /* MagicalRecord+ErrorHandling.m */,
+				CDDEEC7E174BECB500ACE95C /* MagicalRecord+iCloud.h */,
+				CDDEEC7F174BECB500ACE95C /* MagicalRecord+iCloud.m */,
+				CDDEEC80174BECB500ACE95C /* MagicalRecord+Options.h */,
+				CDDEEC81174BECB500ACE95C /* MagicalRecord+Options.m */,
+				CDDEEC82174BECB500ACE95C /* MagicalRecord+Setup.h */,
+				CDDEEC83174BECB500ACE95C /* MagicalRecord+Setup.m */,
+				CDDEEC84174BECB500ACE95C /* MagicalRecord+ShorthandSupport.h */,
+				CDDEEC85174BECB500ACE95C /* MagicalRecord+ShorthandSupport.m */,
+				CDDEEC86174BECB500ACE95C /* MagicalRecord.h */,
+				CDDEEC87174BECB500ACE95C /* MagicalRecord.m */,
+				CDDEEC88174BECB500ACE95C /* MagicalRecordShorthand.h */,
+			);
+			path = Core;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -1188,8 +1423,6 @@
 				CD08A4B316DEBFC300E0D420 /* Default@2x.png in Resources */,
 				CD08A4B516DEBFC300E0D420 /* Default-568h@2x.png in Resources */,
 				CD08A4B816DEBFC300E0D420 /* MainStoryboard.storyboard in Resources */,
-				CD08A4F516DECBC300E0D420 /* cameraoverlay.png in Resources */,
-				CD08A4F816DEF4AB00E0D420 /* camerabg.png in Resources */,
 				CD3F74D916E3FAD800447E93 /* LICENSE.txt in Resources */,
 				CD3F74DB16E3FAD800447E93 /* SVProgressHUD.bundle in Resources */,
 				CD3F74F216E3FB3000447E93 /* NSDateTimeAgo.strings in Resources */,
@@ -1197,11 +1430,18 @@
 				CD3F74F416E3FB3000447E93 /* README.md in Resources */,
 				CD3F75C316E3FF0900447E93 /* LGPL.txt in Resources */,
 				CD3F75CC16E3FF9500447E93 /* LICENSE in Resources */,
-				CD4E885316E5CE2F006333CB /* ImgurViewTemplate.html in Resources */,
 				CD4E886216E6765A006333CB /* Icon.png in Resources */,
 				CD4E886316E6765A006333CB /* Icon@2x.png in Resources */,
 				CD231A6316F38E4400EE6290 /* iOSRedditCaptcha.xib in Resources */,
 				CDD961B416F4DB5B00D178B5 /* iOSRedditLogin.xib in Resources */,
+				CD9B3C76171BC5E80067AAD5 /* button.png in Resources */,
+				CD9B3C77171BC5E80067AAD5 /* button@2x.png in Resources */,
+				CD9B3C78171BC5E80067AAD5 /* buttonHighlight.png in Resources */,
+				CD9B3C79171BC5E80067AAD5 /* buttonHighlight@2x.png in Resources */,
+				CD9B3C7E171BD6060067AAD5 /* Settings.bundle in Resources */,
+				CD9B3C80171BDEA00067AAD5 /* reddit_alien.png in Resources */,
+				CD9B3C82171BEF0F0067AAD5 /* imgur.png in Resources */,
+				CD9B3C84171BEFEB0067AAD5 /* imgur@2x.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1232,11 +1472,10 @@
 				CD08A4AF16DEBFC300E0D420 /* AppDelegate.m in Sources */,
 				CD08A4BB16DEBFC300E0D420 /* creeper.xcdatamodeld in Sources */,
 				CD08A4BE16DEBFC300E0D420 /* AnimationListController.m in Sources */,
-				CD08A4C116DEBFC300E0D420 /* ImgurWebViewController.m in Sources */,
+				CD08A4C116DEBFC300E0D420 /* RedditWebViewController.m in Sources */,
 				CD69A22816DF3EAA0045BD19 /* SceneCapture.m in Sources */,
-				CD3F746116E190C600447E93 /* ImageInfo.m in Sources */,
+				CD3F746116E190C600447E93 /* RedditPostSubmit.m in Sources */,
 				CD3F746416E1953100447E93 /* ImgurIOS.m in Sources */,
-				CD3F74B516E3FA5500447E93 /* Mochi.m in Sources */,
 				CD3F74DC16E3FAD800447E93 /* SVProgressHUD.m in Sources */,
 				CD3F74F316E3FB3000447E93 /* NSDate+TimeAgo.m in Sources */,
 				CD3F74FF16E3FCC300447E93 /* NSData+Base64.m in Sources */,
@@ -1259,11 +1498,38 @@
 				CD8105EC1707615400471389 /* CreeperDataExtensions.m in Sources */,
 				CD8915A2170B98D400244C0A /* ImageUploadingCell.m in Sources */,
 				CDA5DE65170CA225001278D3 /* ImageOnlineCell.m in Sources */,
-				CDA5DEB3170E2C15001278D3 /* RedditPost.m in Sources */,
 				CDA5DEB6170E2C15001278D3 /* FeedItem.m in Sources */,
 				CDA5DEB9170E2C15001278D3 /* ImgurEntry.m in Sources */,
 				CDA5DEBC170E30EB001278D3 /* RedditPostCell.m in Sources */,
 				CDA5DF1817152477001278D3 /* AnimatedItemCell.m in Sources */,
+				CDA5DF891715EBB3001278D3 /* ImgurSubmit.m in Sources */,
+				CDDEED61174BECB500ACE95C /* MagicalImportFunctions.m in Sources */,
+				CDDEED62174BECB500ACE95C /* NSAttributeDescription+MagicalDataImport.m in Sources */,
+				CDDEED63174BECB500ACE95C /* NSEntityDescription+MagicalDataImport.m in Sources */,
+				CDDEED64174BECB500ACE95C /* NSNumber+MagicalDataImport.m in Sources */,
+				CDDEED65174BECB500ACE95C /* NSObject+MagicalDataImport.m in Sources */,
+				CDDEED66174BECB500ACE95C /* NSRelationshipDescription+MagicalDataImport.m in Sources */,
+				CDDEED67174BECB500ACE95C /* NSString+MagicalDataImport.m in Sources */,
+				CDDEED68174BECB500ACE95C /* NSManagedObject+MagicalAggregation.m in Sources */,
+				CDDEED69174BECB500ACE95C /* NSManagedObject+MagicalDataImport.m in Sources */,
+				CDDEED6A174BECB500ACE95C /* NSManagedObject+MagicalFinders.m in Sources */,
+				CDDEED6B174BECB500ACE95C /* NSManagedObject+MagicalRecord.m in Sources */,
+				CDDEED6C174BECB500ACE95C /* NSManagedObject+MagicalRequests.m in Sources */,
+				CDDEED6D174BECB500ACE95C /* NSManagedObjectContext+MagicalObserving.m in Sources */,
+				CDDEED6E174BECB500ACE95C /* NSManagedObjectContext+MagicalRecord.m in Sources */,
+				CDDEED6F174BECB500ACE95C /* NSManagedObjectContext+MagicalSaves.m in Sources */,
+				CDDEED70174BECB500ACE95C /* NSManagedObjectContext+MagicalThreading.m in Sources */,
+				CDDEED71174BECB500ACE95C /* NSManagedObjectModel+MagicalRecord.m in Sources */,
+				CDDEED72174BECB500ACE95C /* NSPersistentStore+MagicalRecord.m in Sources */,
+				CDDEED73174BECB500ACE95C /* NSPersistentStoreCoordinator+MagicalRecord.m in Sources */,
+				CDDEED74174BECB500ACE95C /* MagicalRecord+Actions.m in Sources */,
+				CDDEED75174BECB500ACE95C /* MagicalRecord+ErrorHandling.m in Sources */,
+				CDDEED76174BECB500ACE95C /* MagicalRecord+iCloud.m in Sources */,
+				CDDEED77174BECB500ACE95C /* MagicalRecord+Options.m in Sources */,
+				CDDEED78174BECB500ACE95C /* MagicalRecord+Setup.m in Sources */,
+				CDDEED79174BECB500ACE95C /* MagicalRecord+ShorthandSupport.m in Sources */,
+				CDDEED7A174BECB500ACE95C /* MagicalRecord.m in Sources */,
+				CDE0A3361756C89C00A540D2 /* RedditPost.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1384,19 +1650,28 @@
 		CD08A4C516DEBFC300E0D420 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_IDENTITY = "iPhone Developer: Douglas Pedley (RUBT84JQ9J)";
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"\"$(SRCROOT)\"",
+					"\"$(SRCROOT)/externals/MagicalRecord/Project Files/iOS App Unit Tests/Frameworks\"",
+					"\"$(SRCROOT)/externals/MagicalRecord/Project Files/Mac App Unit Tests/Frameworks\"",
 				);
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "creeper/creeper-Prefix.pch";
 				HEADER_SEARCH_PATHS = "externals/**";
 				INFOPLIST_FILE = "creeper/creeper-Info.plist";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SRCROOT)/externals/MagicalRecord/Project Files/iOS App Unit Tests/Frameworks/OCMockLibrary\"",
+					"\"$(SRCROOT)/externals/MagicalRecord/Project Files/Mac App Unit Tests/Frameworks/OCMockLibrary\"",
+				);
 				OTHER_LDFLAGS = (
 					"-all_load",
 					"-ObjC",
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE = "272B9712-82EE-4905-B1D2-0F90669A0A2B";
 				WRAPPER_EXTENSION = app;
 			};
 			name = Debug;
@@ -1404,22 +1679,29 @@
 		CD08A4C616DEBFC300E0D420 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CODE_SIGN_IDENTITY = "iPhone Distribution";
+				CODE_SIGN_IDENTITY = "iPhone Developer: Douglas Pedley (RUBT84JQ9J)";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution";
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"\"$(SRCROOT)\"",
+					"\"$(SRCROOT)/externals/MagicalRecord/Project Files/iOS App Unit Tests/Frameworks\"",
+					"\"$(SRCROOT)/externals/MagicalRecord/Project Files/Mac App Unit Tests/Frameworks\"",
 				);
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "creeper/creeper-Prefix.pch";
 				HEADER_SEARCH_PATHS = "externals/**";
 				INFOPLIST_FILE = "creeper/creeper-Info.plist";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SRCROOT)/externals/MagicalRecord/Project Files/iOS App Unit Tests/Frameworks/OCMockLibrary\"",
+					"\"$(SRCROOT)/externals/MagicalRecord/Project Files/Mac App Unit Tests/Frameworks/OCMockLibrary\"",
+				);
 				OTHER_LDFLAGS = (
 					"-all_load",
 					"-ObjC",
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				PROVISIONING_PROFILE = "";
+				PROVISIONING_PROFILE = "272B9712-82EE-4905-B1D2-0F90669A0A2B";
 				"PROVISIONING_PROFILE[sdk=iphoneos*]" = "";
 				WRAPPER_EXTENSION = app;
 			};

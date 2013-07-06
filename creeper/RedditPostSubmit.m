@@ -1,5 +1,5 @@
 //
-//  ImageInfo.m
+//  RedditPostSubmit.m
 //  creeper
 //
 //  Created by Douglas Pedley on 3/1/13.
@@ -26,24 +26,68 @@
 //
 
 
-#import "ImageInfo.h"
+#import "RedditPostSubmit.h"
 #import "iOSRedditAPI.h"
 #import "SceneCapture.h"
 #import "ImgurEntry.h"
 #import "CreeperDataExtensions.h"
+#import "GifCreationManager.h"
 
-@interface ImageInfo ()
+@interface RedditPostSubmit ()
 
 @property (nonatomic, strong) IBOutlet UITextField *titleEdit;
-@property (nonatomic, strong) IBOutlet UITextField *descriptionEdit;
+@property (nonatomic, strong) IBOutlet UITextField *subredditEdit;
 
 -(IBAction)saveAction:(id)sender;
 
 @end
 
-@implementation ImageInfo
+@implementation RedditPostSubmit
 
 #pragma mark - actions
+
+-(void)saveNewReddit:(RedditPost *)post
+{
+	[MagicalRecord saveUsingCurrentThreadContextWithBlock:^(NSManagedObjectContext *localContext) {
+		FeedItem *theItem = [FeedItem withEncoderID:self.item.encoderID inContext:localContext];
+		if (!theItem)
+		{
+			DLog(@"no item");
+		}
+		else
+		{
+			RedditPost *localPost = [RedditPost findFirstByAttribute:@"redditID" withValue:post.redditID inContext:localContext];
+			theItem.reddit = localPost;
+			theItem.feedItemType = FeedItemType_Reddit;
+		}
+	} completion:^(BOOL success, NSError *error) {
+		NSFileManager *mgr = [NSFileManager defaultManager];
+		
+		// Copy the animation
+		NSString *redditPath = [iOSRedditAPI storageLocation:post];
+		NSString *gcmPath = [GifCreationManager storageLocationForEncoderID:self.item.encoderID imageIndex:0];
+		if ([mgr fileExistsAtPath:gcmPath])
+		{
+			if (![mgr fileExistsAtPath:redditPath])
+			{
+				[mgr copyItemAtPath:gcmPath toPath:redditPath error:nil];
+			}
+			[mgr removeItemAtPath:gcmPath error:nil];
+		}
+		
+		// Now copy the preview image
+		redditPath = [iOSRedditAPI storageLocationForPreview:post];
+		gcmPath = [GifCreationManager storageLocationForEncoderID:self.item.encoderID previewImageIndex:0];
+		if ([mgr fileExistsAtPath:gcmPath])
+		{
+			if (![mgr fileExistsAtPath:redditPath])
+			{
+				[mgr copyItemAtPath:gcmPath toPath:redditPath error:nil];
+			}
+			[mgr removeItemAtPath:gcmPath error:nil];
+		}
+	}];
+}
 
 -(NSString *)subredditFromText:(NSString *)theSub
 {
@@ -52,41 +96,12 @@
 		return @"creeperapp";
 	}
 	
-	if ([[theSub substringToIndex:3] isEqualToString:@"/r/"])
+	NSRange r = [theSub rangeOfCharacterFromSet:[[NSCharacterSet alphanumericCharacterSet] invertedSet]];
+	if (r.location != NSNotFound)
 	{
-		theSub = [theSub substringFromIndex:3];
-		
-		NSRange r = [theSub rangeOfCharacterFromSet:[[NSCharacterSet alphanumericCharacterSet] invertedSet]];
-		if (r.location != NSNotFound)
-		{
-			return nil;
-		}
-		return theSub;
+		return nil;
 	}
-	
-	return @"creeperapp";
-}
-
--(void)saveNewReddit:(RedditPost *)post
-{
-	if (![NSThread isMainThread])
-	{
-		[self performSelectorOnMainThread:@selector(saveNewReddit) withObject:nil waitUntilDone:YES];
-		return;
-	}
-	
-	// reload it here
-	FeedItem *theItem = [FeedItem withEncoderID:self.item.encoderID];
-	if (!theItem)
-	{
-		DLog(@"no item");
-	}
-	else
-	{
-		theItem.reddit = post;
-		theItem.feedItemType = FeedItemType_Reddit;
-		[FeedItem save];
-	}	
+	return theSub;
 }
 
 -(IBAction)saveAction:(id)sender
@@ -96,9 +111,9 @@
 		[self.titleEdit resignFirstResponder];
 	}
 	
-	if ([self.descriptionEdit isFirstResponder])
+	if ([self.subredditEdit isFirstResponder])
 	{
-		[self.descriptionEdit resignFirstResponder];
+		[self.subredditEdit resignFirstResponder];
 	}
 	
 	if (!self.titleEdit.text || [self.titleEdit.text length]==0)
@@ -108,8 +123,8 @@
 	}
 	else
 	{
-		NSString *subreddit = [self subredditFromText:self.descriptionEdit.text];
-
+		NSString *subreddit = [self subredditFromText:self.subredditEdit.text];
+		
 		if (!subreddit)
 		{
 			UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Submission failed" message:@"The subreddit is invalid." delegate:self cancelButtonTitle:@"Close" otherButtonTitles:nil];
@@ -117,7 +132,7 @@
 		}
 		else
 		{
-			__weak ImageInfo *blockSelf = self;
+			__weak RedditPostSubmit *blockSelf = self;
 			[[iOSRedditAPI shared] submitLink:self.item.imgur.link toSubreddit:subreddit withTitle:self.titleEdit.text captchaVC:self submitted:^(BOOL success, RedditPost *post) {
 				if (!success)
 				{
@@ -149,6 +164,10 @@
 {
     [super viewDidLoad];
 
+	if (self.item.imgur.imgTitle)
+	{
+		self.titleEdit.text = self.item.imgur.imgTitle;
+	}
 	[self.titleEdit becomeFirstResponder];
 }
 

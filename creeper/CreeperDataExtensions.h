@@ -32,6 +32,7 @@
 
 typedef enum
 {
+	FeedItemType_Unsaved    = 1000,
 	FeedItemType_Encoding   = 1001,
 	FeedItemType_Encoded    = 1002,
 	FeedItemType_Uploading  = 1003,
@@ -49,13 +50,25 @@ FeedItemType;
 @property (nonatomic, readonly) UIImage *currentImage;
 
 -(NSArray *)buildAnimationFrames;
+-(void)attachToImgur:(ImgurEntry *)imgur;
 
-+(FeedItem *)withEncoderID:(NSString *)theEncoderID;
++(FeedItem *)withEncoderID:(NSString *)theEncoderID inContext:(NSManagedObjectContext *)context;
 
 @end
 
 @interface RedditPost (CreeperDataExtensions)
 
 @property (nonatomic, readonly) NSURL *mobileURL;
+@property (nonatomic, readonly) NSString *fullRedditLink;
+@property (nonatomic, readonly) UIImage *previewFrame;
+@property (nonatomic, readonly) NSString *imgurID;
+@property (nonatomic, readonly) BOOL nsfw;
+@property (nonatomic, readonly) NSArray *animationFrames;
+
+-(NSArray *)buildAnimationFrames;
+-(NSArray *)cachedAnimationFrames;
+-(UIImage *)cachedPreviewFrame;
+
++(RedditPost *)withDictionary:(NSDictionary *)postDictionary inContext:(NSManagedObjectContext *)context;
 
 @end

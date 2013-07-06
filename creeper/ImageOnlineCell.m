@@ -46,9 +46,10 @@ static int ImgurInfoAlert = 100;
 @property (nonatomic, strong) IBOutlet UILabel *infoLabel;
 @property (nonatomic, strong) IBOutlet UIButton *actionButton;
 @property (nonatomic, strong) IBOutlet UILabel *timestampLabel;
-@property (nonatomic, strong) IBOutlet UIActivityIndicatorView *activity;
 
 @property (nonatomic, strong) NSString *encoderID;
+
+-(IBAction)imageInfoAction:(id)sender;
 
 @end
 
@@ -58,7 +59,6 @@ static int ImgurInfoAlert = 100;
 {
 	[super prepareForReuse];
 	[self.actionButton setHidden:NO];
-	[self.activity setHidden:YES];
 	[self.infoLabel setHidden:YES];
 	self.encoderID = nil;
 	self.infoLabel.text = @"";
@@ -68,8 +68,9 @@ static int ImgurInfoAlert = 100;
 - (id)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier
 {
     self = [super initWithStyle:style reuseIdentifier:reuseIdentifier];
-    if (self) {
-        // Initialization code
+    if (self)
+	{
+//		self.actionButton.imageView = [ios]
     }
     return self;
 }
@@ -81,19 +82,18 @@ static int ImgurInfoAlert = 100;
     // Configure the view for the selected state
 }
 
--(void)configureWithItem:(FeedItem *)item
+-(void)configureWithItem:(FeedItem *)item detailLevel:(AnimatedItemCellRenderDetailLevel)level
 {
-	[super configureWithItem:item];
+	[super configureWithItem:item detailLevel:level];
 	if (!self.encoderID) // This must be our first load.
 	{
 		[self.actionButton setHidden:NO];
-		[self.activity setHidden:YES];
 		[self.infoLabel setHidden:YES];
 	}
 	self.encoderID = item.encoderID;
 	
 	// Set the timestamp
-	self.timestampLabel.text = [NSString stringWithFormat:@"Created: %@", [item.timestamp timeAgo]];
+	self.timestampLabel.text = [item.timestamp timeAgo];
 }
 
 -(BOOL)isCorrectCellForItem:(FeedItem *)item
@@ -103,7 +103,7 @@ static int ImgurInfoAlert = 100;
 
 -(void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex
 {
-	FeedItem *item = [FeedItem withEncoderID:self.encoderID];
+	FeedItem *item = [FeedItem withEncoderID:self.encoderID inContext:[NSManagedObjectContext contextForCurrentThread]];
 	if (alertView.tag==ImgurInfoAlert)
 	{
 		switch (buttonIndex)
@@ -137,7 +137,7 @@ static int ImgurInfoAlert = 100;
 
 -(IBAction)imageInfoAction:(id)sender
 {
-	FeedItem *item = [FeedItem withEncoderID:self.encoderID];
+	FeedItem *item = [FeedItem withEncoderID:self.encoderID inContext:[NSManagedObjectContext contextForCurrentThread]];
 	
 	UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Imgur Info"
 													message:item.imgur.imgurID

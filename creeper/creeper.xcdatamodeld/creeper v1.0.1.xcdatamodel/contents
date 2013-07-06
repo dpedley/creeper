@@ -21,14 +21,23 @@
         <relationship name="feedItem" optional="YES" minCount="1" maxCount="1" deletionRule="Nullify" destinationEntity="FeedItem" inverseName="imgur" inverseEntity="FeedItem" syncable="YES"/>
     </entity>
     <entity name="RedditPost" representedClassName="RedditPost" syncable="YES">
-        <attribute name="postName" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="author" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="created" optional="YES" attributeType="Date" syncable="YES"/>
+        <attribute name="domain" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="hotOrder" optional="YES" attributeType="Integer 16" defaultValueString="0" syncable="YES"/>
+        <attribute name="imgurLink" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="over18Number" optional="YES" attributeType="Boolean" syncable="YES"/>
         <attribute name="redditID" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="redditName" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="redditTitle" optional="YES" attributeType="String" syncable="YES"/>
         <attribute name="redditURL" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="score" optional="YES" attributeType="Integer 32" defaultValueString="0" syncable="YES"/>
+        <attribute name="validationString" optional="YES" attributeType="String" syncable="YES"/>
         <relationship name="feedItem" optional="YES" minCount="1" maxCount="1" deletionRule="Nullify" destinationEntity="FeedItem" inverseName="reddit" inverseEntity="FeedItem" syncable="YES"/>
     </entity>
     <elements>
         <element name="FeedItem" positionX="160" positionY="192" width="128" height="165"/>
         <element name="ImgurEntry" positionX="160" positionY="192" width="128" height="165"/>
-        <element name="RedditPost" positionX="160" positionY="192" width="128" height="105"/>
+        <element name="RedditPost" positionX="160" positionY="192" width="128" height="240"/>
     </elements>
 </model>

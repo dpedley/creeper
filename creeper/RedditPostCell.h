@@ -28,8 +28,12 @@
 #import <UIKit/UIKit.h>
 #import "AnimatedItemCell.h"
 
-@class FeedItem;
+@class RedditPost;
 
 @interface RedditPostCell : AnimatedItemCell
+
+@property (nonatomic, strong) RedditPost *reddit;
+
+-(void)configureWithReddit:(RedditPost *)rp detailLevel:(AnimatedItemCellRenderDetailLevel)level;
 
 @end

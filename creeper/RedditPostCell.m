@@ -32,6 +32,8 @@
 #import "CreeperDataExtensions.h"
 #import "NSDate+TimeAgo.h"
 #import "GifCreationManager.h"
+#import "iOSRedditAPI.h"
+#import "SceneCapture.h"
 
 typedef enum
 {
@@ -45,11 +47,10 @@ static int ImgurInfoAlert = 100;
 @interface RedditPostCell ()
 
 @property (nonatomic, strong) IBOutlet UILabel *infoLabel;
+@property (nonatomic, strong) IBOutlet UILabel *karmaLabel;
 @property (nonatomic, strong) IBOutlet UIButton *actionButton;
 @property (nonatomic, strong) IBOutlet UILabel *timestampLabel;
-@property (nonatomic, strong) IBOutlet UIActivityIndicatorView *activity;
 
-@property (nonatomic, strong) NSString *encoderID;
 
 -(IBAction)imageInfoAction:(id)sender;
 
@@ -61,11 +62,17 @@ static int ImgurInfoAlert = 100;
 {
 	[super prepareForReuse];
 	[self.actionButton setHidden:NO];
-	[self.activity setHidden:YES];
 	[self.infoLabel setHidden:YES];
-	self.encoderID = nil;
+	self.reddit = nil;
 	self.infoLabel.text = @"";
+	self.karmaLabel.text = @"";
 	self.timestampLabel.text = @"";
+}
+
+-(void)awakeFromNib
+{
+	[super awakeFromNib];
+	self.karmaLabel.text = @"";
 }
 
 - (id)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier
@@ -84,19 +91,98 @@ static int ImgurInfoAlert = 100;
     // Configure the view for the selected state
 }
 
--(void)configureWithItem:(FeedItem *)item
+/*
+-(NSString *)imgurIDSafe
 {
-	[super configureWithItem:item];
-	if (!self.encoderID) // This must be our first load.
+	NSString *imgurID = nil;
+	if (self.encoderID)
 	{
-		[self.actionButton setHidden:NO];
-		[self.activity setHidden:YES];
-		[self.infoLabel setHidden:YES];
+		FeedItem *item = [FeedItem withEncoderID:self.encoderID];
+		imgurID = item.imgur.imgurID;
 	}
-	self.encoderID = item.encoderID;
+	else if (self.redditEntry)
+	{
+		imgurID = self.redditEntry.imgurID;
+	}
+	return imgurID;
+}
+
+-(NSString *)imgurSafe
+{
+	NSString *imgur = nil;
+	if (self.encoderID)
+	{
+		FeedItem *item = [FeedItem withEncoderID:self.encoderID];
+		imgur = item.imgur.link;
+	}
+	else if (self.reddit)
+	{
+		imgur = self.reddit.imgur;
+	}
+	return imgur;
+}
+*/
+
+-(void)startPreviewAnimation
+{
+	if (!self.animationLoaded)
+	{
+		NSArray *cachedFrames = [self.reddit cachedAnimationFrames];
+		if (cachedFrames)
+		{
+			[self.preview setAnimationImages:cachedFrames];
+			[self.preview setAnimationDuration:[cachedFrames count] * SceneCaptureFrameInterval];
+			self.animationLoaded = YES;
+		}
+	}
+	[super startPreviewAnimation];
+}
+
+-(void)configureWithItem:(FeedItem *)item detailLevel:(AnimatedItemCellRenderDetailLevel)level
+{
+	[super configureWithItem:item detailLevel:level];
+	if (!self.reddit) // This must be our first load.
+	{
+		self.reddit = item.reddit;
+		[self.actionButton setHidden:NO];
+		[self.infoLabel setHidden:YES];
+		[self configureWithReddit:item.reddit detailLevel:level];
+		
+		__weak RedditPostCell *blockSelf = self;
+		[[iOSRedditAPI shared] loadCurrentDataForRedditPostID:item.reddit.redditID completion:^(NSDictionary *postDictionary, BOOL cached) {
+			
+			if (!cached)
+			{
+				[MagicalRecord saveUsingCurrentThreadContextWithBlock:^(NSManagedObjectContext *localContext) {
+					RedditPost *reddit = [RedditPost withDictionary:postDictionary inContext:localContext];
+					[blockSelf.karmaLabel performSelectorOnMainThread:@selector(setText:) withObject:[NSString stringWithFormat:@"%@", reddit.score] waitUntilDone:NO];
+				} completion:^(BOOL success, NSError *error) {
+					DLog(@"the post: %@", postDictionary);
+				}];
+			}
+			else
+			{
+				DLog(@"the cached post: %@", postDictionary);
+			}
+		}];
+	}
 
 	// Set the timestamp
-	self.timestampLabel.text = [NSString stringWithFormat:@"Created: %@", [item.timestamp timeAgo]];
+	self.timestampLabel.text = [item.timestamp timeAgo];
+}
+
+-(void)configureWithReddit:(RedditPost *)rp detailLevel:(AnimatedItemCellRenderDetailLevel)level
+{
+	[super configureWithReddit:rp detailLevel:level];
+	
+	[self.actionButton setHidden:NO];
+	[self.infoLabel setHidden:YES];
+	
+	self.reddit = rp;
+	
+	self.karmaLabel.text = [NSString stringWithFormat:@"%@", rp.score];
+	
+	self.timestampLabel.text = [rp.created timeAgo];
 }
 
 -(BOOL)isCorrectCellForItem:(FeedItem *)item
@@ -106,7 +192,6 @@ static int ImgurInfoAlert = 100;
 
 - (void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex
 {
-	FeedItem *item = [FeedItem withEncoderID:self.encoderID];
 	if (alertView.tag==ImgurInfoAlert)
 	{
 		switch (buttonIndex)
@@ -119,15 +204,21 @@ static int ImgurInfoAlert = 100;
 				
 			case ImgurInfoAlertOption_ImgurID:
 			{
-				UIPasteboard *pasteboard = [UIPasteboard generalPasteboard];
-				pasteboard.string = item.imgur.imgurID;
+				if (self.reddit.imgurID)
+				{
+					UIPasteboard *pasteboard = [UIPasteboard generalPasteboard];
+					pasteboard.string = self.reddit.imgurID;
+				}
 			}
 				break;
 				
 			case ImgurInfoAlertOption_ImgurLink:
 			{
-				UIPasteboard *pasteboard = [UIPasteboard generalPasteboard];
-				pasteboard.string = item.imgur.link;
+				if (self.reddit.imgurLink)
+				{
+					UIPasteboard *pasteboard = [UIPasteboard generalPasteboard];
+					pasteboard.string = self.reddit.imgurLink;
+				}
 			}
 				break;
 								
@@ -140,14 +231,13 @@ static int ImgurInfoAlert = 100;
 
 -(IBAction)imageInfoAction:(id)sender
 {
-	FeedItem *item = [FeedItem withEncoderID:self.encoderID];
-	
 	UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Imgur Info"
-													message:item.imgur.imgurID
+													message:self.reddit.imgurID
 												   delegate:self
 										  cancelButtonTitle:@"Close"
 										  otherButtonTitles:@"Copy Image ID", @"Copy link", 
 						  nil];
+	
 	alert.tag = ImgurInfoAlert;
 	[alert show];
 }

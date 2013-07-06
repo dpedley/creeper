@@ -38,6 +38,8 @@
 
 @implementation ImgurIOS
 
+#pragma mark - Images for buttons
+
 +(NSString*)postValueEncoding:(NSString *)value
 {
 	NSString *escaped = [value stringByReplacingOccurrencesOfString:@"&" withString:@"%26"];
@@ -60,165 +62,205 @@
 
 +(void)deleteImageWithHashToken:(NSString *)hashToken deleteComplete:(void (^)(BOOL success))completion
 {
-	NSString *urlString = [NSString stringWithFormat:@"https://api.imgur.com/3/image/%@", hashToken];
-	NSURL *url = [NSURL URLWithString:urlString];
-	
-	NSMutableURLRequest* urlRequest = [[NSMutableURLRequest alloc]initWithURL:url];
-	[urlRequest setHTTPMethod:@"DELETE"];
-	[urlRequest setValue:[NSString stringWithFormat:@"Client-ID %@", IMGUR_CLIENTID] forHTTPHeaderField:@"Authorization"];
-	
-	AFJSONRequestOperation *operation = [AFJSONRequestOperation JSONRequestOperationWithRequest:urlRequest success:^(NSURLRequest *request, NSHTTPURLResponse *response, id JSON) {
-		
-		NSNumber *status = [JSON objectForKey:@"status"];
-		NSNumber *success = [JSON objectForKey:@"success"];
-		BOOL imageGone = [success boolValue];
-		
-		if (!imageGone)
-		{
-			int statusCode = [status integerValue];
-			if (statusCode==200)
-			{
-				// Let's assume it's gone here too
-				imageGone = YES;
-			}
-			else if (statusCode==404)
-			{
-				// 404 means not found, so it's gone
-				imageGone = YES;
-			}
-		}
-		
-		if (imageGone)
-		{
-			DLog(@"Imgur Delete Response: %@", JSON);
-			
-			completion(YES);
-		}
-		else
-		{
-			completion(NO);
-		}
-		
-	} failure:^(NSURLRequest *request, NSHTTPURLResponse *response, NSError *error, id JSON) {
-		DLog(@"er res: %@", JSON);
-		
-		NSNumber *status = [JSON objectForKey:@"status"];
-		NSNumber *success = [JSON objectForKey:@"success"];
-		BOOL imageGone = [success boolValue];
-		
-		if (!imageGone)
-		{
-			int statusCode = [status integerValue];
-			if (statusCode==200)
-			{
-				// Let's assume it's gone here too
-				imageGone = YES;
-			}
-			else if (statusCode==404)
-			{
-				// 404 means not found, so it's gone
-				imageGone = YES;
-			}
-		}
-		
-		if (imageGone)
-		{
-			DLog(@"Imgur Delete Response: %@", JSON);
-			
-			completion(YES);
-		}
-		else
-		{
-			completion(NO);
-		}
-		
-	}];
-	
-	[operation start];
+    [self reachableOnce:NO completion:^(Reachability *reachability) {
+        NSString *urlString = [NSString stringWithFormat:@"https://api.imgur.com/3/image/%@", hashToken];
+        NSURL *url = [NSURL URLWithString:urlString];
+        
+        NSMutableURLRequest* urlRequest = [[NSMutableURLRequest alloc]initWithURL:url];
+        [urlRequest setHTTPMethod:@"DELETE"];
+        [urlRequest setValue:[NSString stringWithFormat:@"Client-ID %@", IMGUR_CLIENTID] forHTTPHeaderField:@"Authorization"];
+        
+        AFJSONRequestOperation *operation = [AFJSONRequestOperation JSONRequestOperationWithRequest:urlRequest success:^(NSURLRequest *request, NSHTTPURLResponse *response, id JSON) {
+            
+            NSNumber *status = [JSON objectForKey:@"status"];
+            NSNumber *success = [JSON objectForKey:@"success"];
+            BOOL imageGone = [success boolValue];
+            
+            if (!imageGone)
+            {
+                int statusCode = [status integerValue];
+                if (statusCode==200)
+                {
+                    // Let's assume it's gone here too
+                    imageGone = YES;
+                }
+                else if (statusCode==404)
+                {
+                    // 404 means not found, so it's gone
+                    imageGone = YES;
+                }
+            }
+            
+            if (imageGone)
+            {
+                DLog(@"Imgur Delete Response: %@", JSON);
+                
+                completion(YES);
+            }
+            else
+            {
+                completion(NO);
+            }
+            
+        } failure:^(NSURLRequest *request, NSHTTPURLResponse *response, NSError *error, id JSON) {
+            DLog(@"er res: %@", JSON);
+            
+            NSNumber *status = [JSON objectForKey:@"status"];
+            NSNumber *success = [JSON objectForKey:@"success"];
+            BOOL imageGone = [success boolValue];
+            
+            if (!imageGone)
+            {
+                int statusCode = [status integerValue];
+                if (statusCode==200)
+                {
+                    // Let's assume it's gone here too
+                    imageGone = YES;
+                }
+                else if (statusCode==404)
+                {
+                    // 404 means not found, so it's gone
+                    imageGone = YES;
+                }
+            }
+            
+            if (imageGone)
+            {
+                DLog(@"Imgur Delete Response: %@", JSON);
+                
+                completion(YES);
+            }
+            else
+            {
+                completion(NO);
+            }
+            
+        }];
+        
+        [operation start];
+    }];
 }
 
-+(void)uploadImageData:(NSData *)data name:(NSString *)theName title:(NSString *)theTitle description:(NSString *)theDescription uploadComplete:(void (^)(BOOL success, ImgurEntry *imgur))completion
++(void)reachableOnce:(BOOL)wifiOnly completion:(NetworkReachable)completionBlock
 {
-	NSMutableString *optionalParams = [NSMutableString string];
-	
-	if (theName && [theName length]>0)
-	{
-		[optionalParams appendFormat:@"name=%@&", [theName stringByAddingPercentEscapesUsingEncoding:NSASCIIStringEncoding]];
-	}
-	else
-	{
-		theName = nil;
-	}
-	
-	if (theTitle && [theTitle length]>0)
-	{
-		[optionalParams appendFormat:@"title=%@&", [theTitle stringByAddingPercentEscapesUsingEncoding:NSASCIIStringEncoding]];
-	}
-	else
-	{
-		theTitle = nil;
-	}
-	
-	if (theDescription && [theDescription length]>0)
-	{
-		[optionalParams appendFormat:@"description=%@&", [theDescription stringByAddingPercentEscapesUsingEncoding:NSASCIIStringEncoding]];
-	}
-	else
-	{
-		theDescription = nil;
-	}
-	
-//	NSString* post_data = [NSString stringWithFormat:@"%@image=%@",
-//						   optionalParams,
-//						   img
-//						   ];
-	NSString *base64EncodedImage = [data base64EncodingWithLineLength:0];
-//	DLog(@"base64:\n\n%@\n\n", [self postValueEncoding:base64EncodedImage]);
-	NSString* post_data = [NSString stringWithFormat:@"%@type=base64&image=%@",
-						   optionalParams,
-						   [self postValueEncoding:base64EncodedImage]
-						   ];
-	NSURL *url = [NSURL URLWithString:@"https://api.imgur.com/3/upload"];
-	
-	NSMutableURLRequest* urlRequest = [[NSMutableURLRequest alloc]initWithURL:url];
-	[urlRequest setHTTPMethod:@"POST"];
-	[urlRequest setHTTPBody:[post_data dataUsingEncoding:NSASCIIStringEncoding]];
-	[urlRequest setValue:[NSString stringWithFormat:@"Client-ID %@", IMGUR_CLIENTID] forHTTPHeaderField:@"Authorization"];
-	
-	__block NSTimeInterval createStamp = [[NSDate date] timeIntervalSince1970];
-	
-	AFJSONRequestOperation *operation = [AFJSONRequestOperation JSONRequestOperationWithRequest:urlRequest success:^(NSURLRequest *request, NSHTTPURLResponse *response, id JSON)
-	{
-		NSNumber *success = [JSON objectForKey:@"success"];
-		if ([success boolValue])
-		{
-			NSDictionary *entryDict = JSON[@"data"];
-			
-			ImgurEntry *newEntry = [ImgurEntry addNew];
-			newEntry.deletehash = entryDict[@"deletehash"];
-			newEntry.imgurID = entryDict[@"id"];
-			newEntry.link = entryDict[@"link"];
-			newEntry.timestamp = [NSNumber numberWithDouble:createStamp];
-			newEntry.imgName = theName;
-			newEntry.imgTitle = theTitle;
-			newEntry.imgDescription = theDescription;
-			[ImgurEntry save];
-			
-			// Cache the image data for later
-			DLog(@"Saved: %@", JSON);
-			completion(YES, newEntry);
-		}
-		else
-		{
-			completion(NO, nil);
-		}
-		
-	} failure:^(NSURLRequest *request, NSHTTPURLResponse *response, NSError *error, id JSON) {
-		completion(NO, nil);
-		DLog(@"er res: %@", JSON);
-	}];
-	
-	[operation start];
+    // allocate a reachability object
+    Reachability* reach = [Reachability reachabilityWithHostname:@"api.imgur.com"];
+    
+    if (wifiOnly)
+    {
+        reach.reachableOnWWAN = NO;
+    }
+    
+    reach.reachableBlock = ^(Reachability*reach)
+    {
+        [reach stopNotifier];
+        completionBlock(reach);
+    };
+    
+    reach.unreachableBlock = ^(Reachability*reach){};
+    
+    // start the notifier which will cause the reachability object to retain itself!
+    [reach startNotifier];
+}
+
++(void)reachableViaWifi:(NetworkReachable)wifiBlock
+{
+    [self reachableOnce:YES completion:wifiBlock];
+}
+
+
++(void)uploadImageData:(NSData *)data name:(NSString *)aName title:(NSString *)aTitle description:(NSString *)aDescription uploadComplete:(void (^)(BOOL success, ImgurEntry *imgur))completion
+{
+    [self reachableViaWifi:^(Reachability *reachability) {
+        NSMutableString *optionalParams = [NSMutableString string];
+        
+        NSString *theName = aName;
+        if (theName && [theName length]>0)
+        {
+            [optionalParams appendFormat:@"name=%@&", [theName stringByAddingPercentEscapesUsingEncoding:NSASCIIStringEncoding]];
+        }
+        else
+        {
+            theName = nil;
+        }
+        
+        NSString *theTitle = aTitle;
+        if (theTitle && [theTitle length]>0)
+        {
+            [optionalParams appendFormat:@"title=%@&", [theTitle stringByAddingPercentEscapesUsingEncoding:NSASCIIStringEncoding]];
+        }
+        else
+        {
+            theTitle = nil;
+        }
+        
+        NSString *theDescription = aDescription;
+        if (theDescription && [theDescription length]>0)
+        {
+            [optionalParams appendFormat:@"description=%@&", [theDescription stringByAddingPercentEscapesUsingEncoding:NSASCIIStringEncoding]];
+        }
+        else
+        {
+            theDescription = nil;
+        }
+        
+        //	NSString* post_data = [NSString stringWithFormat:@"%@image=%@",
+        //						   optionalParams,
+        //						   img
+        //						   ];
+        NSString *base64EncodedImage = [data base64EncodingWithLineLength:0];
+        //	DLog(@"base64:\n\n%@\n\n", [self postValueEncoding:base64EncodedImage]);
+        NSString* post_data = [NSString stringWithFormat:@"%@type=base64&image=%@",
+                               optionalParams,
+                               [self postValueEncoding:base64EncodedImage]
+                               ];
+        NSURL *url = [NSURL URLWithString:@"https://api.imgur.com/3/upload"];
+        
+        NSMutableURLRequest* urlRequest = [[NSMutableURLRequest alloc]initWithURL:url];
+        [urlRequest setHTTPMethod:@"POST"];
+        [urlRequest setHTTPBody:[post_data dataUsingEncoding:NSASCIIStringEncoding]];
+        [urlRequest setValue:[NSString stringWithFormat:@"Client-ID %@", IMGUR_CLIENTID] forHTTPHeaderField:@"Authorization"];
+        
+        __block NSTimeInterval createStamp = [[NSDate date] timeIntervalSince1970];
+        
+        AFJSONRequestOperation *operation = [AFJSONRequestOperation JSONRequestOperationWithRequest:urlRequest success:^(NSURLRequest *request, NSHTTPURLResponse *response, id JSON)
+                                             {
+                                                 NSNumber *success = [JSON objectForKey:@"success"];
+                                                 if ([success boolValue])
+                                                 {
+                                                     NSDictionary *entryDict = JSON[@"data"];
+                                                     
+                                                     [MagicalRecord saveUsingCurrentThreadContextWithBlock:^(NSManagedObjectContext *localContext) {
+                                                         ImgurEntry *newEntry = [ImgurEntry createInContext:localContext];
+                                                         newEntry.deletehash = entryDict[@"deletehash"];
+                                                         newEntry.imgurID = entryDict[@"id"];
+                                                         newEntry.link = entryDict[@"link"];
+                                                         newEntry.timestamp = [NSNumber numberWithDouble:createStamp];
+                                                         newEntry.imgName = theName;
+                                                         newEntry.imgTitle = theTitle;
+                                                         newEntry.imgDescription = theDescription;
+                                                     } completion:^(BOOL success, NSError *error) {
+                                                         ImgurEntry *savedEntry = [ImgurEntry findFirstByAttribute:@"imgurID" withValue:entryDict[@"id"]];
+                                                         if (savedEntry)
+                                                         {
+                                                             // Cache the image data for later
+                                                             DLog(@"Saved: %@", JSON);
+                                                             completion(YES, savedEntry);
+                                                         }
+                                                     }];
+                                                 }
+                                                 else
+                                                 {
+                                                     completion(NO, nil);
+                                                 }
+                                                 
+                                             } failure:^(NSURLRequest *request, NSHTTPURLResponse *response, NSError *error, id JSON) {
+                                                 completion(NO, nil);
+                                                 DLog(@"er res: %@ %@ %d", JSON, error, response.statusCode);
+                                             }];
+        
+        [operation start];
+    }];
 }
 
 @end
