@@ -57,7 +57,7 @@ Imagery
 =======
 
 The splash screen is an illustration of Eurasian Treecreepers by Henrik Grönvold. It is dated from 1904-1905. 
-Henrik passed away in 1940. This image became part of the the public domain in the European Union and non-EU 
+Henrik passed away in 1940. This image became part of the public domain in the European Union and non-EU 
 countries in 2010 with a copyright term of 70 years. I found the image and copyright information on wikimedia
 at the following url.
 
